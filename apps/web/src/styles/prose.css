@@ -1,4 +1,5 @@
-/* Rendered Markdown of a note */
+/* Rendered Markdown of a note. Two reading sizes only: below the h1, headings are told apart
+   by weight, a rule under h2, and the space above them. */
 
 .prose-note {
   display: flex;
@@ -10,18 +11,48 @@
 .prose-note h1,
 .prose-note h2,
 .prose-note h3,
-.prose-note h4 {
+.prose-note h4,
+.prose-note h5,
+.prose-note h6 {
   font-weight: 700;
-  line-height: 1.25;
-  margin-top: 0.5em;
+  line-height: 1.3;
+  text-wrap: balance;
 }
 
 .prose-note h1 {
   font-size: var(--text-title);
+  line-height: 1.25;
+  margin-top: 0.75em;
+}
+
+.prose-note h2 {
+  margin-top: 1.25em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--rule);
+}
+
+.prose-note h3 {
+  margin-top: 0.75em;
+}
+
+.prose-note h4,
+.prose-note h5,
+.prose-note h6 {
+  margin-top: 0.5em;
+  color: var(--ink-muted);
 }
 
 .prose-note > :first-child {
   margin-top: 0;
+}
+
+.prose-note p,
+.prose-note li {
+  max-width: 75ch;
+}
+
+.prose-note strong {
+  font-weight: 700;
 }
 
 .prose-note ul,
@@ -33,12 +64,26 @@
   list-style: disc;
 }
 
+.prose-note ul ul {
+  list-style: circle;
+}
+
 .prose-note ol {
   list-style: decimal;
 }
 
+.prose-note li::marker {
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
 .prose-note li + li {
-  margin-top: 0.2em;
+  margin-top: 0.25em;
+}
+
+.prose-note li > ul,
+.prose-note li > ol {
+  margin-top: 0.25em;
 }
 
 .prose-note li:has(> input[type='checkbox']) {
@@ -48,54 +93,79 @@
 
 .prose-note input[type='checkbox'] {
   accent-color: var(--filed);
-  margin-right: 0.4em;
+  margin-right: 0.5em;
+  vertical-align: -0.1em;
+}
+
+.prose-note li:has(> input[type='checkbox']:checked) {
+  color: var(--ink-muted);
 }
 
 .prose-note blockquote {
   border-left: 1px solid var(--rule-strong);
-  padding-left: 1em;
+  padding: 0.125em 0 0.125em 1em;
   color: var(--ink-muted);
 }
 
 .prose-note code {
   font-family: var(--font-mono);
+  font-size: 0.9375em;
   background: var(--ground);
-  border-radius: 3px;
-  padding: 0.05em 0.3em;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 0 0.3em;
 }
 
 .prose-note pre {
   font-family: var(--font-mono);
+  line-height: 1.5;
   background: var(--ground);
   border: 1px solid var(--rule);
   border-radius: var(--radius);
   padding: 0.75rem 1rem;
   overflow-x: auto;
+  scrollbar-width: thin;
 }
 
 .prose-note pre code {
   background: none;
+  border: 0;
   padding: 0;
+  font-size: 1em;
 }
 
+/* Wide tables scroll on their own instead of pushing the page sideways. */
 .prose-note table {
+  display: block;
+  max-width: 100%;
+  width: max-content;
+  overflow-x: auto;
   border-collapse: collapse;
   font-variant-numeric: tabular-nums;
+  scrollbar-width: thin;
 }
 
 .prose-note th,
 .prose-note td {
   border: 1px solid var(--rule);
-  padding: 0.25em 0.6em;
+  padding: 0.375em 0.75em;
   text-align: left;
+  vertical-align: top;
+}
+
+.prose-note th {
+  background: var(--ground);
+  font-weight: 700;
 }
 
 .prose-note a {
   color: inherit;
   text-decoration-color: var(--kraft-deep);
+  text-underline-offset: 0.2em;
 }
 
 .prose-note hr {
   border: 0;
   border-top: 1px solid var(--rule);
+  margin: 0.5em 0;
 }

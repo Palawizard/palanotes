@@ -44,7 +44,7 @@ export function SortModeForm({ initialMode }: { initialMode: SortMode }) {
 
   return (
     <fieldset className="choice-group">
-      <legend className="choice-legend">Rangement</legend>
+      <legend className="sr-only">Mode de rangement</legend>
       {OPTIONS.map((option) => (
         <label key={option.value} className="choice">
           <input

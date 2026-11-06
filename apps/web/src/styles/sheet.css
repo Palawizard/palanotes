@@ -42,6 +42,22 @@
 .sheet-hint {
   color: var(--ink-muted);
   flex: 1 1 18rem;
+  font-size: var(--text-meta);
+  line-height: var(--leading-meta);
+}
+
+/* The day at the top of the page, as written in the corner of a notebook page. */
+.sheet-date {
+  color: var(--ink-muted);
+  font-size: var(--text-meta);
+  line-height: var(--leading-meta);
+  font-variant-numeric: tabular-nums;
+  margin-bottom: -1.25rem;
+}
+
+.sheet-shortcut {
+  font-size: var(--text-meta);
+  color: var(--ink-muted);
 }
 
 .sheet-actions {

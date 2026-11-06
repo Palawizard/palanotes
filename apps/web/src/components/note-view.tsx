@@ -6,6 +6,7 @@ import { formatDay, formatFull } from '@/lib/format';
 import { withoutLeadingTitle } from '@/lib/markdown-text';
 import { mutate } from '@/lib/mutate';
 import { useFolderActions } from './folder-actions';
+import { Icon } from './icons';
 import { Markdown } from './markdown';
 import { TagList } from './tag-list';
 
@@ -107,30 +108,40 @@ export function NoteView({ note }: { note: NoteData }) {
   return (
     <>
       <header className="note-head">
-        <h1 className="page-title">{note.title}</h1>
-        <div className="note-meta">
-          <time dateTime={note.updatedAt} title={formatFull(note.updatedAt)}>
-            Modifiée le {formatDay(note.updatedAt)}
-          </time>
-          <TagList tags={note.tags} />
-        </div>
-        <div className="form-actions">
-          <button
-            type="button"
-            className="button button-quiet button-small"
-            onClick={() => open('edit')}
-          >
-            Modifier
-          </button>
-          <button
-            type="button"
-            className="button button-quiet button-small"
-            onClick={() =>
-              actions.startMoveNote({ id: note.id, title: note.title, folderId: note.folderId })
-            }
-          >
-            Déplacer vers…
-          </button>
+        <h1 className="page-title note-title">{note.title}</h1>
+        <div className="note-subhead">
+          <div className="note-meta">
+            <span className="note-date">
+              <Icon name="calendar" size={14} />
+              <time dateTime={note.updatedAt} title={formatFull(note.updatedAt)}>
+                Modifiée le {formatDay(note.updatedAt)}
+              </time>
+            </span>
+            <TagList
+              tags={note.tags}
+              hrefOf={(tag) => `/recherche?tag=${encodeURIComponent(tag)}`}
+            />
+          </div>
+          <div className="note-actions">
+            <button
+              type="button"
+              className="button button-quiet button-small"
+              onClick={() => open('edit')}
+            >
+              <Icon name="pencil" />
+              Modifier
+            </button>
+            <button
+              type="button"
+              className="button button-quiet button-small"
+              onClick={() =>
+                actions.startMoveNote({ id: note.id, title: note.title, folderId: note.folderId })
+              }
+            >
+              <Icon name="move" />
+              Déplacer vers…
+            </button>
+          </div>
         </div>
       </header>
       <div className="note-body">

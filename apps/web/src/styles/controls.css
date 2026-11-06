@@ -153,13 +153,6 @@
   color: var(--ink-muted);
 }
 
-.settings-account {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  align-items: flex-start;
-}
-
 .choice-status {
   min-height: 1.5em;
   color: var(--ink-muted);
@@ -498,4 +491,74 @@ a.tag {
 .picker-empty {
   padding: 0.5rem;
   color: var(--ink-muted);
+}
+
+/* Settings: one block per subject, its explanation on the left on a wide screen. */
+
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  max-width: 54rem;
+}
+
+.settings-section {
+  display: grid;
+  grid-template-columns: minmax(10rem, 15rem) minmax(0, 1fr);
+  gap: 1rem 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--rule);
+}
+
+.settings-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.settings-help {
+  color: var(--ink-muted);
+  font-size: var(--text-meta);
+  line-height: var(--leading-meta);
+}
+
+.settings-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+}
+
+.settings-account {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.settings-avatar {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: none;
+  border-radius: 50%;
+  background: var(--ground);
+  border: 1px solid var(--rule-strong);
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.settings-name {
+  font-weight: 700;
+}
+
+@media (max-width: 47.99rem) {
+  .settings-section {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

@@ -64,7 +64,7 @@
 }
 
 .note-page {
-  max-width: 46rem;
+  max-width: 50rem;
 }
 
 .note-head {
@@ -73,13 +73,43 @@
   gap: 0.5rem;
 }
 
+.note-subhead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+
+.note-title {
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+}
+
+.note-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex: none;
+}
+
+.note-actions .button svg {
+  color: var(--ink-muted);
+}
+
+.note-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.note-date svg {
+  color: var(--ink-faint);
+}
+
 .note-body {
   border-top: 1px solid var(--rule);
   padding-top: 1.25rem;
-  max-width: 75ch;
 }
-
-/* Note rows: dense list of notes, shared by the explorer, recents and search. */
 
 .note-rows {
   display: flex;
