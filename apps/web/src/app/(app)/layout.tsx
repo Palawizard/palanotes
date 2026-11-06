@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { AppNav } from '@/components/app-nav';
+import { AppNav, SettingsLink } from '@/components/app-nav';
 import { apiPath } from '@/lib/paths';
 import { getCurrentUser } from '@/server/auth';
 
@@ -18,6 +18,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         </Link>
         <AppNav />
         <div className="rail-foot">
+          <SettingsLink />
           <span className="rail-user">{user.displayName}</span>
           <form action={apiPath('/api/auth/logout')} method="post">
             <button type="submit" className="rail-link rail-signout">
@@ -26,9 +27,11 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           </form>
         </div>
       </header>
-      <main className="main" id="contenu">
-        {children}
-      </main>
+      <div className="page">
+        <main className="main" id="contenu">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

@@ -7,7 +7,6 @@ const LINKS = [
   { href: '/', label: 'Écrire' },
   { href: '/dossiers', label: 'Dossiers' },
   { href: '/recherche', label: 'Recherche' },
-  { href: '/reglages', label: 'Réglages' },
 ] as const;
 
 function isActive(pathname: string, href: string): boolean {
@@ -31,6 +30,21 @@ export function AppNav() {
           {link.label}
         </Link>
       ))}
+      {/* On a phone the rail foot is hidden, so settings join the bar. */}
+      <SettingsLink className="rail-only-phone" />
     </nav>
+  );
+}
+
+export function SettingsLink({ className = '' }: { className?: string }) {
+  const pathname = usePathname();
+  return (
+    <Link
+      href="/reglages"
+      className={`rail-link ${className}`.trim()}
+      aria-current={pathname.startsWith('/reglages') ? 'page' : undefined}
+    >
+      Réglages
+    </Link>
   );
 }

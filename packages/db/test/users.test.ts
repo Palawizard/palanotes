@@ -22,3 +22,19 @@ describe('upsertUser', () => {
     expect((await findUserById(db, user.id))?.sortMode).toBe('direct');
   });
 });
+
+describe('account maintenance', () => {
+  it('lists accounts and deletes one with everything it owns', async () => {
+    const { createEntry } = await import('../src/repo/entries');
+    const { deleteUserBySubject, listAccounts } = await import('../src/repo/users');
+    const user = await upsertUser(db, { authSubject: 'sub-to-delete', displayName: 'Parti' });
+    await createEntry(db, user.id, 'texte');
+    expect(
+      (await listAccounts(db)).some((account) => account.authSubject === 'sub-to-delete'),
+    ).toBe(true);
+
+    expect(await deleteUserBySubject(db, 'sub-to-delete')).toBe(true);
+    expect(await findUserById(db, user.id)).toBeNull();
+    expect(await deleteUserBySubject(db, 'sub-to-delete')).toBe(false);
+  });
+});

@@ -1,0 +1,91 @@
+# Production stack for vm-apps. See docs/DEPLOYMENT.md.
+name: palanotes
+
+x-app-env: &app-env
+  DATABASE_URL: postgres://palanotes:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@postgres:5432/palanotes
+
+services:
+  postgres:
+    image: postgres:17.11-bookworm@sha256:665dc7b37ac52a17e298511414c21d23ffa4e6a6ef6225b3e5d59c7afb35e994
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: palanotes
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: palanotes
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    networks:
+      - database
+    mem_limit: 512m
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U palanotes -d palanotes']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  migrate:
+    image: palanotes-worker:${PALANOTES_TAG:-local}
+    build:
+      context: .
+      dockerfile: docker/worker.Dockerfile
+    command: ['node_modules/.bin/tsx', 'node_modules/@palanotes/db/src/migrate-cli.ts']
+    environment: *app-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - database
+    mem_limit: 256m
+    restart: 'no'
+
+  worker:
+    image: palanotes-worker:${PALANOTES_TAG:-local}
+    restart: unless-stopped
+    env_file: .env
+    environment: *app-env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    volumes:
+      - claude:/home/node/.claude-palanotes
+    networks:
+      - database
+      - egress
+    mem_limit: 768m
+
+  web:
+    image: palanotes-web:${PALANOTES_TAG:-local}
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+      args:
+        BASE_PATH: /notes
+    restart: unless-stopped
+    env_file: .env
+    environment: *app-env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      database:
+      egress:
+      proxy:
+        # The reverse proxy reaches the app as palanotes-web:3000.
+        aliases:
+          - palanotes-web
+    mem_limit: 512m
+
+volumes:
+  postgres:
+  claude:
+
+networks:
+  # No route out: only the app containers reach the database.
+  database:
+    internal: true
+  # Outbound access: Authentik for the web app, the Claude service for the worker.
+  egress:
+  # Shared with the reverse proxy that serves palawi.fr/notes. No port is published.
+  proxy:
+    external: true
+    name: ${PROXY_NETWORK:-proxy}

@@ -16,6 +16,7 @@
     "@palanotes/core": "workspace:*",
     "@palanotes/db": "workspace:*",
     "@palanotes/llm": "workspace:*",
+    "drizzle-orm": "0.45.4",
     "jose": "6.2.15",
     "next": "16.4.5",
     "openid-client": "6.8.9",

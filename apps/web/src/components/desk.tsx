@@ -7,6 +7,7 @@ import { Composer } from './composer';
 import { Pocket, type EntryAction } from './pocket';
 
 const POLL_MS = 2500;
+const FILING_MS = 220;
 const UNSETTLED = new Set(['pending', 'processing']);
 
 function withoutKey(record: Record<string, string>, key: string): Record<string, string> {
@@ -19,6 +20,8 @@ export function Desk({ initialEntries }: { initialEntries: EntryView[] }) {
   const [entries, setEntries] = useState(initialEntries);
   const [newId, setNewId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [filingId, setFilingId] = useState<string | null>(null);
+  const [settledId, setSettledId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Record<string, string>>({});
   const unsettled = entries.some((entry) => UNSETTLED.has(entry.status));
 
@@ -61,7 +64,15 @@ export function Desk({ initialEntries }: { initialEntries: EntryView[] }) {
         message?: string;
       };
       if (response.ok && data.entries) {
-        setEntries(data.entries);
+        const next = data.entries;
+        if (action === 'accept') {
+          // Let the row slip out toward its folder before it shows its filed state.
+          setFilingId(entryId);
+          await new Promise((resolve) => setTimeout(resolve, FILING_MS));
+          setFilingId(null);
+          setSettledId(entryId);
+        }
+        setEntries(next);
       } else {
         setMessages((current) => ({
           ...current,
@@ -84,6 +95,8 @@ export function Desk({ initialEntries }: { initialEntries: EntryView[] }) {
       <Pocket
         entries={entries}
         newId={newId}
+        filingId={filingId}
+        settledId={settledId}
         busyId={busyId}
         messages={messages}
         onAction={onAction}
