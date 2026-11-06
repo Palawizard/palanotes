@@ -198,3 +198,44 @@ test.describe('on a phone', () => {
     );
   });
 });
+
+test('with every folder in the trash, the folders page still leads to the trash', async ({
+  page,
+}) => {
+  await page.goto('./dossiers/recents');
+  const ids = await page
+    .getByRole('tree', { name: 'Dossiers' })
+    .locator('[role="treeitem"][aria-level="1"][data-folder]')
+    .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-folder')));
+  expect(ids.length).toBeGreaterThan(0);
+  try {
+    for (const id of ids) {
+      const status = await page.evaluate(
+        async (folderId) =>
+          (await fetch(`/notes/api/folders/${folderId}`, { method: 'DELETE' })).status,
+        id,
+      );
+      expect(status).toBe(200);
+    }
+
+    await page.goto('./dossiers');
+    await expect(
+      page.getByText('Tu n’as plus aucun dossier, mais la corbeille en garde'),
+    ).toBeVisible();
+    await page.getByRole('link', { name: 'Ouvrir la corbeille' }).click();
+    await expect(page.getByRole('heading', { level: 1, name: 'Corbeille' })).toBeVisible();
+  } finally {
+    // Put every folder back so the next tests find the demo account as it was.
+    await page.goto('./dossiers/corbeille');
+    const rows = page.getByRole('list', { name: 'Dossiers supprimés' }).getByRole('listitem');
+    for (let left = await rows.count(); left > 0; left -= 1) {
+      await rows.first().getByRole('button', { name: 'Restaurer' }).click();
+      await page.waitForURL(/\/dossiers\/[0-9a-f-]{36}/);
+      await page.goto('./dossiers/corbeille');
+    }
+  }
+  await page.goto('./dossiers/recents');
+  await expect(
+    page.getByRole('tree', { name: 'Dossiers' }).locator('[role="treeitem"][aria-level="1"]'),
+  ).toHaveCount(ids.length);
+});

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { countTrash } from '@palanotes/db';
 import { RecentView } from '@/components/recent-view';
 import { getCurrentUser } from '@/server/auth';
 import { getDb } from '@/server/db';
@@ -16,14 +17,29 @@ export default async function FoldersPage({
   if (!user) {
     return null;
   }
-  const tree = await loadFolderTree(getDb(), user.id);
+  const db = getDb();
+  const [tree, trashCount] = await Promise.all([
+    loadFolderTree(db, user.id),
+    countTrash(db, user.id),
+  ]);
   if (tree.roots.length === 0) {
+    // Without folders the explorer has no tree, so the trash link must live here.
     return (
       <div className="page-stack">
         <h1 className="page-title">Dossiers</h1>
-        <p className="empty-state">
-          Rien n’est encore rangé. <Link href="/">Écris ta première note</Link>, elle arrivera ici.
-        </p>
+        {trashCount > 0 ? (
+          <p className="empty-state">
+            Tu n’as plus aucun dossier, mais la corbeille en garde{' '}
+            {trashCount > 1 ? `${trashCount}` : 'un'}.{' '}
+            <Link href="/dossiers/corbeille">Ouvrir la corbeille</Link> pour{' '}
+            {trashCount > 1 ? 'les' : 'le'} restaurer.
+          </p>
+        ) : (
+          <p className="empty-state">
+            Rien n’est encore rangé. <Link href="/">Écris ta première note</Link>, elle arrivera
+            ici.
+          </p>
+        )}
       </div>
     );
   }
