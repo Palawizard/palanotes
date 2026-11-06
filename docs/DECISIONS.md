@@ -53,3 +53,7 @@ The explorer keeps everything that matters in the URL (folder, open note, order,
 ## 2026-11-06: native drag and drop, with « Déplacer vers… » as the main path
 
 Notes and folders are dragged with the browser's own drag and drop, without a library: drop targets are only the rows of the folder tree, which is simple enough to handle by hand. Native dragging is unreliable on touch screens and cannot be done from the keyboard, so every move also exists as « Déplacer vers… » with a filterable folder list (WCAG 2.2, 2.5.7). Folders are never deleted with their content: only an empty folder can be deleted, and merging moves every note before removing the emptied folder.
+
+## 2026-11-06: stricter typo matching
+
+With a few hundred real notes, `word_similarity` at 0.4 matched pieces of longer words: « quokka » found 4 notes and « xylophone » 13. Search now uses `strict_word_similarity` (whole words) at the same threshold, and only for words of four letters or more. Measured on the demo account, the misspellings of the tests still match (« modle », « reseua », « algoritme », « dentsite ») while those two words match nothing.

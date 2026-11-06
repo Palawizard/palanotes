@@ -97,6 +97,23 @@ const SCREENS: Screen[] = [
   { name: 'recherche-vide', path: async () => './recherche' },
   { name: 'recherche', path: async () => './recherche?q=réseau', fullPage: true },
   { name: 'recherche-rien', path: async () => './recherche?q=ornithorynque' },
+  {
+    name: 'recherche-filtres',
+    path: async () =>
+      `./recherche?q=réseau&dossier=${await idOf('folders', 'name', 'Réseau')}&tag=réseau&periode=annee`,
+  },
+  {
+    name: 'recherche-filtres-rien',
+    path: async () => './recherche?q=crêpes&tag=réseau',
+  },
+  {
+    name: 'recherche-apercu',
+    path: async () => './recherche?q=sous-réseaux',
+    prepare: async (page) => {
+      await page.locator('.result').first().hover();
+      await page.waitForTimeout(700);
+    },
+  },
   { name: 'reglages', path: async () => './reglages' },
 ];
 
