@@ -63,3 +63,10 @@ export function formatShort(iso: string, now = new Date()): string {
 export function formatFull(iso: string): string {
   return fullFormat.format(new Date(iso));
 }
+
+// Time left before something in the trash goes for good, counted in whole days.
+export function formatDaysLeft(expiresIso: string, now = new Date()): string {
+  const days = Math.ceil((new Date(expiresIso).getTime() - now.getTime()) / DAY);
+  if (days <= 0) return 'disparaît aujourd’hui';
+  return days === 1 ? 'encore 1 jour' : `encore ${days} jours`;
+}

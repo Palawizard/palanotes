@@ -1,0 +1,86 @@
+/* Trash: deleted folders waiting 30 days, in the explorer list pane */
+
+.tree-trash {
+  margin: 0.75rem 0 0;
+}
+
+.trash-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  padding: 0 0.75rem 0.75rem;
+}
+
+.trash-head .list-meta {
+  flex: 1 1 14rem;
+}
+
+.trash-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.trash-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 0.5rem 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--radius);
+}
+
+.trash-row-icon {
+  margin-top: 0.25rem;
+  color: var(--ink-faint);
+}
+
+.trash-row-text {
+  display: grid;
+  gap: 0.0625rem;
+  min-width: 0;
+}
+
+.trash-row-name {
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trash-row-meta {
+  font-size: var(--text-meta);
+  line-height: var(--leading-meta);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.trash-row-actions {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: -0.5rem;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .trash-row:hover {
+    background: var(--hover);
+  }
+}
+
+.trash-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 3rem 1rem;
+  color: var(--ink-muted);
+  text-align: center;
+}
+
+.trash-empty svg {
+  color: var(--ink-faint);
+}

@@ -16,6 +16,9 @@ import type { FolderItem } from '@/server/folders';
 import { Dialog } from './dialog';
 import { CREATE, FolderPicker, ROOT } from './folder-picker';
 import { MenuPopup, type MenuItem, type MenuPosition } from './menu';
+import { held, notes } from '@/lib/counts';
+import { StatusLine } from './status-line';
+import { useUndoShortcut } from './undo-shortcut';
 
 export interface NoteRef {
   id: string;
@@ -57,8 +60,9 @@ const TITLES: Record<Task['kind'], string> = {
   'move-note': 'Déplacer la note',
 };
 
-function notes(count: number): string {
-  return `${count} note${count > 1 ? 's' : ''}`;
+interface Trashed {
+  id: string;
+  name: string;
 }
 
 // Everything that changes the shape of the folders: menus, dialogs, drops. Every change ends
@@ -82,7 +86,9 @@ export function FolderActionsProvider({
   const [target, setTarget] = useState<{ id: string; path: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [status, setStatus] = useState({ text: '' });
+  const [status, setStatus] = useState<{ text: string; undo?: boolean }>({ text: '' });
+  // The last folder sent to the trash from this page: « Annuler » and Ctrl+Z bring it back.
+  const [trashed, setTrashed] = useState<Trashed | null>(null);
   const statusTimer = useRef<number | undefined>(undefined);
   // The folder whose tree item gets the focus back once the tree shows the change.
   const refocus = useRef<string | null>(null);
@@ -120,11 +126,37 @@ export function FolderActionsProvider({
     return ids;
   };
 
-  function say(text: string) {
+  function say(text: string, undo = false) {
     window.clearTimeout(statusTimer.current);
-    setStatus({ text });
-    statusTimer.current = window.setTimeout(() => setStatus({ text: '' }), 6000);
+    setStatus({ text, undo });
+    statusTimer.current = window.setTimeout(() => setStatus({ text: '' }), undo ? 10000 : 6000);
   }
+
+  async function restoreTrashed() {
+    if (!trashed) return;
+    setTrashed(null);
+    const result = await send<{ folder: { folderId: string; name: string; renamed: boolean } }>(
+      `/api/trash/${trashed.id}/restore`,
+      'POST',
+      undefined,
+      'Restauration impossible. Réessaie depuis la corbeille.',
+    );
+    if (!result.ok) {
+      say(result.message);
+      return;
+    }
+    const { folderId, name: restoredName, renamed } = result.data.folder;
+    say(
+      renamed
+        ? `« ${trashed.name} » restauré sous le nom « ${restoredName} ».`
+        : `« ${trashed.name} » restauré.`,
+    );
+    refocus.current = folderId;
+    router.push(`/dossiers/${folderId}`);
+    router.refresh();
+  }
+
+  useUndoShortcut(trashed ? () => void restoreTrashed() : null);
 
   function open(next: Task) {
     setTask(next);
@@ -248,17 +280,35 @@ export function FolderActionsProvider({
         } else failure = result.message;
       }
     } else if (task.kind === 'delete') {
-      const result = await send(
+      const result = await send<{
+        trash: { id: string; name: string; noteCount: number; folderCount: number };
+      }>(
         `/api/folders/${task.folder.id}`,
         'DELETE',
         undefined,
         'Suppression impossible. Réessaie.',
       );
       if (result.ok) {
-        say(`Dossier « ${task.folder.name} » supprimé.`);
-        if (params.id === task.folder.id) {
+        const { trash } = result.data;
+        setTrashed({ id: trash.id, name: trash.name });
+        say(
+          trash.noteCount + trash.folderCount > 0
+            ? `« ${trash.name} » mis à la corbeille avec ${held(trash.noteCount, trash.folderCount)}.`
+            : `« ${trash.name} » mis à la corbeille.`,
+          true,
+        );
+        if (params.id && subtree(task.folder.id).has(params.id)) {
           router.push(task.folder.parentId ? `/dossiers/${task.folder.parentId}` : '/dossiers');
         }
+        setBusy(false);
+        menuTarget.current = null;
+        setTask(null);
+        refocus.current = task.folder.parentId;
+        if (!task.folder.parentId) {
+          requestAnimationFrame(() => document.querySelector<HTMLElement>('.tree-pinned')?.focus());
+        }
+        router.refresh();
+        return;
       } else failure = result.message;
     } else if (task.kind === 'move-note') {
       if (!target) failure = 'Choisis le dossier de la note.';
@@ -313,13 +363,9 @@ export function FolderActionsProvider({
         },
         {
           id: 'delete',
-          label:
-            menuFolder.totalCount === 0 && !childrenOf.has(menuFolder.id)
-              ? 'Supprimer…'
-              : 'Supprimer (dossier vide seulement)',
+          label: 'Supprimer…',
           icon: 'trash',
           danger: true,
-          disabled: menuFolder.totalCount > 0 || childrenOf.has(menuFolder.id),
           onSelect: () => open({ kind: 'delete', folder: menuFolder }),
         },
       ]
@@ -367,7 +413,9 @@ export function FolderActionsProvider({
             : task?.kind === 'merge'
               ? `Les ${notes(task.folder.totalCount)} de « ${task.folder.name} » et ses sous-dossiers iront dans le dossier choisi. « ${task.folder.name} » disparaîtra ensuite. Aucune note n’est supprimée.`
               : task?.kind === 'delete'
-                ? `« ${task.folder.name} » est vide. Il sera supprimé.`
+                ? task.folder.totalCount + subtree(task.folder.id).size - 1 > 0
+                  ? `« ${task.folder.name} » et tout ce qu’il contient iront dans la corbeille : ${held(task.folder.totalCount, subtree(task.folder.id).size - 1)}. Tu pourras tout restaurer pendant 30 jours.`
+                  : `« ${task.folder.name} » est vide. Il ira dans la corbeille pendant 30 jours.`
                 : task?.kind === 'move-note'
                   ? `« ${task.note.title} » est dans ${where(task.note.folderId)}.`
                   : task?.kind === 'move'
@@ -448,9 +496,10 @@ export function FolderActionsProvider({
           </div>
         </form>
       </Dialog>
-      <p className="explorer-status" role="status" data-shown={status.text ? true : undefined}>
-        {status.text}
-      </p>
+      <StatusLine
+        text={status.text}
+        onUndo={status.undo && trashed ? () => void restoreTrashed() : null}
+      />
     </Context.Provider>
   );
 }
