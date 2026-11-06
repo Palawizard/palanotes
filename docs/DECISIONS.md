@@ -29,3 +29,7 @@ The default model is `claude-haiku-5-5`: filing is a short classification and fo
 ## 2026-11-06: failures are final until the user retries
 
 A model error, a refusal or an invalid plan marks the entry `failed` with a short message and stores nothing in the notes. The queue only retries infrastructure errors (database, crash). Retrying a filing is a user action.
+
+## 2026-11-06: undo through note snapshots
+
+Every change a filing makes to a note writes a full snapshot in `note_versions` (folder, title, summary, tags, content), and the applied run records the ids it created or extended. Undo replays those snapshots instead of computing a reverse diff. It is refused when a touched note was modified after the filing, because restoring would silently drop that later change. An undone filing returns to review and can be accepted again.

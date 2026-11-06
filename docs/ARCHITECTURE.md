@@ -35,7 +35,9 @@ The domain code in `packages/core` depends on neither Next.js nor pg-boss.
 4. Depending on the account setting (`users.sort_mode`):
    - `review`: the plan is shown to the user, who accepts or rejects it;
    - `direct`: the plan is applied right away, with an undo button.
-5. Applying a plan creates missing folders, creates or extends notes, and writes one `note_versions` row per change. Undo restores the previous versions and marks the plan `undone`.
+5. Applying a plan (`applySortRun`) runs in one transaction with the plan row locked: it creates missing folders, creates or extends notes, writes one `note_versions` snapshot per touched note (`created`, or `before_append` with the previous title, summary, tags and content) and records the ids in `sort_runs.applied`.
+6. Undo (`undoSortRun`) deletes the notes the plan created, restores the extended notes from their snapshots, removes the folders it created when they are empty, and puts the entry back to review. It is refused when a touched note changed after the filing, so a manual edit is never lost.
+7. From the pocket the user can also reject a proposal (the entry keeps its raw text, status `rejected`) or retry it (the pending proposal is set aside and the entry is queued again).
 
 Filing never edits or deletes the raw entry, so a bad filing can always be redone.
 
