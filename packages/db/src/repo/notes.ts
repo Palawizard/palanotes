@@ -55,6 +55,52 @@ export async function findNotesByIds(
     .where(and(eq(notes.userId, userId), inArray(notes.id, [...noteIds])));
 }
 
+export interface NoteRowRecord {
+  id: string;
+  folderId: string;
+  title: string;
+  summary: string;
+  tags: string[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const rowColumns = {
+  id: notes.id,
+  folderId: notes.folderId,
+  title: notes.title,
+  summary: notes.summary,
+  tags: notes.tags,
+  createdAt: notes.createdAt,
+  updatedAt: notes.updatedAt,
+};
+
+// What a list shows of a note: never its content, which can be long.
+export async function listNoteRowsInFolder(
+  db: DbOrTx,
+  userId: string,
+  folderId: string,
+): Promise<NoteRowRecord[]> {
+  return db
+    .select(rowColumns)
+    .from(notes)
+    .where(and(eq(notes.userId, userId), eq(notes.folderId, folderId)))
+    .orderBy(desc(notes.updatedAt));
+}
+
+export async function listRecentNoteRows(
+  db: DbOrTx,
+  userId: string,
+  limit = 30,
+): Promise<NoteRowRecord[]> {
+  return db
+    .select(rowColumns)
+    .from(notes)
+    .where(eq(notes.userId, userId))
+    .orderBy(desc(notes.updatedAt))
+    .limit(limit);
+}
+
 export async function listNotesInFolder(
   db: DbOrTx,
   userId: string,

@@ -117,6 +117,7 @@ export const notes = pgTable(
   },
   (t) => [
     index('notes_user_folder_idx').on(t.userId, t.folderId),
+    index('notes_user_updated_idx').on(t.userId, t.updatedAt.desc()),
     index('notes_folder_idx').on(t.folderId),
     index('notes_search_idx').using('gin', t.search),
     index('notes_search_text_trgm_idx').using('gin', t.searchText.op('gin_trgm_ops')),

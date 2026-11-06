@@ -6,7 +6,14 @@ import {
   listFoldersWithCounts,
   renameFolder,
 } from '../src/repo/folders';
-import { countNoteVersions, findNote, listNotesInFolder, updateNote } from '../src/repo/notes';
+import {
+  countNoteVersions,
+  findNote,
+  listNoteRowsInFolder,
+  listNotesInFolder,
+  listRecentNoteRows,
+  updateNote,
+} from '../src/repo/notes';
 import { notes } from '../src/schema';
 import type { User } from '../src/repo/users';
 import { createTestDb, createTestUser } from './db';
@@ -77,5 +84,22 @@ describe('notes and folders', () => {
     await note(user, ['Perso'], 'b');
     const counts = await listFoldersWithCounts(db, user.id);
     expect(counts.find((folder) => folder.name === 'Perso')?.noteCount).toBe(2);
+  });
+
+  it('lists note rows without their content, for the account only', async () => {
+    const alice = await createTestUser(db);
+    const bob = await createTestUser(db);
+    const first = await note(alice, ['Cours', 'Réseau'], 'DNS');
+    await note(alice, ['Cours', 'Réseau'], 'DHCP');
+    await note(bob, ['Cours', 'Réseau'], 'Chez Bob');
+
+    const rows = await listNoteRowsInFolder(db, alice.id, first.folderId);
+    expect(rows.map((row) => row.title).sort()).toEqual(['DHCP', 'DNS']);
+    expect(rows[0]).not.toHaveProperty('content');
+    expect(await listNoteRowsInFolder(db, bob.id, first.folderId)).toEqual([]);
+
+    const recent = await listRecentNoteRows(db, alice.id, 1);
+    expect(recent).toHaveLength(1);
+    expect(recent[0]?.title).toBe('DHCP');
   });
 });
