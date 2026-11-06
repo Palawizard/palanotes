@@ -6,6 +6,7 @@ export const STATUS_LABELS: Record<EntryStatus, string> = {
   proposed: 'À valider',
   applied: 'Rangée',
   failed: 'Échec',
+  rejected: 'Refusée',
 };
 
 // Each status has its own shape, so it reads without relying on colour.
@@ -44,6 +45,12 @@ export function StatusMark({ status }: { status: EntryStatus }) {
             strokeLinecap="round"
             strokeLinejoin="round"
           />
+        </>
+      ) : null}
+      {status === 'rejected' ? (
+        <>
+          <circle cx="7" cy="7" r="5.25" fill="none" stroke="currentColor" strokeWidth="1.5" />
+          <path d="M4 7h6" stroke="currentColor" strokeWidth="1.5" />
         </>
       ) : null}
       {status === 'failed' ? (

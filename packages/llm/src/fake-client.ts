@@ -24,7 +24,7 @@ export class FakeLlmClient implements LlmClient {
     const folderPath = folder ? folder.charAt(0).toUpperCase() + folder.slice(1) : 'Divers';
     return {
       json: {
-        explanation: `Rangée dans ${folderPath}.`,
+        explanation: `Nouvelle note dans ${folderPath}.`,
         actions: [
           {
             type: 'create',

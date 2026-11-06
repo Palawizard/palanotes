@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import { ENTRY_MAX_LENGTH } from '@palanotes/core';
-import { createEntry, listRecentEntries } from '@palanotes/db';
+import { createEntry } from '@palanotes/db';
 import { getCurrentUser } from '@/server/auth';
 import { getDb } from '@/server/db';
-import { toEntryView } from '@/server/entry-view';
+import { loadPocket, toEntryView } from '@/server/entry-view';
 import { queueSortEntry } from '@/server/queue';
 import { RateLimiter } from '@/server/rate-limit';
 
@@ -23,8 +23,7 @@ export async function GET(): Promise<Response> {
   if (!user) {
     return Response.json({ error: 'unauthorized' }, { status: 401 });
   }
-  const entries = await listRecentEntries(getDb(), user.id);
-  return Response.json({ entries: entries.map(toEntryView) });
+  return Response.json({ entries: await loadPocket(getDb(), user.id) });
 }
 
 export async function POST(request: Request): Promise<Response> {

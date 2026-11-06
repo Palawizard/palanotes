@@ -19,7 +19,20 @@ export const entryStatusEnum = pgEnum('entry_status', [
   'proposed',
   'applied',
   'failed',
+  'rejected',
 ]);
+export const noteVersionKindEnum = pgEnum('note_version_kind', [
+  'created',
+  'before_append',
+  'before_edit',
+]);
+
+export interface AppliedChanges {
+  createdNoteIds: string[];
+  appendedNoteIds: string[];
+  createdFolderIds: string[];
+}
+
 export const sortRunStatusEnum = pgEnum('sort_run_status', [
   'proposed',
   'applied',
@@ -108,6 +121,7 @@ export const sortRuns = pgTable(
     model: text('model').notNull(),
     inputTokens: integer('input_tokens'),
     outputTokens: integer('output_tokens'),
+    applied: jsonb('applied').$type<AppliedChanges>(),
     appliedAt: timestamp('applied_at', { withTimezone: true }),
     undoneAt: timestamp('undone_at', { withTimezone: true }),
     ...timestamps,
@@ -115,7 +129,8 @@ export const sortRuns = pgTable(
   (t) => [index('sort_runs_entry_idx').on(t.entryId)],
 );
 
-// One row per content change, so applying a sort run can be undone.
+// One row per change to a note: a snapshot of the note as it was created, or as it was
+// just before a filing appended to it or the user edited it. Undo restores from these rows.
 export const noteVersions = pgTable(
   'note_versions',
   {
@@ -124,6 +139,11 @@ export const noteVersions = pgTable(
       .notNull()
       .references(() => notes.id, { onDelete: 'cascade' }),
     sortRunId: uuid('sort_run_id').references(() => sortRuns.id, { onDelete: 'set null' }),
+    kind: noteVersionKindEnum('kind').notNull().default('before_edit'),
+    folderId: uuid('folder_id'),
+    title: text('title'),
+    summary: text('summary'),
+    tags: text('tags').array(),
     content: text('content').notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },

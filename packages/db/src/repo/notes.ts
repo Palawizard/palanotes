@@ -1,4 +1,4 @@
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, inArray } from 'drizzle-orm';
 import type { DbOrTx } from '../client';
 import { notes } from '../schema';
 
@@ -39,4 +39,18 @@ export async function findNote(db: DbOrTx, userId: string, noteId: string): Prom
     .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
     .limit(1);
   return note ?? null;
+}
+
+export async function findNotesByIds(
+  db: DbOrTx,
+  userId: string,
+  noteIds: readonly string[],
+): Promise<Pick<Note, 'id' | 'title' | 'folderId'>[]> {
+  if (noteIds.length === 0) {
+    return [];
+  }
+  return db
+    .select({ id: notes.id, title: notes.title, folderId: notes.folderId })
+    .from(notes)
+    .where(and(eq(notes.userId, userId), inArray(notes.id, [...noteIds])));
 }
