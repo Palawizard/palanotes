@@ -76,7 +76,8 @@ The worker parses the answer with `parseSortPlan` (Zod), checks that every folde
 
 - Folder actions (new subfolder, rename, move, merge, delete) open from a right click or Shift+F10 on a tree item, the `⋯` button of a tree row or of the list header. They live in `components/folder-actions.tsx`, which also shows a short status line read by screen readers after every change.
 - Notes and folders can be dragged onto a folder of the tree (native HTML drag and drop); a folder dragged onto the tree header goes to the top level. On touch screens and with the keyboard, « Déplacer vers… » opens a dialog with a filterable folder list instead.
-- Server side (`packages/db/src/repo/folders.ts`): `createFolder`, `moveFolder` (refuses the folder itself and its subfolders), `mergeFolder` (moves notes, writing a `note_versions` row for each, moves subfolders, merges subfolders of the same name, then removes the emptied source, in one transaction) and `deleteEmptyFolder` (refuses a folder that holds a note or a subfolder). Every query is filtered by the account. Routes: `POST /api/folders`, `PATCH` and `DELETE /api/folders/<id>`, `POST /api/folders/<id>/merge`.
+- Server side (`packages/db/src/repo/folders.ts`): `createFolder`, `moveFolder` (refuses the folder itself and its subfolders), `mergeFolder` (moves notes, writing a `note_versions` row for each, moves subfolders, merges subfolders of the same name, then removes the emptied source, in one transaction). Every query is filtered by the account. Routes: `POST /api/folders`, `PATCH` and `DELETE /api/folders/<id>`, `POST /api/folders/<id>/merge`.
+- Deleting a folder sends it to the trash with everything it holds (`packages/db/src/repo/trash.ts`). `trashFolder` copies the folder, its subfolders, their notes and note history into one `trash_items` row, then deletes them, in one transaction; the live tables keep no deleted rows. `restoreTrashItem` puts everything back with the same ids (to the old parent if it still exists, else to the top level, with a « (restauré) » suffix on a name clash). Right after a deletion the status line offers « Annuler », also on Ctrl+Z outside text fields. `/dossiers/corbeille` lists the trash, restores an item, deletes one for good or empties it. The worker purges items older than 30 days every hour (`purgeExpiredTrash`). Routes: `POST /api/trash/<id>/restore`, `DELETE /api/trash/<id>`, `DELETE /api/trash`.
 
 ## Search
 
@@ -91,7 +92,7 @@ Embedding search (pgvector) can be added later if this is not enough.
 
 ## Data
 
-Tables: `users`, `folders` (tree through `parent_id`), `entries` (raw text), `notes`, `sort_runs` (model plans), `note_versions` (history). Schema: `packages/db/src/schema.ts`.
+Tables: `users`, `folders` (tree through `parent_id`), `entries` (raw text), `notes`, `sort_runs` (model plans), `note_versions` (history), `trash_items` (deleted folders, kept 30 days). Schema: `packages/db/src/schema.ts`.
 
 ## Sign-in
 
