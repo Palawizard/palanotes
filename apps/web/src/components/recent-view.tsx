@@ -1,7 +1,7 @@
 import { listRecentNoteRows } from '@palanotes/db';
 import { explorerHref } from '@/lib/explorer-url';
 import { getDb } from '@/server/db';
-import { folderChoices, loadNotePane, toRowData } from '@/server/explorer';
+import { loadNotePane, toRowData } from '@/server/explorer';
 import { loadFolderTree } from '@/server/folders';
 import { BackLink, ExplorerMain, NotePane, type ExplorerLevel } from './explorer';
 import { NoteRow } from './note-row';
@@ -55,14 +55,7 @@ export async function RecentView({
           </div>
         </>
       }
-      note={
-        <NotePane
-          note={note}
-          folders={folderChoices(tree)}
-          backHref="/dossiers/recents"
-          backLabel="Récents"
-        />
-      }
+      note={<NotePane note={note} backHref="/dossiers/recents" backLabel="Récents" />}
     />
   );
 }

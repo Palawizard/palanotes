@@ -6,7 +6,8 @@ import { Breadcrumb } from '@/components/breadcrumb';
 import { NoteView } from '@/components/note-view';
 import { getCurrentUser } from '@/server/auth';
 import { getDb } from '@/server/db';
-import { loadFolderTree } from '@/server/folders';
+import { flattenTree, loadFolderTree } from '@/server/folders';
+import { FolderActionsProvider } from '@/components/folder-actions';
 
 export const metadata: Metadata = { title: 'Note' };
 
@@ -25,30 +26,27 @@ export default async function NotePage({ params }: { params: Promise<{ id: strin
     notFound();
   }
   const trail = tree.ancestors(note.folderId);
-  const folders = [...tree.byId.values()]
-    .map((node) => ({ id: node.id, path: node.path }))
-    .sort((a, b) => a.path.localeCompare(b.path, 'fr'));
-
   return (
-    <article className="page-stack note-page">
-      <Breadcrumb
-        items={[
-          { label: 'Dossiers', href: '/dossiers' },
-          ...trail.map((node) => ({ label: node.name, href: `/dossiers/${node.id}` })),
-          { label: note.title },
-        ]}
-      />
-      <NoteView
-        note={{
-          id: note.id,
-          title: note.title,
-          content: note.content,
-          tags: note.tags,
-          folderId: note.folderId,
-          updatedAt: note.updatedAt.toISOString(),
-        }}
-        folders={folders}
-      />
-    </article>
+    <FolderActionsProvider folders={flattenTree(tree)}>
+      <article className="page-stack note-page">
+        <Breadcrumb
+          items={[
+            { label: 'Dossiers', href: '/dossiers' },
+            ...trail.map((node) => ({ label: node.name, href: `/dossiers/${node.id}` })),
+            { label: note.title },
+          ]}
+        />
+        <NoteView
+          note={{
+            id: note.id,
+            title: note.title,
+            content: note.content,
+            tags: note.tags,
+            folderId: note.folderId,
+            updatedAt: note.updatedAt.toISOString(),
+          }}
+        />
+      </article>
+    </FolderActionsProvider>
   );
 }

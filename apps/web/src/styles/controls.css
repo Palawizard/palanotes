@@ -30,18 +30,10 @@
   line-height: 1.55;
 }
 
-.note-editor,
-.move-form {
+.note-editor {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-}
-
-.move-form {
-  background: var(--paper);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  padding: 1rem 1.25rem;
 }
 
 .form-actions {
@@ -55,18 +47,6 @@
   color: var(--failed);
   font-weight: 700;
   flex-basis: 100%;
-}
-
-.inline-form {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.inline-form .field {
-  width: auto;
-  flex: 1 1 14rem;
 }
 
 .button-small {
@@ -420,4 +400,102 @@ a.tag {
   .icon-button:active:not(:disabled) {
     transform: none;
   }
+}
+
+.button-danger {
+  background: var(--failed);
+  color: var(--paper);
+}
+
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Folder picker: a search field over a short scrolling list. */
+
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.picker-search {
+  position: relative;
+}
+
+.picker-search svg {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ink-faint);
+  pointer-events: none;
+}
+
+.picker-search .field {
+  padding-left: 2.25rem;
+}
+
+.picker-list {
+  max-height: min(18rem, 45dvh);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 0.25rem;
+  background: var(--ground);
+}
+
+.picker-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.picker-option svg {
+  flex: none;
+  color: var(--ink-faint);
+}
+
+.picker-path {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.picker-option[aria-selected='true'] {
+  background: var(--current);
+  font-weight: 700;
+}
+
+.picker-option[aria-selected='true'] .picker-check {
+  color: var(--ink);
+}
+
+.picker-option[aria-disabled='true'] {
+  color: var(--ink-muted);
+  cursor: not-allowed;
+}
+
+.picker-reason {
+  flex: none;
+  font-size: var(--text-meta);
+  color: var(--ink-muted);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .picker-option:not([aria-disabled='true']):not([aria-selected='true']):hover {
+    background: var(--hover);
+  }
+}
+
+.picker-empty {
+  padding: 0.5rem;
+  color: var(--ink-muted);
 }
