@@ -17,6 +17,7 @@
     "db:down": "docker compose -f docker/compose.dev.yaml down",
     "db:generate": "pnpm --filter @palanotes/db generate",
     "db:migrate": "pnpm --filter @palanotes/db migrate",
+    "db:demo": "pnpm --filter @palanotes/db demo",
     "prepare": "node scripts/install-hooks.mjs",
     "check:private": "node scripts/check-private-files.mjs",
     "e2e": "pnpm --filter @palanotes/web e2e"

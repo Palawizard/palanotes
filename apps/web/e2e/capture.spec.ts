@@ -72,7 +72,7 @@ test('a proposal can be accepted, then undone, then rejected and retried', async
   await page.getByRole('button', { name: 'Valider', exact: true }).click();
 
   const row = page.getByRole('listitem').filter({ hasText: 'Pâte à crêpes' });
-  await expect(row.getByText('Nouvelle note dans Recettes', { exact: true })).toBeVisible({
+  await expect(row.locator('.plan-where')).toHaveText(/^Nouvelle note dans\s*Recettes$/, {
     timeout: 20_000,
   });
   await row.getByRole('button', { name: 'Accepter' }).click();

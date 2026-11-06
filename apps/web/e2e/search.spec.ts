@@ -16,13 +16,14 @@ test('search finds a note filed in the wrong folder, with and without accents an
 
   for (const query of ['modèle osi', 'modele osi', 'modle osi', 'fiabilite']) {
     await page.goto(`./recherche?q=${encodeURIComponent(query)}`);
-    const result = page.getByRole('listitem').filter({ hasText: 'Modèle OSI' });
+    // The demo account has its own notes on the OSI model: look for this one.
+    const result = page.getByRole('listitem').filter({ hasText: 'la couche transport assure' });
     await expect(result).toBeVisible();
     await expect(result).toContainText('Cuisine');
   }
 
   await page.goto('./recherche');
-  await page.getByLabel('Chercher dans tes notes').fill('xylophone');
+  await page.getByLabel('Chercher dans tes notes').fill('ornithorynque');
   await page.getByRole('button', { name: 'Chercher' }).click();
-  await expect(page.getByText('Rien trouvé pour « xylophone ».')).toBeVisible();
+  await expect(page.getByText('Rien trouvé pour « ornithorynque ».')).toBeVisible();
 });

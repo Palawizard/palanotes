@@ -11,4 +11,9 @@
 !.env.example
 data
 docs
+# Demo account, end-to-end tests and screenshots: development only, never shipped.
+packages/db/src/demo
+packages/db/src/demo-cli.ts
+apps/web/e2e
+apps/web/playwright*.ts
 *.log

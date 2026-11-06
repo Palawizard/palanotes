@@ -1,24 +1,22 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { listRecentNotes } from '@palanotes/db';
-import { FolderTree } from '@/components/folder-tree';
-import { NoteList } from '@/components/note-list';
+import { RecentView } from '@/components/recent-view';
 import { getCurrentUser } from '@/server/auth';
 import { getDb } from '@/server/db';
 import { loadFolderTree } from '@/server/folders';
 
 export const metadata: Metadata = { title: 'Dossiers' };
 
-export default async function FoldersPage() {
+export default async function FoldersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ note?: string | string[] }>;
+}) {
   const user = await getCurrentUser();
   if (!user) {
     return null;
   }
-  const db = getDb();
-  const [tree, recent] = await Promise.all([
-    loadFolderTree(db, user.id),
-    listRecentNotes(db, user.id),
-  ]);
+  const tree = await loadFolderTree(getDb(), user.id);
   if (tree.roots.length === 0) {
     return (
       <div className="page-stack">
@@ -29,19 +27,5 @@ export default async function FoldersPage() {
       </div>
     );
   }
-  const paths = new Map([...tree.byId.values()].map((node) => [node.id, node.path]));
-  return (
-    <div className="browse">
-      <div className="browse-side">
-        <h1 className="page-title">Dossiers</h1>
-        <FolderTree roots={tree.roots} currentId={null} />
-      </div>
-      <section className="browse-main" aria-labelledby="recent-title">
-        <h2 className="section-title" id="recent-title">
-          Modifiées récemment
-        </h2>
-        <NoteList notes={recent} folderPaths={paths} />
-      </section>
-    </div>
-  );
+  return <RecentView userId={user.id} noteParam={(await searchParams).note} phoneLevel="folders" />;
 }

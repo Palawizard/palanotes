@@ -1,16 +1,25 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { z } from 'zod';
 import { findNote } from '@palanotes/db';
+import { Breadcrumb } from '@/components/breadcrumb';
+import { BackLink } from '@/components/explorer';
+import { safeReturn } from '@/lib/search-url';
 import { NoteView } from '@/components/note-view';
 import { getCurrentUser } from '@/server/auth';
 import { getDb } from '@/server/db';
-import { loadFolderTree } from '@/server/folders';
+import { flattenTree, loadFolderTree } from '@/server/folders';
+import { FolderActionsProvider } from '@/components/folder-actions';
 
 export const metadata: Metadata = { title: 'Note' };
 
-export default async function NotePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function NotePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ depuis?: string | string[] }>;
+}) {
   const user = await getCurrentUser();
   const id = z.uuid().safeParse((await params).id);
   if (!user || !id.success) {
@@ -25,31 +34,29 @@ export default async function NotePage({ params }: { params: Promise<{ id: strin
     notFound();
   }
   const trail = tree.ancestors(note.folderId);
-  const folders = [...tree.byId.values()]
-    .map((node) => ({ id: node.id, path: node.path }))
-    .sort((a, b) => a.path.localeCompare(b.path, 'fr'));
-
+  const back = safeReturn((await searchParams).depuis);
   return (
-    <article className="page-stack note-page">
-      <nav className="crumbs" aria-label="Chemin">
-        <Link href="/dossiers">Dossiers</Link>
-        {trail.map((node) => (
-          <Link key={node.id} href={`/dossiers/${node.id}`}>
-            {node.name}
-          </Link>
-        ))}
-      </nav>
-      <NoteView
-        note={{
-          id: note.id,
-          title: note.title,
-          content: note.content,
-          tags: note.tags,
-          folderId: note.folderId,
-          updatedAt: note.updatedAt.toISOString(),
-        }}
-        folders={folders}
-      />
-    </article>
+    <FolderActionsProvider folders={flattenTree(tree)}>
+      <article className="page-stack note-page">
+        {back ? <BackLink href={back} label="Retour aux résultats" /> : null}
+        <Breadcrumb
+          items={[
+            { label: 'Dossiers', href: '/dossiers' },
+            ...trail.map((node) => ({ label: node.name, href: `/dossiers/${node.id}` })),
+            { label: note.title },
+          ]}
+        />
+        <NoteView
+          note={{
+            id: note.id,
+            title: note.title,
+            content: note.content,
+            tags: note.tags,
+            folderId: note.folderId,
+            updatedAt: note.updatedAt.toISOString(),
+          }}
+        />
+      </article>
+    </FolderActionsProvider>
   );
 }

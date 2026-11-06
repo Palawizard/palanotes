@@ -63,13 +63,29 @@ The system prompt (`packages/llm/src/prompt.ts`) says the entry and the index ar
 
 The worker parses the answer with `parseSortPlan` (Zod), checks that every folder path is valid and that every `append` targets a note of the same account, and only then stores the plan in `sort_runs`. Anything else marks the entry `failed` with a short message for the user. Logs carry the entry id, the mode, the model and the token counts, never the note text or a credential.
 
+## Explorer
+
+`/dossiers` is a three-pane explorer: the folder tree, the notes of one folder (or the recent notes), and the open note.
+
+- The tree lives in `app/(app)/dossiers/layout.tsx`, which Next keeps across navigation, so it keeps its scroll position and open folders. It follows the WAI-ARIA tree pattern (`components/folder-tree.tsx`) as a flat list of tree items with `aria-level`, so each item's accessible name is its visible text (name and count) and the full count is its description: one tab stop, arrows, Home and End, first-letter jump, Enter to open. Open folders are saved in the `palanotes_tree` cookie, so the server renders the tree as it was left.
+- The list and the note are the page: `/dossiers/recents`, `/dossiers/<folder>`, with `?note=<id>` for the open note, `?tri=modifiee|creee|titre` for the order and `?n=` for the number of notes shown (50 at a time). Lists read note rows without their content (`listNoteRowsInFolder`, `listRecentNoteRows`); sorting is done in `@palanotes/core` (`sortNotes`, French collation, natural numbers).
+- Counts: each folder shows its notes plus those of its subfolders (`folderTotals`), and the list header says how many are directly in the folder.
+- On a phone the panes stack: folders, then a folder's notes, then one note, each with a back link and the folder path. Between 48 and 75rem the tree stays and the list gives way to the open note.
+
+### Organising
+
+- Folder actions (new subfolder, rename, move, merge, delete) open from a right click or Shift+F10 on a tree item, the `⋯` button of a tree row or of the list header. They live in `components/folder-actions.tsx`, which also shows a short status line read by screen readers after every change.
+- Notes and folders can be dragged onto a folder of the tree (native HTML drag and drop); a folder dragged onto the tree header goes to the top level. On touch screens and with the keyboard, « Déplacer vers… » opens a dialog with a filterable folder list instead.
+- Server side (`packages/db/src/repo/folders.ts`): `createFolder`, `moveFolder` (refuses the folder itself and its subfolders), `mergeFolder` (moves notes, writing a `note_versions` row for each, moves subfolders, merges subfolders of the same name, then removes the emptied source, in one transaction) and `deleteEmptyFolder` (refuses a folder that holds a note or a subfolder). Every query is filtered by the account. Routes: `POST /api/folders`, `PATCH` and `DELETE /api/folders/<id>`, `POST /api/folders/<id>/merge`.
+
 ## Search
 
 The goal is to find a note even when it was filed in the wrong place, typed without accents, or misspelled. Search never writes an answer: it lists notes.
 
 - A text search configuration `french_unaccent` (French stemming, accents removed) and a trigger keep two columns of `notes` up to date: `search` (`tsvector`: title weight A, summary and tags B, content C, GIN index) and `search_text` (lowercase text without accents, trigram GIN index).
-- `searchNotes` (`packages/db/src/repo/search.ts`) keeps a note when the whole query matches the full-text index, or when every word of the query matches either the full-text index or, for typos, the trigram word similarity (threshold 0.4). Results are ranked by full-text rank, then similarity, then date, and limited to the signed-in account.
-- Excerpts come from `ts_headline` with control characters around matched words; the page turns them into `<mark>`. Each result shows its folder path.
+- `searchNotes` (`packages/db/src/repo/search.ts`) keeps a note when the whole query matches the full-text index, or when every word of the query matches either the full-text index or, for typos, the strict word similarity of `pg_trgm` (threshold 0.4, words of four letters or more). Strict similarity compares whole words, so an unrelated word no longer matches a piece of a longer one (« xylophone » used to find « téléphone »). Results are ranked by full-text rank, then similarity, then date, and limited to the signed-in account.
+- Filters narrow by folder (alone or with its subfolders), by tags (every chosen tag) and by period (last modified in the last 7 days, 30 days or 12 months). Without words, the filtered notes come newest first. The search page reads its state from the address (`q`, `dossier`, `sous=0`, `tag`, `periode`, `n`; `lib/search-url.ts`), shows the active filters as chips that remove them, and counts folders, tags and periods over the first 200 results to offer ways to narrow them.
+- Excerpts come from `ts_headline` with control characters around matched words; the page turns them into `<mark>`, and also marks the words of a title or excerpt that are close to a misspelled query word. Each result is a card with its folder path, date and tags; on a wide screen, hovering or focusing it shows the beginning of the note. Opening a result keeps the search in `?depuis=`, so the note page offers « Retour aux résultats ».
 
 Embedding search (pgvector) can be added later if this is not enough.
 

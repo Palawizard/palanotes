@@ -1,7 +1,7 @@
 import { and, asc, eq, isNull, sql } from 'drizzle-orm';
-import { buildFolderPaths, samePath } from '@palanotes/core';
-import type { DbOrTx } from '../client';
-import { folders, notes } from '../schema';
+import { buildFolderPaths, samePath, subtreeIds } from '@palanotes/core';
+import type { Db, DbOrTx } from '../client';
+import { folders, notes, noteVersions } from '../schema';
 
 export type Folder = typeof folders.$inferSelect;
 
@@ -121,4 +121,191 @@ export async function renameFolder(
     .where(and(eq(folders.id, folderId), eq(folders.userId, userId)))
     .returning();
   return renamed ?? null;
+}
+
+export class FolderMoveError extends Error {
+  constructor() {
+    super('a folder cannot go inside itself or one of its subfolders');
+    this.name = 'FolderMoveError';
+  }
+}
+
+export class FolderNotEmptyError extends Error {
+  constructor() {
+    super('folder not empty');
+    this.name = 'FolderNotEmptyError';
+  }
+}
+
+async function siblingsOf(db: DbOrTx, userId: string, parentId: string | null) {
+  return db
+    .select({ id: folders.id, name: folders.name })
+    .from(folders)
+    .where(
+      and(
+        eq(folders.userId, userId),
+        parentId ? eq(folders.parentId, parentId) : isNull(folders.parentId),
+      ),
+    );
+}
+
+async function subtreeOf(db: DbOrTx, userId: string, folderId: string): Promise<Set<string>> {
+  const all = await db
+    .select({ id: folders.id, parentId: folders.parentId, name: folders.name })
+    .from(folders)
+    .where(eq(folders.userId, userId));
+  return subtreeIds(all, folderId);
+}
+
+// New folder at the top level or inside one of the account's folders.
+export async function createFolder(
+  db: DbOrTx,
+  userId: string,
+  parentId: string | null,
+  name: string,
+): Promise<Folder | null> {
+  if (parentId && !(await findFolder(db, userId, parentId))) {
+    return null;
+  }
+  const siblings = await siblingsOf(db, userId, parentId);
+  if (siblings.some((sibling) => samePath([sibling.name], [name]))) {
+    throw new FolderNameTakenError();
+  }
+  const [folder] = await db.insert(folders).values({ userId, parentId, name }).returning();
+  return folder ?? null;
+}
+
+// Moves a folder, with its notes and subfolders, under another folder or to the top level.
+export async function moveFolder(
+  db: DbOrTx,
+  userId: string,
+  folderId: string,
+  parentId: string | null,
+): Promise<Folder | null> {
+  const folder = await findFolder(db, userId, folderId);
+  if (!folder || (parentId && !(await findFolder(db, userId, parentId)))) {
+    return null;
+  }
+  if (folder.parentId === parentId) {
+    return folder;
+  }
+  if (parentId && (await subtreeOf(db, userId, folderId)).has(parentId)) {
+    throw new FolderMoveError();
+  }
+  const siblings = await siblingsOf(db, userId, parentId);
+  if (siblings.some((sibling) => samePath([sibling.name], [folder.name]))) {
+    throw new FolderNameTakenError();
+  }
+  const [moved] = await db
+    .update(folders)
+    .set({ parentId, updatedAt: sql`now()` })
+    .where(and(eq(folders.id, folderId), eq(folders.userId, userId)))
+    .returning();
+  return moved ?? null;
+}
+
+export interface MergeResult {
+  movedNotes: number;
+  movedFolders: number;
+}
+
+// Puts the notes and subfolders of `sourceId` into `targetId`, then removes the emptied
+// source. A subfolder whose name already exists in the target is merged into it the same
+// way. Every moved note keeps its previous state in note_versions. No note is deleted.
+export async function mergeFolder(
+  db: Db,
+  userId: string,
+  sourceId: string,
+  targetId: string,
+): Promise<MergeResult | null> {
+  return db.transaction(async (tx) => {
+    const [source, target] = await Promise.all([
+      findFolder(tx, userId, sourceId),
+      findFolder(tx, userId, targetId),
+    ]);
+    if (!source || !target) {
+      return null;
+    }
+    if ((await subtreeOf(tx, userId, sourceId)).has(targetId)) {
+      throw new FolderMoveError();
+    }
+    const result: MergeResult = { movedNotes: 0, movedFolders: 0 };
+    await mergeInto(tx, userId, source.id, target.id, result);
+    return result;
+  });
+}
+
+async function mergeInto(
+  tx: DbOrTx,
+  userId: string,
+  sourceId: string,
+  targetId: string,
+  result: MergeResult,
+): Promise<void> {
+  const moving = await tx
+    .select()
+    .from(notes)
+    .where(and(eq(notes.userId, userId), eq(notes.folderId, sourceId)))
+    .for('update');
+  if (moving.length > 0) {
+    await tx.insert(noteVersions).values(
+      moving.map((note) => ({
+        noteId: note.id,
+        kind: 'before_edit' as const,
+        folderId: note.folderId,
+        title: note.title,
+        summary: note.summary,
+        tags: note.tags,
+        content: note.content,
+      })),
+    );
+    await tx
+      .update(notes)
+      .set({ folderId: targetId, updatedAt: sql`now()` })
+      .where(and(eq(notes.userId, userId), eq(notes.folderId, sourceId)));
+    result.movedNotes += moving.length;
+  }
+
+  const [children, targetChildren] = await Promise.all([
+    siblingsOf(tx, userId, sourceId),
+    siblingsOf(tx, userId, targetId),
+  ]);
+  for (const child of children) {
+    const twin = targetChildren.find((other) => samePath([other.name], [child.name]));
+    if (twin) {
+      await mergeInto(tx, userId, child.id, twin.id, result);
+    } else {
+      await tx
+        .update(folders)
+        .set({ parentId: targetId, updatedAt: sql`now()` })
+        .where(and(eq(folders.id, child.id), eq(folders.userId, userId)));
+      result.movedFolders += 1;
+    }
+  }
+  await tx.delete(folders).where(and(eq(folders.id, sourceId), eq(folders.userId, userId)));
+}
+
+// Removes a folder only when it holds no note and no subfolder: notes are never deleted
+// through a folder.
+export async function deleteEmptyFolder(
+  db: DbOrTx,
+  userId: string,
+  folderId: string,
+): Promise<boolean> {
+  const folder = await findFolder(db, userId, folderId);
+  if (!folder) {
+    return false;
+  }
+  const [content] = await db
+    .select({
+      notes: sql<number>`(select count(*)::int from ${notes} where ${notes.folderId} = ${folderId})`,
+      children: sql<number>`(select count(*)::int from ${folders} where ${folders.parentId} = ${folderId})`,
+    })
+    .from(folders)
+    .where(eq(folders.id, folderId));
+  if ((content?.notes ?? 0) > 0 || (content?.children ?? 0) > 0) {
+    throw new FolderNotEmptyError();
+  }
+  await db.delete(folders).where(and(eq(folders.id, folderId), eq(folders.userId, userId)));
+  return true;
 }

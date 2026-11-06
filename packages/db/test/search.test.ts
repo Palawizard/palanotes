@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { closeDb } from '../src/client';
 import { ensureFolderPath } from '../src/repo/folders';
 import { updateNote } from '../src/repo/notes';
-import { HIGHLIGHT_END, HIGHLIGHT_START, searchNotes } from '../src/repo/search';
+import { HIGHLIGHT_END, HIGHLIGHT_START, listTopTags, searchNotes } from '../src/repo/search';
 import { notes } from '../src/schema';
 import type { User } from '../src/repo/users';
 import { createTestDb, createTestUser } from './db';
@@ -76,6 +76,20 @@ describe('searchNotes', () => {
     expect(hit?.excerpt).toContain(`${HIGHLIGHT_START}transport${HIGHLIGHT_END}`);
   });
 
+  it('builds excerpts from plain sentences, without Markdown or tables', async () => {
+    await add(
+      user,
+      ['Cours'],
+      'Pare-feu',
+      '# Pare-feu\n\n- un **alias** par réseau (`lan_admin`)\n- règles lues de haut en bas\n\n| Port | Usage |\n| --- | --- |\n| 22 | SSH |\n\n```sh\nnft list ruleset\n```',
+    );
+    const [hit] = await searchNotes(db, user.id, 'alias');
+    expect(hit?.excerpt).not.toMatch(/[|*`#]/);
+    expect(hit?.excerpt).toContain('lan_admin');
+    expect(hit?.excerpt).toContain(' · ');
+    expect(hit?.excerpt).not.toContain('nft list');
+  });
+
   it('keeps the index up to date when a note is edited', async () => {
     const note = await add(user, ['Divers'], 'Brouillon', 'rien de spécial');
     expect(await searchNotes(db, user.id, 'kubernetes')).toEqual([]);
@@ -100,5 +114,75 @@ describe('searchNotes', () => {
   it('returns nothing for an empty or unrelated query', async () => {
     expect(await searchNotes(db, user.id, '   ')).toEqual([]);
     expect(await searchNotes(db, user.id, 'xylophone')).toEqual([]);
+  });
+
+  it('does not match pieces of longer words', async () => {
+    await add(user, ['Perso'], 'Forfait', 'Changer de forfait de téléphone avant la fin du mois.');
+    expect(await searchNotes(db, user.id, 'xylophone')).toEqual([]);
+    expect((await searchNotes(db, user.id, 'telephone')).map((hit) => hit.title)).toEqual([
+      'Forfait',
+    ]);
+  });
+});
+
+describe('search filters', () => {
+  let owner: User;
+  let reseau: string;
+  let tcp: string;
+
+  beforeAll(async () => {
+    owner = await createTestUser(db);
+    const dns = await add(owner, ['Cours', 'Réseau'], 'DNS', 'Résolution des noms.', '', [
+      'réseau',
+      'dns',
+    ]);
+    reseau = dns.folderId;
+    const handshake = await add(
+      owner,
+      ['Cours', 'Réseau', 'TCP'],
+      'Poignée de main',
+      'SYN, SYN-ACK, ACK : le réseau ouvre une connexion.',
+      '',
+      ['réseau', 'tcp'],
+    );
+    tcp = handshake.folderId;
+    await add(owner, ['Perso'], 'Box internet', 'Le réseau de la maison tombe.', '', ['maison']);
+    const old = await add(owner, ['Perso'], 'Vieux réseau', 'Réseau du lycée.', '', ['réseau']);
+    await db
+      .update(notes)
+      .set({ updatedAt: new Date('2024-01-01T00:00:00Z') })
+      .where(eq(notes.id, old.id));
+  });
+
+  it('narrows to a folder, with or without its subfolders', async () => {
+    const alone = await searchNotes(db, owner.id, 'réseau', { folderIds: [reseau] });
+    expect(alone.map((hit) => hit.title)).toEqual(['DNS']);
+    const withSub = await searchNotes(db, owner.id, 'réseau', { folderIds: [reseau, tcp] });
+    expect(withSub.map((hit) => hit.title).sort()).toEqual(['DNS', 'Poignée de main']);
+  });
+
+  it('keeps notes that carry every chosen tag', async () => {
+    const hits = await searchNotes(db, owner.id, 'réseau', { tags: ['réseau', 'tcp'] });
+    expect(hits.map((hit) => hit.title)).toEqual(['Poignée de main']);
+  });
+
+  it('keeps notes modified since a date', async () => {
+    const hits = await searchNotes(db, owner.id, 'réseau', { since: new Date('2025-01-01') });
+    expect(hits.map((hit) => hit.title)).not.toContain('Vieux réseau');
+    expect(hits).toHaveLength(3);
+  });
+
+  it('lists the filtered notes newest first without a query', async () => {
+    const hits = await searchNotes(db, owner.id, '', { tags: ['réseau'] });
+    expect(hits.map((hit) => hit.title)).toHaveLength(3);
+    expect(hits.at(-1)?.title).toBe('Vieux réseau');
+    expect(hits[0]?.opening).toBeTruthy();
+    expect(await searchNotes(db, owner.id, '', {})).toEqual([]);
+  });
+
+  it('counts the most used tags of the account', async () => {
+    const tags = await listTopTags(db, owner.id);
+    expect(tags[0]).toEqual({ tag: 'réseau', count: 3 });
+    expect(tags.map((tag) => tag.tag)).toContain('dns');
   });
 });

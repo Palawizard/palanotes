@@ -50,12 +50,21 @@ describe('plainExcerpt', () => {
   it('removes Markdown markers but keeps highlight markers and words', () => {
     expect(
       plainExcerpt('# Modèle \u0001OSI\u0002\n\n- **TCP** est fiable\n| a | b |\n|---|---|'),
-    ).toBe('Modèle \u0001OSI\u0002 TCP est fiable a b');
+    ).toBe('Modèle \u0001OSI\u0002 TCP est fiable a · b');
+    expect(plainExcerpt("c'est l'**encapsulation** de `lan_admin`")).toBe(
+      "c'est l'encapsulation de lan_admin",
+    );
     expect(plainExcerpt('voir [la doc](https://example.com)')).toBe('voir la doc');
   });
 });
 
 describe('displayExcerpt', () => {
+  it('never starts or ends on a line separator', () => {
+    expect(displayExcerpt('· Fiche à relire · ', 'Synthèse', 'fiche')).toBe(
+      '\u0001Fiche\u0002 à relire …',
+    );
+  });
+
   it('drops a leading copy of the title and marks the cut', () => {
     expect(
       displayExcerpt('# Modèle OSI\n\nSept couches : physique, liaison', 'Modèle OSI', 'osi'),

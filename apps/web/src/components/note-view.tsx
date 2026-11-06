@@ -2,10 +2,13 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
-import { formatWhen } from '@/lib/format';
+import { formatDay, formatFull } from '@/lib/format';
 import { withoutLeadingTitle } from '@/lib/markdown-text';
 import { mutate } from '@/lib/mutate';
+import { useFolderActions } from './folder-actions';
+import { Icon } from './icons';
 import { Markdown } from './markdown';
+import { TagList } from './tag-list';
 
 interface NoteData {
   id: string;
@@ -16,31 +19,20 @@ interface NoteData {
   updatedAt: string;
 }
 
-type Mode = 'read' | 'edit' | 'move';
+type Mode = 'read' | 'edit';
 
-const NEW_FOLDER = 'new';
-
-export function NoteView({
-  note,
-  folders,
-}: {
-  note: NoteData;
-  folders: { id: string; path: string }[];
-}) {
+export function NoteView({ note }: { note: NoteData }) {
   const router = useRouter();
+  const actions = useFolderActions();
   const [mode, setMode] = useState<Mode>('read');
   const [title, setTitle] = useState(note.title);
   const [content, setContent] = useState(note.content);
-  const [target, setTarget] = useState(note.folderId);
-  const [newPath, setNewPath] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   function open(next: Mode) {
     setTitle(note.title);
     setContent(note.content);
-    setTarget(note.folderId);
-    setNewPath('');
     setError(null);
     setMode(next);
   }
@@ -116,83 +108,42 @@ export function NoteView({
   return (
     <>
       <header className="note-head">
-        <h1 className="page-title">{note.title}</h1>
-        <p className="note-meta">
-          <time dateTime={note.updatedAt}>Modifiée {formatWhen(note.updatedAt)}</time>
-          {note.tags.length > 0 ? <span>{note.tags.join(', ')}</span> : null}
-        </p>
-        <div className="form-actions">
-          <button
-            type="button"
-            className="button button-quiet button-small"
-            onClick={() => open('edit')}
-          >
-            Modifier
-          </button>
-          <button
-            type="button"
-            className="button button-quiet button-small"
-            onClick={() => open('move')}
-          >
-            Déplacer
-          </button>
-        </div>
-      </header>
-      {mode === 'move' ? (
-        <form
-          className="move-form"
-          aria-label="Déplacer la note"
-          onSubmit={(event) =>
-            submit(event, target === NEW_FOLDER ? { folderPath: newPath } : { folderId: target })
-          }
-        >
-          <label className="field-label" htmlFor="move-target">
-            Dossier
-          </label>
-          <select
-            id="move-target"
-            className="field"
-            value={target}
-            autoFocus
-            onChange={(event) => setTarget(event.target.value)}
-          >
-            {folders.map((folder) => (
-              <option key={folder.id} value={folder.id}>
-                {folder.path}
-              </option>
-            ))}
-            <option value={NEW_FOLDER}>Nouveau dossier…</option>
-          </select>
-          {target === NEW_FOLDER ? (
-            <>
-              <label className="field-label" htmlFor="move-path">
-                Chemin du nouveau dossier
-              </label>
-              <input
-                id="move-path"
-                className="field"
-                placeholder="Cours / Réseau"
-                value={newPath}
-                required
-                onChange={(event) => setNewPath(event.target.value)}
-              />
-            </>
-          ) : null}
-          {error ? (
-            <p className="form-error" role="alert">
-              {error}
-            </p>
-          ) : null}
-          <div className="form-actions">
-            <button type="submit" className="button" disabled={saving || target === note.folderId}>
-              Déplacer ici
+        <h1 className="page-title note-title">{note.title}</h1>
+        <div className="note-subhead">
+          <div className="note-meta">
+            <span className="note-date">
+              <Icon name="calendar" size={14} />
+              <time dateTime={note.updatedAt} title={formatFull(note.updatedAt)}>
+                Modifiée le {formatDay(note.updatedAt)}
+              </time>
+            </span>
+            <TagList
+              tags={note.tags}
+              hrefOf={(tag) => `/recherche?tag=${encodeURIComponent(tag)}`}
+            />
+          </div>
+          <div className="note-actions">
+            <button
+              type="button"
+              className="button button-quiet button-small"
+              onClick={() => open('edit')}
+            >
+              <Icon name="pencil" />
+              Modifier
             </button>
-            <button type="button" className="button button-quiet" onClick={() => setMode('read')}>
-              Annuler
+            <button
+              type="button"
+              className="button button-quiet button-small"
+              onClick={() =>
+                actions.startMoveNote({ id: note.id, title: note.title, folderId: note.folderId })
+              }
+            >
+              <Icon name="move" />
+              Déplacer vers…
             </button>
           </div>
-        </form>
-      ) : null}
+        </div>
+      </header>
       <div className="note-body">
         <Markdown>{withoutLeadingTitle(note.content, note.title)}</Markdown>
       </div>
