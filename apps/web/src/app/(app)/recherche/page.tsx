@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { searchNotes } from '@palanotes/db';
 import { Highlighted } from '@/components/highlighted';
 import { formatWhen } from '@/lib/format';
-import { plainExcerpt } from '@/lib/markdown-text';
+import { displayExcerpt, markSimilarWords } from '@/lib/markdown-text';
 import { getCurrentUser } from '@/server/auth';
 import { getDb } from '@/server/db';
 import { loadFolderTree } from '@/server/folders';
@@ -66,11 +66,11 @@ export default async function SearchPage({
             {hits.map((hit) => (
               <li key={hit.id} className="note-item">
                 <Link href={`/note/${hit.id}`} className="note-link">
-                  {hit.title}
+                  <Highlighted text={markSimilarWords(hit.title, query)} />
                 </Link>
                 {hit.excerpt ? (
                   <p className="note-summary search-excerpt">
-                    <Highlighted text={plainExcerpt(hit.excerpt)} />
+                    <Highlighted text={displayExcerpt(hit.excerpt, hit.title, query)} />
                   </p>
                 ) : null}
                 <p className="note-meta">
