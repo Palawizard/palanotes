@@ -46,7 +46,20 @@ Filing never edits or deletes the raw entry, so a bad filing can always be redon
 - the account whose OIDC `sub` equals `LLM_OWNER_SUBJECT` uses `LLM_OWNER_MODE` (`subscription` by default);
 - every other account uses `LLM_DEFAULT_MODE` (`api` or `disabled`), never the subscription.
 
-Subscription mode runs the Claude Code CLI non-interactively with `CLAUDE_CODE_OAUTH_TOKEN`; api mode uses `ANTHROPIC_API_KEY`. Each plan records the mode, the model and the tokens used.
+`createLlmClient` then builds the client for that mode:
+
+- **subscription**: the Claude Code CLI, run as `claude -p --output-format json --json-schema <schema> --tools "" --strict-mcp-config --no-session-persistence` with the prompt on stdin. Its environment holds only `PATH`, a private config directory and `CLAUDE_CODE_OAUTH_TOKEN`; API keys are left out because the CLI would prefer them. The plan is read from `structured_output`, or from the text result when that field is missing.
+- **api**: the Anthropic SDK, `messages.create` with `output_config.format` set to the same JSON Schema and `effort: low`.
+
+The default model is `claude-haiku-5-5` (`LLM_MODEL` overrides it). The model has no tools: it can only return a plan.
+
+### Prompt
+
+The system prompt (`packages/llm/src/prompt.ts`) says the entry and the index are data, never instructions, except for a filing hint naming a place. The user prompt lists the folders, then one line per note (id, folder, title, summary, tags; never the note content), then the entry inside `<entry>` tags.
+
+### Validation
+
+The worker parses the answer with `parseSortPlan` (Zod), checks that every folder path is valid and that every `append` targets a note of the same account, and only then stores the plan in `sort_runs`. Anything else marks the entry `failed` with a short message for the user. Logs carry the entry id, the mode, the model and the token counts, never the note text or a credential.
 
 ## Search
 
