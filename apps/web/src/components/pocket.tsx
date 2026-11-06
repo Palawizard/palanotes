@@ -1,8 +1,34 @@
+'use client';
+
+import { useState } from 'react';
 import type { EntryView } from '@/server/entry-view';
 import { formatWhen } from '@/lib/format';
+import { Markdown } from './markdown';
 import { STATUS_LABELS, StatusMark } from './status-mark';
 
-export function Pocket({ entries, newId }: { entries: EntryView[]; newId: string | null }) {
+export type EntryAction = 'accept' | 'reject' | 'retry' | 'undo';
+
+interface PocketProps {
+  entries: EntryView[];
+  newId: string | null;
+  busyId: string | null;
+  messages: Record<string, string>;
+  onAction: (entryId: string, action: EntryAction) => void;
+}
+
+const EXPANDABLE = new Set(['proposed', 'applied', 'failed', 'rejected']);
+
+export function Pocket({ entries, newId, busyId, messages, onAction }: PocketProps) {
+  const [open, setOpen] = useState<string | null>(null);
+  const [autoOpened, setAutoOpened] = useState<string | null>(null);
+
+  // The entry just written opens on its own once its filing is ready to look at.
+  const fresh = entries.find((entry) => entry.id === newId);
+  if (fresh && EXPANDABLE.has(fresh.status) && autoOpened !== fresh.id) {
+    setAutoOpened(fresh.id);
+    setOpen(fresh.id);
+  }
+
   return (
     <section className="pocket" aria-labelledby="pocket-title">
       <div className="pocket-head">
@@ -20,22 +46,133 @@ export function Pocket({ entries, newId }: { entries: EntryView[]; newId: string
           Rien pour l’instant. Ce que tu valides arrive ici, puis part dans son dossier.
         </p>
       ) : (
-        <ol className="pocket-list" aria-live="polite">
-          {entries.map((entry) => (
-            <li key={entry.id} className="pocket-row" data-new={entry.id === newId}>
-              <span className="pocket-text">{entry.preview}</span>
-              <time className="pocket-when" dateTime={entry.createdAt}>
-                {formatWhen(entry.createdAt)}
-              </time>
-              {entry.error ? <span className="pocket-error">{entry.error}</span> : null}
-              <span className="pocket-status" data-status={entry.status}>
-                <StatusMark status={entry.status} />
-                {STATUS_LABELS[entry.status]}
-              </span>
-            </li>
-          ))}
+        <ol className="pocket-list">
+          {entries.map((entry) => {
+            const expandable = EXPANDABLE.has(entry.status);
+            const isOpen = expandable && open === entry.id;
+            const summary = (
+              <>
+                <span className="pocket-text">{entry.preview}</span>
+                <time className="pocket-when" dateTime={entry.createdAt}>
+                  {formatWhen(entry.createdAt)}
+                </time>
+                <span className="pocket-status" data-status={entry.status}>
+                  <StatusMark status={entry.status} />
+                  {STATUS_LABELS[entry.status]}
+                </span>
+              </>
+            );
+            return (
+              <li
+                key={entry.id}
+                className="pocket-row"
+                data-new={entry.id === newId}
+                data-open={isOpen}
+              >
+                {expandable ? (
+                  <button
+                    type="button"
+                    className="pocket-summary"
+                    aria-expanded={isOpen}
+                    aria-controls={`entry-${entry.id}`}
+                    onClick={() => setOpen(isOpen ? null : entry.id)}
+                  >
+                    {summary}
+                  </button>
+                ) : (
+                  <div className="pocket-summary">{summary}</div>
+                )}
+                {isOpen ? (
+                  <EntryDetails
+                    entry={entry}
+                    busy={busyId === entry.id}
+                    message={messages[entry.id]}
+                    onAction={onAction}
+                  />
+                ) : null}
+              </li>
+            );
+          })}
         </ol>
       )}
     </section>
+  );
+}
+
+function EntryDetails({
+  entry,
+  busy,
+  message,
+  onAction,
+}: {
+  entry: EntryView;
+  busy: boolean;
+  message: string | undefined;
+  onAction: (entryId: string, action: EntryAction) => void;
+}) {
+  const run = entry.run;
+  const button = (action: EntryAction, label: string, primary = false) => (
+    <button
+      type="button"
+      className={primary ? 'button' : 'button button-quiet'}
+      disabled={busy}
+      onClick={() => onAction(entry.id, action)}
+    >
+      {label}
+    </button>
+  );
+
+  return (
+    <div className="pocket-details" id={`entry-${entry.id}`}>
+      {entry.status === 'failed' ? <p className="pocket-error">{entry.error}</p> : null}
+      {entry.status === 'rejected' ? (
+        <p className="pocket-note">Proposition refusée. Ton texte est gardé tel quel.</p>
+      ) : null}
+      {run && (entry.status === 'proposed' || entry.status === 'applied') ? (
+        <>
+          <p className="pocket-explanation">
+            {run.status === 'undone' ? 'Rangement annulé. ' : ''}
+            {run.explanation}
+          </p>
+          {run.actions.map((action, index) => (
+            <article className="plan-card" key={index}>
+              <p className="plan-where">
+                {action.type === 'create'
+                  ? `Nouvelle note dans ${action.folderPath}`
+                  : `Ajout à « ${action.noteTitle} »${action.folderPath ? `, dans ${action.folderPath}` : ''}`}
+              </p>
+              <h3 className="plan-title">
+                {action.type === 'create' ? action.title : action.sectionTitle}
+              </h3>
+              <div className="plan-preview">
+                <Markdown>{action.content}</Markdown>
+              </div>
+            </article>
+          ))}
+        </>
+      ) : null}
+      <details className="pocket-raw">
+        <summary>Texte d’origine</summary>
+        <pre>{entry.content}</pre>
+      </details>
+      {message ? (
+        <p className="pocket-error" role="alert">
+          {message}
+        </p>
+      ) : null}
+      <div className="pocket-actions">
+        {entry.status === 'proposed' ? (
+          <>
+            {button('accept', 'Accepter', true)}
+            {button('reject', 'Refuser')}
+            {button('retry', 'Relancer')}
+          </>
+        ) : null}
+        {entry.status === 'applied' ? button('undo', 'Annuler le rangement') : null}
+        {entry.status === 'failed' || entry.status === 'rejected'
+          ? button('retry', 'Relancer', true)
+          : null}
+      </div>
+    </div>
   );
 }

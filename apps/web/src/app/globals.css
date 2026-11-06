@@ -211,6 +211,80 @@ a {
   }
 }
 
+/* Pages */
+
+.page-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.page-title {
+  font-size: var(--text-title);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.choice-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.choice-legend {
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.choice {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+}
+
+.choice:has(input:checked) {
+  border-color: var(--ink);
+}
+
+.choice:has(input:focus-visible) {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.choice input {
+  accent-color: var(--ink);
+  margin-top: 0.3rem;
+  width: 1rem;
+  height: 1rem;
+}
+
+.choice input:focus-visible {
+  outline: none;
+}
+
+.choice-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.choice-label {
+  font-weight: 700;
+}
+
+.choice-help {
+  color: var(--ink-muted);
+}
+
+.choice-status {
+  min-height: 1.5em;
+  color: var(--ink-muted);
+}
+
 /* Page: the writing sheet */
 
 .sheet {
@@ -381,15 +455,221 @@ kbd {
 }
 
 .pocket-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-areas: 'text status' 'when status' 'error error';
-  column-gap: 1rem;
-  padding: 0.625rem 1.25rem;
   border-top: 1px solid var(--rule);
 }
 
-.pocket-row[data-new='true'] {
+.pocket-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: 'text status' 'when status';
+  column-gap: 1rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.625rem 1.25rem;
+  font: inherit;
+  color: inherit;
+}
+
+button.pocket-summary {
+  cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  button.pocket-summary:hover {
+    background: var(--ground);
+  }
+}
+
+.pocket-row[data-open='true'] > .pocket-summary {
+  background: var(--ground);
+}
+
+.pocket-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  padding: 0.5rem 1.25rem 1.25rem;
+  background: var(--ground);
+}
+
+.pocket-explanation {
+  font-weight: 700;
+}
+
+.pocket-note {
+  color: var(--ink-muted);
+}
+
+.plan-card {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 0.875rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.plan-where {
+  color: var(--ink-muted);
+}
+
+.plan-title {
+  font-weight: 700;
+}
+
+.plan-preview .prose-note h1,
+.plan-preview .prose-note h2,
+.plan-preview .prose-note h3 {
+  font-size: var(--text-body);
+}
+
+.plan-preview {
+  max-height: 16rem;
+  overflow: auto;
+  border-top: 1px solid var(--rule);
+  padding-top: 0.5rem;
+}
+
+.plan-links {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-weight: 700;
+}
+
+.pocket-raw summary {
+  cursor: pointer;
+  color: var(--ink-muted);
+  width: fit-content;
+}
+
+.pocket-raw pre {
+  margin-top: 0.5rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: var(--font-mono);
+  font-size: 0.9375rem;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+}
+
+.pocket-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.pocket-actions:empty {
+  display: none;
+}
+
+/* Rendered Markdown of a note */
+
+.prose-note {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75em;
+  overflow-wrap: anywhere;
+}
+
+.prose-note h1,
+.prose-note h2,
+.prose-note h3,
+.prose-note h4 {
+  font-weight: 700;
+  line-height: 1.25;
+  margin-top: 0.5em;
+}
+
+.prose-note h1 {
+  font-size: var(--text-title);
+}
+
+.prose-note > :first-child {
+  margin-top: 0;
+}
+
+.prose-note ul,
+.prose-note ol {
+  padding-left: 1.4em;
+}
+
+.prose-note ul {
+  list-style: disc;
+}
+
+.prose-note ol {
+  list-style: decimal;
+}
+
+.prose-note li + li {
+  margin-top: 0.2em;
+}
+
+.prose-note li:has(> input[type='checkbox']) {
+  list-style: none;
+  margin-left: -1.4em;
+}
+
+.prose-note input[type='checkbox'] {
+  accent-color: var(--filed);
+  margin-right: 0.4em;
+}
+
+.prose-note blockquote {
+  border-left: 1px solid var(--rule-strong);
+  padding-left: 1em;
+  color: var(--ink-muted);
+}
+
+.prose-note code {
+  font-family: var(--font-mono);
+  font-size: 0.9375em;
+  background: var(--ground);
+  border-radius: 3px;
+  padding: 0.05em 0.3em;
+}
+
+.prose-note pre {
+  font-family: var(--font-mono);
+  background: var(--ground);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+}
+
+.prose-note pre code {
+  background: none;
+  padding: 0;
+}
+
+.prose-note table {
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.prose-note th,
+.prose-note td {
+  border: 1px solid var(--rule);
+  padding: 0.25em 0.6em;
+  text-align: left;
+}
+
+.prose-note a {
+  color: inherit;
+  text-decoration-color: var(--kraft-deep);
+}
+
+.prose-note hr {
+  border: 0;
+  border-top: 1px solid var(--rule);
+}
+
+.pocket-row[data-new='true'] > .pocket-summary {
   animation: pocket-in 240ms var(--ease-out);
 }
 
@@ -414,9 +694,8 @@ kbd {
 }
 
 .pocket-error {
-  grid-area: error;
   color: var(--failed);
-  margin-top: 0.25rem;
+  font-weight: 700;
 }
 
 .pocket-status {
@@ -442,6 +721,9 @@ kbd {
 .pocket-status[data-status='failed'] {
   color: var(--failed);
 }
+.pocket-status[data-status='rejected'] {
+  color: var(--ink-muted);
+}
 
 .mark-spin {
   transform-origin: 50% 50%;
@@ -455,7 +737,7 @@ kbd {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pocket-row[data-new='true'] {
+  .pocket-row[data-new='true'] > .pocket-summary {
     animation: pocket-fade 200ms ease;
   }
   .mark-spin {

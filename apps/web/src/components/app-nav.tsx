@@ -3,7 +3,10 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-const LINKS = [{ href: '/', label: 'Écrire' }] as const;
+const LINKS = [
+  { href: '/', label: 'Écrire' },
+  { href: '/reglages', label: 'Réglages' },
+] as const;
 
 function isActive(pathname: string, href: string): boolean {
   return href === '/' ? pathname === '/' : pathname.startsWith(href);
