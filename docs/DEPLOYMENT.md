@@ -71,29 +71,35 @@ git clone https://github.com/Palawizard/palanotes.git /srv/palanotes
 cd /srv/palanotes
 git checkout main
 cp .env.example .env
-chmod 600 .env
+cp .env.worker.example .env.worker
+chmod 600 .env .env.worker
 ```
 
-Fill `.env`:
+`.env.worker` holds the model credentials and is read by the worker only, so the internet-facing web container never holds them. Fill `.env`:
+
+| Variable             | Production value                                                         |
+| -------------------- | ------------------------------------------------------------------------ |
+| `POSTGRES_PASSWORD`  | `openssl rand -hex 24` (hex only: it goes into a URL)                    |
+| `PUBLIC_URL`         | `https://palawi.fr`                                                      |
+| `BASE_PATH`          | `/notes`                                                                 |
+| `SESSION_SECRET`     | `openssl rand -base64 48`                                                |
+| `OIDC_ISSUER`        | `https://auth.palawi.fr/application/o/palanotes/`                        |
+| `OIDC_CLIENT_ID`     | from step 1                                                              |
+| `OIDC_CLIENT_SECRET` | from step 1                                                              |
+| `OIDC_REDIRECT_URI`  | `https://palawi.fr/notes/api/auth/callback`                              |
+| `LLM_OWNER_MODE`     | `subscription`                                                           |
+| `LLM_OWNER_SUBJECT`  | empty for now, filled at step 6                                          |
+| `LLM_DEFAULT_MODE`   | `disabled` (or `api` once testers arrive, with `ANTHROPIC_API_KEY`)      |
+| `LLM_MODEL`          | empty (default `claude-haiku-5-5`)                                       |
+| `LLM_FAKE`           | `0`                                                                      |
+| `PROXY_NETWORK`      | name of the Docker network your reverse proxy uses (`docker network ls`) |
+
+Fill `.env.worker`:
 
 | Variable                  | Production value                                                           |
 | ------------------------- | -------------------------------------------------------------------------- |
-| `POSTGRES_PASSWORD`       | `openssl rand -hex 24` (hex only: it goes into a URL)                      |
-| `PUBLIC_URL`              | `https://palawi.fr`                                                        |
-| `BASE_PATH`               | `/notes`                                                                   |
-| `SESSION_SECRET`          | `openssl rand -base64 48`                                                  |
-| `OIDC_ISSUER`             | `https://auth.palawi.fr/application/o/palanotes/`                          |
-| `OIDC_CLIENT_ID`          | from step 1                                                                |
-| `OIDC_CLIENT_SECRET`      | from step 1                                                                |
-| `OIDC_REDIRECT_URI`       | `https://palawi.fr/notes/api/auth/callback`                                |
-| `LLM_OWNER_MODE`          | `subscription`                                                             |
-| `LLM_OWNER_SUBJECT`       | empty for now, filled at step 6                                            |
-| `LLM_DEFAULT_MODE`        | `disabled` (or `api` once testers arrive, with `ANTHROPIC_API_KEY`)        |
 | `CLAUDE_CODE_OAUTH_TOKEN` | from step 2                                                                |
 | `ANTHROPIC_API_KEY`       | empty until testers; set a monthly spending limit in the Anthropic console |
-| `LLM_MODEL`               | empty (default `claude-haiku-5-5`)                                         |
-| `LLM_FAKE`                | `0`                                                                        |
-| `PROXY_NETWORK`           | name of the Docker network your reverse proxy uses (`docker network ls`)   |
 
 Leave `DATABASE_URL`, `CLAUDE_CLI_PATH` and `CLAUDE_CLI_CONFIG_DIR` out: `compose.yaml` and the worker image set them. Changing `SESSION_SECRET` signs everyone out.
 

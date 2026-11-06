@@ -72,7 +72,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
-      - run: cp .env.example .env
+      - run: cp .env.example .env && cp .env.worker.example .env.worker
       - run: docker network create proxy
       - run: POSTGRES_PASSWORD=ci docker compose config --quiet
       - run: POSTGRES_PASSWORD=ci docker compose build
@@ -84,6 +84,7 @@ jobs:
           POSTGRES_PASSWORD=ci docker compose up -d --wait --wait-timeout 180
           docker compose ps
           docker compose logs migrate | grep 'migrations applied'
+          docker compose exec -T web sh -c '[ -z "${CLAUDE_CODE_OAUTH_TOKEN+set}" ] && [ -z "${ANTHROPIC_API_KEY+set}" ]'
           docker compose exec -T web node -e "fetch('http://127.0.0.1:3000/notes/api/health').then(async (r) => { console.log(r.status, await r.text()); process.exit(r.ok ? 0 : 1); })"
       - if: always()
         run: docker compose logs --no-color | tail -100

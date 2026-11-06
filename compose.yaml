@@ -41,7 +41,10 @@ services:
   worker:
     image: palanotes-worker:${PALANOTES_TAG:-local}
     restart: unless-stopped
-    env_file: .env
+    # Model credentials live in .env.worker so the internet-facing web container never holds them.
+    env_file:
+      - .env
+      - .env.worker
     environment: *app-env
     depends_on:
       migrate:
