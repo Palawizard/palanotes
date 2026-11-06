@@ -103,3 +103,13 @@ test('direct mode files without asking and can be undone', async ({ page }) => {
   await page.getByLabel(/Je valide chaque rangement/).check();
   await expect(page.getByRole('status')).toHaveText('Enregistré.');
 });
+
+test('the writing form still works before the page script runs', async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto('./');
+  await page.getByLabel('Ta note').fill('Envoyée sans script');
+  await page.getByRole('button', { name: 'Valider', exact: true }).click();
+  await expect(page.getByText('Envoyée sans script')).toBeVisible();
+  await context.close();
+});
