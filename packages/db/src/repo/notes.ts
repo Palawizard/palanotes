@@ -1,6 +1,6 @@
-import { and, desc, eq, inArray } from 'drizzle-orm';
+import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import type { DbOrTx } from '../client';
-import { notes } from '../schema';
+import { folders, notes, noteVersions } from '../schema';
 
 export type Note = typeof notes.$inferSelect;
 
@@ -53,4 +53,84 @@ export async function findNotesByIds(
     .select({ id: notes.id, title: notes.title, folderId: notes.folderId })
     .from(notes)
     .where(and(eq(notes.userId, userId), inArray(notes.id, [...noteIds])));
+}
+
+export async function listNotesInFolder(
+  db: DbOrTx,
+  userId: string,
+  folderId: string,
+): Promise<Note[]> {
+  return db
+    .select()
+    .from(notes)
+    .where(and(eq(notes.userId, userId), eq(notes.folderId, folderId)))
+    .orderBy(desc(notes.updatedAt));
+}
+
+export async function listRecentNotes(db: DbOrTx, userId: string, limit = 12): Promise<Note[]> {
+  return db
+    .select()
+    .from(notes)
+    .where(eq(notes.userId, userId))
+    .orderBy(desc(notes.updatedAt))
+    .limit(limit);
+}
+
+export interface NoteChanges {
+  title?: string;
+  content?: string;
+  folderId?: string;
+}
+
+// Manual edit or move. The previous state is kept in note_versions first.
+export async function updateNote(
+  db: DbOrTx,
+  userId: string,
+  noteId: string,
+  changes: NoteChanges,
+): Promise<Note | null> {
+  return db.transaction(async (tx) => {
+    const [note] = await tx
+      .select()
+      .from(notes)
+      .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
+      .for('update')
+      .limit(1);
+    if (!note) {
+      return null;
+    }
+    if (changes.folderId) {
+      const [target] = await tx
+        .select({ id: folders.id })
+        .from(folders)
+        .where(and(eq(folders.id, changes.folderId), eq(folders.userId, userId)))
+        .limit(1);
+      if (!target) {
+        return null;
+      }
+    }
+    await tx.insert(noteVersions).values({
+      noteId: note.id,
+      kind: 'before_edit',
+      folderId: note.folderId,
+      title: note.title,
+      summary: note.summary,
+      tags: note.tags,
+      content: note.content,
+    });
+    const [updated] = await tx
+      .update(notes)
+      .set({ ...changes, updatedAt: sql`now()` })
+      .where(eq(notes.id, note.id))
+      .returning();
+    return updated ?? null;
+  });
+}
+
+export async function countNoteVersions(db: DbOrTx, noteId: string): Promise<number> {
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(noteVersions)
+    .where(eq(noteVersions.noteId, noteId));
+  return row?.count ?? 0;
 }

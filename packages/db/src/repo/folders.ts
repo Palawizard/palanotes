@@ -1,7 +1,7 @@
-import { and, asc, eq, isNull } from 'drizzle-orm';
+import { and, asc, eq, isNull, sql } from 'drizzle-orm';
 import { buildFolderPaths, samePath } from '@palanotes/core';
 import type { DbOrTx } from '../client';
-import { folders } from '../schema';
+import { folders, notes } from '../schema';
 
 export type Folder = typeof folders.$inferSelect;
 
@@ -66,4 +66,59 @@ export async function listRootFolders(db: DbOrTx, userId: string): Promise<Folde
     .from(folders)
     .where(and(eq(folders.userId, userId), isNull(folders.parentId)))
     .orderBy(asc(folders.name));
+}
+
+export interface FolderWithCount extends Folder {
+  noteCount: number;
+}
+
+export async function listFoldersWithCounts(
+  db: DbOrTx,
+  userId: string,
+): Promise<FolderWithCount[]> {
+  const rows = await db
+    .select({ folder: folders, noteCount: sql<number>`count(${notes.id})::int` })
+    .from(folders)
+    .leftJoin(notes, eq(notes.folderId, folders.id))
+    .where(eq(folders.userId, userId))
+    .groupBy(folders.id)
+    .orderBy(asc(folders.name));
+  return rows.map((row) => ({ ...row.folder, noteCount: row.noteCount }));
+}
+
+export class FolderNameTakenError extends Error {
+  constructor() {
+    super('folder name taken');
+    this.name = 'FolderNameTakenError';
+  }
+}
+
+export async function renameFolder(
+  db: DbOrTx,
+  userId: string,
+  folderId: string,
+  name: string,
+): Promise<Folder | null> {
+  const folder = await findFolder(db, userId, folderId);
+  if (!folder) {
+    return null;
+  }
+  const siblings = await db
+    .select({ id: folders.id, name: folders.name })
+    .from(folders)
+    .where(
+      and(
+        eq(folders.userId, userId),
+        folder.parentId ? eq(folders.parentId, folder.parentId) : isNull(folders.parentId),
+      ),
+    );
+  if (siblings.some((sibling) => sibling.id !== folderId && samePath([sibling.name], [name]))) {
+    throw new FolderNameTakenError();
+  }
+  const [renamed] = await db
+    .update(folders)
+    .set({ name, updatedAt: sql`now()` })
+    .where(and(eq(folders.id, folderId), eq(folders.userId, userId)))
+    .returning();
+  return renamed ?? null;
 }
