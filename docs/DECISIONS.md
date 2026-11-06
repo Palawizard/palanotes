@@ -41,3 +41,7 @@ Search uses Postgres full-text search with an accent-insensitive French configur
 ## 2026-11-06: end-to-end tests on a production build
 
 Playwright starts `next build && next start` rather than `next dev`: the dev server's hot reload sometimes reloaded pages in a loop during long runs, and a production build is closer to what ships.
+
+## 2026-11-06: production stack
+
+One Compose stack on vm-apps: Postgres 17 (pinned by digest, internal network only), a one-shot `migrate` service, the worker (with the Claude Code CLI pinned at 2.1.318) and the web app (Next.js standalone), joined to the reverse proxy's external network. No published port. The worker image also carries the account maintenance command used by `purge-comptes-orphelins`. Backups are daily `pg_dump` archives with a freshness check.
