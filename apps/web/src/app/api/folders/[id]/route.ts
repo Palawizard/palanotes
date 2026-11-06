@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { deleteEmptyFolder, moveFolder, renameFolder } from '@palanotes/db';
+import { moveFolder, renameFolder, trashFolder } from '@palanotes/db';
 import { getCurrentUser } from '@/server/auth';
 import { getDb } from '@/server/db';
 import {
@@ -48,6 +48,7 @@ export async function PATCH(request: Request, context: Context): Promise<Respons
   }
 }
 
+// Deletes the folder with everything it holds; all of it goes to the trash first.
 export async function DELETE(_request: Request, context: Context): Promise<Response> {
   const user = await getCurrentUser();
   if (!user) {
@@ -57,13 +58,16 @@ export async function DELETE(_request: Request, context: Context): Promise<Respo
   if (!id.success) {
     return notFoundResponse();
   }
-  try {
-    return (await deleteEmptyFolder(getDb(), user.id, id.data))
-      ? new Response(null, { status: 204 })
-      : notFoundResponse();
-  } catch (error) {
-    const response = folderErrorResponse(error);
-    if (response) return response;
-    throw error;
+  const item = await trashFolder(getDb(), user.id, id.data);
+  if (!item) {
+    return notFoundResponse();
   }
+  return Response.json({
+    trash: {
+      id: item.id,
+      name: item.name,
+      noteCount: item.noteCount,
+      folderCount: item.folderCount,
+    },
+  });
 }

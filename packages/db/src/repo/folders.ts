@@ -130,13 +130,6 @@ export class FolderMoveError extends Error {
   }
 }
 
-export class FolderNotEmptyError extends Error {
-  constructor() {
-    super('folder not empty');
-    this.name = 'FolderNotEmptyError';
-  }
-}
-
 async function siblingsOf(db: DbOrTx, userId: string, parentId: string | null) {
   return db
     .select({ id: folders.id, name: folders.name })
@@ -283,29 +276,4 @@ async function mergeInto(
     }
   }
   await tx.delete(folders).where(and(eq(folders.id, sourceId), eq(folders.userId, userId)));
-}
-
-// Removes a folder only when it holds no note and no subfolder: notes are never deleted
-// through a folder.
-export async function deleteEmptyFolder(
-  db: DbOrTx,
-  userId: string,
-  folderId: string,
-): Promise<boolean> {
-  const folder = await findFolder(db, userId, folderId);
-  if (!folder) {
-    return false;
-  }
-  const [content] = await db
-    .select({
-      notes: sql<number>`(select count(*)::int from ${notes} where ${notes.folderId} = ${folderId})`,
-      children: sql<number>`(select count(*)::int from ${folders} where ${folders.parentId} = ${folderId})`,
-    })
-    .from(folders)
-    .where(eq(folders.id, folderId));
-  if ((content?.notes ?? 0) > 0 || (content?.children ?? 0) > 0) {
-    throw new FolderNotEmptyError();
-  }
-  await db.delete(folders).where(and(eq(folders.id, folderId), eq(folders.userId, userId)));
-  return true;
 }

@@ -30,6 +30,7 @@ const PAGES: { name: string; path: () => Promise<string> }[] = [
   },
   { name: 'empty search', path: async () => './recherche' },
   { name: 'settings', path: async () => './reglages' },
+  { name: 'trash', path: async () => './dossiers/corbeille' },
 ];
 
 async function audit(page: Page) {

@@ -1,13 +1,14 @@
 import { writeFile } from 'node:fs/promises';
 import { PgBoss } from 'pg-boss';
-import { QUEUES, type SortEntryJob } from '@palanotes/core';
-import { createDb, listStalePendingEntryIds } from '@palanotes/db';
+import { QUEUES, TRASH_RETENTION_DAYS, type SortEntryJob } from '@palanotes/core';
+import { createDb, listStalePendingEntryIds, purgeExpiredTrash } from '@palanotes/db';
 import { createLlmClient, resolveLlmMode } from '@palanotes/llm';
 import { readConfig } from './config';
 import { sortEntry } from './sort-entry';
 
 const SWEEP_INTERVAL_MS = 30_000;
 const STALE_AFTER_MS = 30_000;
+const PURGE_INTERVAL_MS = 60 * 60 * 1000;
 
 const config = readConfig(process.env);
 const db = createDb(config.databaseUrl, { max: 4 });
@@ -44,6 +45,20 @@ const sweeper = setInterval(() => {
   );
 }, SWEEP_INTERVAL_MS);
 
+// Deleted folders stay in the trash for TRASH_RETENTION_DAYS days, then go for good.
+async function purge(): Promise<void> {
+  const removed = await purgeExpiredTrash(db, TRASH_RETENTION_DAYS);
+  if (removed > 0) {
+    console.log(`[worker] trash: ${removed} expired item(s) removed`);
+  }
+}
+const purger = setInterval(() => {
+  purge().catch((error: unknown) =>
+    console.error('[worker] trash purge failed', error instanceof Error ? error.message : ''),
+  );
+}, PURGE_INTERVAL_MS);
+await purge();
+
 // The container health check reads the age of this file.
 const heartbeatFile = process.env.WORKER_HEARTBEAT_FILE;
 async function beat(): Promise<void> {
@@ -63,6 +78,7 @@ console.log(`[worker] started${config.llm.fake ? ' with the fake model' : ''}`);
 
 const stop = async (): Promise<void> => {
   clearInterval(sweeper);
+  clearInterval(purger);
   clearInterval(heartbeat);
   await boss.stop({ graceful: true });
   await db.$client.end();

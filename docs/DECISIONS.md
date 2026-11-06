@@ -52,8 +52,12 @@ The explorer keeps everything that matters in the URL (folder, open note, order,
 
 ## 2026-11-06: native drag and drop, with « Déplacer vers… » as the main path
 
-Notes and folders are dragged with the browser's own drag and drop, without a library: drop targets are only the rows of the folder tree, which is simple enough to handle by hand. Native dragging is unreliable on touch screens and cannot be done from the keyboard, so every move also exists as « Déplacer vers… » with a filterable folder list (WCAG 2.2, 2.5.7). Folders are never deleted with their content: only an empty folder can be deleted, and merging moves every note before removing the emptied folder.
+Notes and folders are dragged with the browser's own drag and drop, without a library: drop targets are only the rows of the folder tree, which is simple enough to handle by hand. Native dragging is unreliable on touch screens and cannot be done from the keyboard, so every move also exists as « Déplacer vers… » with a filterable folder list (WCAG 2.2, 2.5.7). Folders are never deleted with their content: only an empty folder can be deleted, and merging moves every note before removing the emptied folder. (The deletion part is replaced by « deleted folders go to the trash for 30 days » below.)
 
 ## 2026-11-06: stricter typo matching
 
 With a few hundred real notes, `word_similarity` at 0.4 matched pieces of longer words: « quokka » found 4 notes and « xylophone » 13. Search now uses `strict_word_similarity` (whole words) at the same threshold, and only for words of four letters or more. Measured on the demo account, the misspellings of the tests still match (« modle », « reseua », « algoritme », « dentsite ») while those two words match nothing.
+
+## 2026-11-06: deleted folders go to the trash for 30 days
+
+A folder can be deleted whatever it holds, after a confirmation that says how many notes and subfolders go with it. The folder, its subfolders, their notes and the history of each note are copied into one `trash_items` row (a JSON payload) in the same transaction that deletes them. The live tables never hold a deleted row, so no other query (lists, counts, search, the index sent to the model) needs a « not deleted » filter that could be forgotten. Restoring inserts the rows back with their ids and dates; the folder returns to its old parent if it still exists, otherwise to the top level, with a « (restauré) » suffix when the name is taken. The worker purges items older than 30 days every hour. Right after a deletion, « Annuler » in the status line and Ctrl+Z restore it.

@@ -4,3 +4,4 @@ export * from './jobs';
 export * from './sort-plan-schema';
 export * from './folder-tree';
 export * from './note-sort';
+export * from './trash';

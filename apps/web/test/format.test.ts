@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatDay, formatFull, formatShort, formatWhen } from '@/lib/format';
+import { formatDay, formatDaysLeft, formatFull, formatShort, formatWhen } from '@/lib/format';
 
 const now = new Date('2026-11-06T15:00:00Z');
 
@@ -36,5 +36,13 @@ describe('formatShort', () => {
 describe('formatFull', () => {
   it('spells the whole date', () => {
     expect(formatFull('2026-11-06T13:02:00Z')).toBe('vendredi 6 novembre 2026 à 14:02');
+  });
+});
+
+describe('formatDaysLeft', () => {
+  it('counts the days left before the trash empties itself', () => {
+    expect(formatDaysLeft('2026-12-06T15:00:00Z', now)).toBe('encore 30 jours');
+    expect(formatDaysLeft('2026-11-07T09:00:00Z', now)).toBe('encore 1 jour');
+    expect(formatDaysLeft('2026-11-06T14:00:00Z', now)).toBe('disparaît aujourd’hui');
   });
 });

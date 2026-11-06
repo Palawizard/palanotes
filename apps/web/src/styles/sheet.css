@@ -1,8 +1,19 @@
 /* Page: the writing sheet */
 
+/* The sheet sits on the page as its own leaf: a 1px edge, the writing area on paper and the
+   foot on the pocket ground, so it reads as a bounded place to write without becoming a grey
+   editor frame. Focus darkens the edge. */
 .sheet {
   display: flex;
   flex-direction: column;
+  background: var(--paper);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.sheet:focus-within {
+  border-color: var(--ink-muted);
 }
 
 .sheet-input {
@@ -14,7 +25,7 @@
   color: var(--ink);
   font: inherit;
   line-height: 1.6;
-  padding: 0.5rem 0 1rem;
+  padding: 1rem 1.25rem 1.25rem;
   caret-color: var(--kraft-deep);
 }
 
@@ -26,17 +37,14 @@
   outline: none;
 }
 
-.sheet:focus-within .sheet-foot {
-  border-color: var(--rule-strong);
-}
-
 .sheet-foot {
   display: flex;
   align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
+  background: var(--ground);
   border-top: 1px solid var(--rule);
-  padding: 0.75rem 0 0;
+  padding: 0.75rem 1.25rem;
 }
 
 .sheet-hint {
