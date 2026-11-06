@@ -1,5 +1,5 @@
 import { PgBoss } from 'pg-boss';
-import { QUEUES } from './queues.js';
+import { QUEUES } from './queues';
 
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) {

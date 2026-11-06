@@ -1,4 +1,4 @@
-import type { LlmMode } from './types.js';
+import type { LlmMode } from './types';
 
 export interface LlmModeConfig {
   ownerSubject: string | null;

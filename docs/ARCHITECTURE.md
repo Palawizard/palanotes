@@ -58,4 +58,12 @@ Tables: `users`, `folders` (tree through `parent_id`), `entries` (raw text), `no
 
 ## Sign-in
 
-OIDC with Authentik (`https://auth.palawi.fr/application/o/palanotes/`), authorization code with PKCE. Users are identified by their `sub` (`users.auth_subject`), never by their email. The session cookie belongs to the app only, with `path=/notes`, `Secure`, `HttpOnly` and `SameSite=Lax`. Access is limited to an Authentik group.
+OIDC with Authentik (`https://auth.palawi.fr/application/o/palanotes/`), authorization code with PKCE, through `openid-client`:
+
+- `GET /api/auth/login` stores the PKCE verifier, `state`, `nonce` and return path in a short-lived signed cookie, then redirects to Authentik;
+- `GET /api/auth/callback` checks them, creates or updates the `users` row from the ID token `sub`, and sets the session cookie;
+- `POST /api/auth/logout` clears the session.
+
+Users are identified by their `sub` (`users.auth_subject`), never by their email. The session cookie `palawi_notes_session` is a signed JWT that belongs to the app only, with `path=/notes`, `Secure`, `HttpOnly` and `SameSite=Lax`. Access is limited to an Authentik group.
+
+`src/proxy.ts` checks the cookie signature on every request (pages are redirected to sign-in, API routes answer 401) and refuses state-changing requests from another origin. Pages and route handlers then load the account from the database with `getCurrentUser()`; every query is filtered by that account.

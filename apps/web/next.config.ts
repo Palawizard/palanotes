@@ -5,6 +5,8 @@ const config: NextConfig = {
   output: 'standalone',
   transpilePackages: ['@palanotes/core', '@palanotes/db', '@palanotes/llm'],
   poweredByHeader: false,
+  // The repository is public: no generated agent instruction files.
+  agentRules: false,
 };
 
 export default config;

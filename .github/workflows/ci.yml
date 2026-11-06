@@ -8,6 +8,54 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17.6
+        env:
+          POSTGRES_USER: palanotes
+          POSTGRES_PASSWORD: palanotes
+          POSTGRES_DB: palanotes_test
+        ports:
+          - 5434:5432
+        options: >-
+          --health-cmd "pg_isready -U palanotes"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgres://palanotes:palanotes@localhost:5434/palanotes_test
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: node scripts/check-private-files.mjs
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17.6
+        env:
+          POSTGRES_USER: palanotes
+          POSTGRES_PASSWORD: palanotes
+          POSTGRES_DB: palanotes_e2e
+        ports:
+          - 5434:5432
+        options: >-
+          --health-cmd "pg_isready -U palanotes"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -16,8 +64,5 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm format:check
-      - run: pnpm lint
-      - run: pnpm typecheck
-      - run: pnpm test
-      - run: pnpm build
+      - run: pnpm --filter @palanotes/web exec playwright install --with-deps chromium
+      - run: pnpm e2e
