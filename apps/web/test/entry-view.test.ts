@@ -6,7 +6,7 @@ import {
   trigramSimilarity,
   withoutLeadingTitle,
 } from '@/lib/markdown-text';
-import { previewOf } from '@/server/entry-view';
+import { filedNotesAllGone, previewOf } from '@/server/entry-view';
 import { RateLimiter } from '@/server/rate-limit';
 
 describe('previewOf', () => {
@@ -19,6 +19,31 @@ describe('previewOf', () => {
     const preview = previewOf('a'.repeat(300));
     expect(preview.length).toBe(140);
     expect(preview.endsWith('…')).toBe(true);
+  });
+});
+
+describe('filedNotesAllGone', () => {
+  const run = (createdNoteIds: string[], appendedNoteIds: string[] = []) => ({
+    status: 'applied' as const,
+    applied: { createdNoteIds, appendedNoteIds, createdFolderIds: [] },
+  });
+
+  it('drops a filed entry once every note it filed is deleted', () => {
+    expect(filedNotesAllGone('applied', run(['a']), new Set())).toBe(true);
+    expect(filedNotesAllGone('applied', run(['a', 'b'], ['c']), new Set(['x']))).toBe(true);
+  });
+
+  it('keeps it while one of its notes is still there', () => {
+    expect(filedNotesAllGone('applied', run(['a', 'b', 'c']), new Set(['b']))).toBe(false);
+    expect(filedNotesAllGone('applied', run([], ['c']), new Set(['c']))).toBe(false);
+  });
+
+  it('keeps entries that were never filed', () => {
+    expect(filedNotesAllGone('proposed', undefined, new Set())).toBe(false);
+    expect(filedNotesAllGone('failed', undefined, new Set())).toBe(false);
+    expect(
+      filedNotesAllGone('applied', { status: 'undone' as const, applied: null }, new Set()),
+    ).toBe(false);
   });
 });
 
