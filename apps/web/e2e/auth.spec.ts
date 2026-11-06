@@ -31,7 +31,7 @@ test('a mutation from another origin is refused', async ({ request }) => {
 
 test('signing out clears the session', async ({ page }) => {
   await page.goto('./');
-  await page.getByRole('button', { name: 'Se déconnecter' }).click();
+  await page.getByRole('button', { name: 'Se déconnecter' }).first().click();
   await expect(page.getByRole('heading', { name: 'À bientôt' })).toBeVisible();
   const response = await page.request.get('api/entries');
   expect(response.status()).toBe(401);

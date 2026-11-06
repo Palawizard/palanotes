@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import type { EntryView } from '@/server/entry-view';
 import { formatWhen } from '@/lib/format';
@@ -150,6 +151,15 @@ function EntryDetails({
             </article>
           ))}
         </>
+      ) : null}
+      {entry.status === 'applied' && run && run.noteIds.length > 0 ? (
+        <p className="plan-links">
+          {run.noteIds.map((noteId, index) => (
+            <Link key={noteId} href={`/note/${noteId}`}>
+              {run.noteIds.length > 1 ? `Ouvrir la note ${index + 1}` : 'Ouvrir la note'}
+            </Link>
+          ))}
+        </p>
       ) : null}
       <details className="pocket-raw">
         <summary>Texte d’origine</summary>

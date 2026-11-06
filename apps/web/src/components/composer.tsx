@@ -92,12 +92,19 @@ export function Composer({ onSubmitted }: { onSubmitted: (entry: EntryView) => v
   const over = text.length > ENTRY_MAX_LENGTH;
 
   return (
-    <form className="sheet" onSubmit={onSubmit} aria-label="Nouvelle note">
+    <form
+      className="sheet"
+      onSubmit={onSubmit}
+      action={apiPath('/api/entries')}
+      method="post"
+      aria-label="Nouvelle note"
+    >
       <label htmlFor="entry" className="sr-only">
         Ta note
       </label>
       <textarea
         id="entry"
+        name="content"
         ref={input}
         className="sheet-input"
         value={text}

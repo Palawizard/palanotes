@@ -9,6 +9,7 @@ import {
   type EntryStatus,
   type SortRun,
 } from '@palanotes/db';
+import { withoutLeadingTitle } from '@/lib/markdown-text';
 
 export type ActionView =
   | { type: 'create'; folderPath: string; title: string; content: string }
@@ -40,15 +41,6 @@ export interface EntryView {
 }
 
 const PREVIEW_LENGTH = 140;
-
-// The plan card already shows the title, so a first heading that repeats it is dropped.
-export function withoutLeadingTitle(content: string, title: string): string {
-  const match = /^\s*#{1,6}\s+(.+?)\s*(\n|$)/.exec(content);
-  if (match && match[1]?.trim().toLowerCase() === title.trim().toLowerCase()) {
-    return content.slice(match[0].length).trimStart();
-  }
-  return content;
-}
 
 export function previewOf(content: string): string {
   const line =
