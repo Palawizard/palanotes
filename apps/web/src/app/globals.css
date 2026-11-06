@@ -383,7 +383,7 @@ kbd {
 .pocket-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-areas: 'text status' 'when status';
+  grid-template-areas: 'text status' 'when status' 'error error';
   column-gap: 1rem;
   padding: 0.625rem 1.25rem;
   border-top: 1px solid var(--rule);
@@ -411,6 +411,12 @@ kbd {
   grid-area: when;
   color: var(--ink-muted);
   font-variant-numeric: tabular-nums;
+}
+
+.pocket-error {
+  grid-area: error;
+  color: var(--failed);
+  margin-top: 0.25rem;
 }
 
 .pocket-status {

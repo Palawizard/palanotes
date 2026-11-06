@@ -9,5 +9,10 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "1.6.0",
+    "@palanotes/core": "workspace:*",
+    "zod": "4.6.7"
   }
 }

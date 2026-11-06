@@ -53,3 +53,13 @@ test('the api refuses an entry that is too long', async ({ page }) => {
   });
   expect(status).toBe(400);
 });
+
+test('the worker files an entry and the pocket shows it to review', async ({ page }) => {
+  await page.goto('./');
+  await page
+    .getByLabel('Ta note')
+    .fill('Le masque /26 donne 62 hôtes\nà ranger avec mes cours de réseau');
+  await page.getByRole('button', { name: 'Valider' }).click();
+  const row = page.getByRole('listitem').filter({ hasText: 'Le masque /26 donne 62 hôtes' });
+  await expect(row.getByText('À valider')).toBeVisible({ timeout: 20_000 });
+});
