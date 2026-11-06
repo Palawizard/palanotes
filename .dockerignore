@@ -11,4 +11,7 @@
 !.env.example
 data
 docs
+# Demo account for local runs and tests: never shipped.
+packages/db/src/demo
+packages/db/src/demo-cli.ts
 *.log

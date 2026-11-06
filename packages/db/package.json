@@ -6,13 +6,15 @@
   "exports": {
     ".": "./src/index.ts",
     "./migrate": "./src/migrate.ts",
-    "./testing": "./src/testing.ts"
+    "./testing": "./src/testing.ts",
+    "./demo": "./src/demo/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "generate": "drizzle-kit generate",
-    "migrate": "tsx src/migrate-cli.ts"
+    "migrate": "tsx src/migrate-cli.ts",
+    "demo": "tsx src/demo-cli.ts"
   },
   "dependencies": {
     "drizzle-orm": "0.45.4",
