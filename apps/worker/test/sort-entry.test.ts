@@ -213,3 +213,33 @@ describe('sortEntry failures', () => {
     expect(again).toBe('skipped');
   });
 });
+
+describe('sortEntry in direct mode', () => {
+  it('applies the plan right away', async () => {
+    const user = await createTestUser(db);
+    await db.update(schema.users).set({ sortMode: 'direct' }).where(eq(schema.users.id, user.id));
+    const direct = { ...user, sortMode: 'direct' as const };
+    const entry = await createEntry(db, direct.id, 'Lait, œufs\nà ranger avec les courses');
+    const client = new ScriptedClient(() => ({
+      explanation: 'x',
+      actions: [
+        {
+          type: 'create',
+          folderPath: 'Courses',
+          title: 'Lait',
+          content: '- Lait\n- Œufs',
+          summary: 's',
+          tags: [],
+        },
+      ],
+    }));
+    const outcome = await sortEntry(
+      { db, clientFor: () => ({ client }), log: () => undefined },
+      entry.id,
+    );
+    expect(outcome).toBe('applied');
+    expect((await findEntryById(db, entry.id))?.status).toBe('applied');
+    const filed = await db.select().from(schema.notes).where(eq(schema.notes.userId, direct.id));
+    expect(filed.map((note) => note.title)).toEqual(['Lait']);
+  });
+});

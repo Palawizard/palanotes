@@ -7,7 +7,9 @@ import {
   type SortPlan,
 } from '@palanotes/core';
 import {
+  applySortRun,
   createSortRun,
+  FilingError,
   findEntryById,
   findUserById,
   listFolders,
@@ -30,7 +32,7 @@ export interface SortEntryDeps {
   log?: (message: string) => void;
 }
 
-export type SortEntryOutcome = 'proposed' | 'failed' | 'skipped';
+export type SortEntryOutcome = 'proposed' | 'applied' | 'failed' | 'skipped';
 
 const INVALID_PLAN = 'Le rangement proposé n’était pas valable. Relance le rangement.';
 
@@ -120,8 +122,8 @@ export async function sortEntry(deps: SortEntryDeps, entryId: string): Promise<S
     return fail(INVALID_PLAN, problem);
   }
 
-  await deps.db.transaction(async (tx) => {
-    await createSortRun(tx, {
+  const run = await deps.db.transaction(async (tx) => {
+    const created = await createSortRun(tx, {
       userId: user.id,
       entryId: entry.id,
       plan,
@@ -131,9 +133,22 @@ export async function sortEntry(deps: SortEntryDeps, entryId: string): Promise<S
       outputTokens: response.outputTokens,
     });
     await setEntryStatus(tx, entry.id, 'proposed');
+    return created;
   });
   log(
     `[sort] entry ${entry.id} proposed (${response.mode}, ${response.model}, in ${response.inputTokens ?? '?'} / out ${response.outputTokens ?? '?'} tokens)`,
   );
+  if (user.sortMode === 'direct') {
+    try {
+      await applySortRun(deps.db, user.id, run.id);
+      log(`[sort] entry ${entry.id} applied directly`);
+      return 'applied';
+    } catch (error) {
+      // The proposal stays visible, so the user can still accept or retry it.
+      log(
+        `[sort] entry ${entry.id} could not be applied: ${error instanceof FilingError ? error.userMessage : 'error'}`,
+      );
+    }
+  }
   return 'proposed';
 }
