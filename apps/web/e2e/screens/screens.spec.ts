@@ -50,6 +50,16 @@ const SCREENS: Screen[] = [
     fullPage: true,
   },
   {
+    name: 'dossier-note',
+    path: async () =>
+      `./dossiers/${await idOf('folders', 'name', 'TCP-IP')}?note=${await idOf('notes', 'title', 'Adressage IPv4 et masques')}`,
+  },
+  {
+    name: 'dossier-gros',
+    path: async () => `./dossiers/${await idOf('folders', 'name', 'Journal')}?tri=titre`,
+  },
+  { name: 'recents', path: async () => './dossiers/recents' },
+  {
     name: 'note',
     path: async () => `./note/${await idOf('notes', 'title', 'Adressage IPv4 et masques')}`,
   },

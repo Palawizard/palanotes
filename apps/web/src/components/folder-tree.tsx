@@ -1,36 +1,247 @@
-import Link from 'next/link';
-import type { FolderTreeNode } from '@/server/folders';
+'use client';
 
-function Branch({ nodes, currentId }: { nodes: FolderTreeNode[]; currentId: string | null }) {
-  return (
-    <ul className="tree-list">
-      {nodes.map((node) => (
-        <li key={node.id}>
-          <Link
-            href={`/dossiers/${node.id}`}
-            className="tree-link"
-            aria-current={node.id === currentId ? 'page' : undefined}
-          >
-            <span className="tree-name">{node.name}</span>
-            {node.noteCount > 0 ? <span className="tree-count">{node.noteCount}</span> : null}
-          </Link>
-          {node.children.length > 0 ? <Branch nodes={node.children} currentId={currentId} /> : null}
-        </li>
-      ))}
-    </ul>
-  );
+import Link from 'next/link';
+import { useParams, useRouter } from 'next/navigation';
+import { useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
+import { serializeTreeCookie, TREE_COOKIE } from '@/lib/tree-cookie';
+import type { FolderItem } from '@/server/folders';
+import { Icon } from './icons';
+
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
+const YEAR = 60 * 60 * 24 * 365;
+
+interface VisibleItem {
+  item: FolderItem;
+  level: number;
+  hasChildren: boolean;
+  setSize: number;
+  posInSet: number;
 }
 
-export function FolderTree({
-  roots,
-  currentId,
-}: {
-  roots: FolderTreeNode[];
-  currentId: string | null;
-}) {
+function normalize(text: string): string {
+  return text
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase();
+}
+
+function countLabel(item: FolderItem): string {
+  if (item.totalCount === 0) return 'vide';
+  const total = `${item.totalCount} note${item.totalCount > 1 ? 's' : ''}`;
+  return item.noteCount === item.totalCount ? total : `${total} dont ${item.noteCount} ici`;
+}
+
+function saveOpen(ids: Set<string>): void {
+  document.cookie = `${TREE_COOKIE}=${serializeTreeCookie(ids)}; path=${BASE_PATH || '/'}; max-age=${YEAR}; samesite=lax`;
+}
+
+// Folder tree of the explorer, following the WAI-ARIA tree pattern: one tab stop, arrows to
+// move, Right and Left to open and close, Home and End, first letter to jump, Enter to open.
+export function FolderTree({ items, savedOpen }: { items: FolderItem[]; savedOpen: string[] }) {
+  const router = useRouter();
+  const params = useParams<{ id?: string }>();
+  const currentId = params.id && params.id !== 'recents' ? params.id : null;
+
+  const { byId, children } = useMemo(() => {
+    const map = new Map(items.map((item) => [item.id, item]));
+    const kids = new Map<string | null, FolderItem[]>();
+    for (const item of items) {
+      const key = item.parentId && map.has(item.parentId) ? item.parentId : null;
+      kids.set(key, [...(kids.get(key) ?? []), item]);
+    }
+    return { byId: map, children: kids };
+  }, [items]);
+
+  const ancestorsOf = (id: string | null): string[] => {
+    const chain: string[] = [];
+    const seen = new Set<string>();
+    let parent = id ? byId.get(id)?.parentId : null;
+    while (parent && !seen.has(parent)) {
+      seen.add(parent);
+      chain.push(parent);
+      parent = byId.get(parent)?.parentId ?? null;
+    }
+    return chain;
+  };
+
+  const [open, setOpen] = useState<Set<string>>(
+    () => new Set([...savedOpen, ...ancestorsOf(currentId)]),
+  );
+  const [shownFor, setShownFor] = useState(currentId);
+  if (shownFor !== currentId) {
+    // A new current folder: open the way to it, keep everything else as it was.
+    setShownFor(currentId);
+    setOpen((previous) => new Set([...previous, ...ancestorsOf(currentId)]));
+  }
+  const [focusId, setFocusId] = useState<string | null>(null);
+  const refs = useRef(new Map<string, HTMLLIElement>());
+
+  const visible = useMemo(() => {
+    const list: VisibleItem[] = [];
+    const walk = (parentId: string | null, level: number, seen: Set<string>) => {
+      const siblings = children.get(parentId) ?? [];
+      siblings.forEach((item, index) => {
+        if (seen.has(item.id)) return;
+        const kids = children.get(item.id) ?? [];
+        list.push({
+          item,
+          level,
+          hasChildren: kids.length > 0,
+          setSize: siblings.length,
+          posInSet: index + 1,
+        });
+        if (kids.length > 0 && open.has(item.id)) {
+          walk(item.id, level + 1, new Set(seen).add(item.id));
+        }
+      });
+    };
+    walk(null, 1, new Set());
+    return list;
+  }, [children, open]);
+
+  const tabStop =
+    (focusId && visible.some((entry) => entry.item.id === focusId) && focusId) ||
+    (currentId && visible.some((entry) => entry.item.id === currentId) && currentId) ||
+    visible[0]?.item.id;
+
+  function focus(id: string | undefined) {
+    if (!id) return;
+    setFocusId(id);
+    refs.current.get(id)?.focus();
+  }
+
+  function toggle(id: string, next?: boolean) {
+    const copy = new Set(open);
+    if (next ?? !copy.has(id)) copy.add(id);
+    else copy.delete(id);
+    setOpen(copy);
+    saveOpen(copy);
+  }
+
+  function onKeyDown(event: KeyboardEvent<HTMLUListElement>) {
+    const index = visible.findIndex((entry) => entry.item.id === tabStop);
+    const entry = visible[index];
+    if (!entry) return;
+    const { item, hasChildren } = entry;
+    const handled = () => {
+      event.preventDefault();
+      event.stopPropagation();
+    };
+    switch (event.key) {
+      case 'ArrowDown':
+        handled();
+        focus(visible[Math.min(index + 1, visible.length - 1)]?.item.id);
+        break;
+      case 'ArrowUp':
+        handled();
+        focus(visible[Math.max(index - 1, 0)]?.item.id);
+        break;
+      case 'Home':
+        handled();
+        focus(visible[0]?.item.id);
+        break;
+      case 'End':
+        handled();
+        focus(visible.at(-1)?.item.id);
+        break;
+      case 'ArrowRight':
+        handled();
+        if (hasChildren && !open.has(item.id)) toggle(item.id, true);
+        else if (hasChildren) focus(visible[index + 1]?.item.id);
+        break;
+      case 'ArrowLeft':
+        handled();
+        if (hasChildren && open.has(item.id)) toggle(item.id, false);
+        else if (item.parentId && byId.has(item.parentId)) focus(item.parentId);
+        break;
+      case 'Enter':
+      case ' ':
+        handled();
+        router.push(`/dossiers/${item.id}`);
+        break;
+      default:
+        if (event.key.length === 1 && /\p{L}|\p{N}/u.test(event.key)) {
+          handled();
+          const letter = normalize(event.key);
+          const after = [...visible.slice(index + 1), ...visible.slice(0, index + 1)];
+          focus(after.find((other) => normalize(other.item.name).startsWith(letter))?.item.id);
+        }
+    }
+  }
+
+  const visibleById = new Map(visible.map((entry) => [entry.item.id, entry]));
+
+  const renderLevel = (parentId: string | null, level: number) => {
+    const entries = (children.get(parentId) ?? []).flatMap((item) => {
+      const entry = visibleById.get(item.id);
+      return entry && entry.level === level ? [entry] : [];
+    });
+    return entries.map((entry) => {
+      const { item, hasChildren } = entry;
+      const isOpen = hasChildren && open.has(item.id);
+      const isCurrent = item.id === currentId;
+      return (
+        <li
+          key={item.id}
+          ref={(node) => {
+            if (node) refs.current.set(item.id, node);
+            else refs.current.delete(item.id);
+          }}
+          role="treeitem"
+          aria-level={level}
+          aria-setsize={entry.setSize}
+          aria-posinset={entry.posInSet}
+          aria-expanded={hasChildren ? isOpen : undefined}
+          aria-selected={isCurrent}
+          aria-label={`${item.name}, ${countLabel(item)}`}
+          tabIndex={item.id === tabStop ? 0 : -1}
+          onFocus={(event) => {
+            if (event.target === event.currentTarget) setFocusId(item.id);
+          }}
+          className="tree-item"
+        >
+          <div
+            className="tree-row"
+            data-current={isCurrent || undefined}
+            style={{ '--level': level - 1 } as CSSProperties}
+          >
+            <span
+              className="tree-toggle"
+              data-open={isOpen || undefined}
+              aria-hidden="true"
+              onClick={hasChildren ? () => toggle(item.id) : undefined}
+            >
+              {hasChildren ? <Icon name="chevronRight" size={14} /> : null}
+            </span>
+            <Link
+              href={`/dossiers/${item.id}`}
+              className="tree-link"
+              tabIndex={-1}
+              onClick={() => setFocusId(item.id)}
+              title={item.path}
+            >
+              <Icon name="folder" className="tree-icon" />
+              <span className="tree-name">{item.name}</span>
+              {item.totalCount > 0 ? (
+                <span className="tree-count" aria-hidden="true">
+                  {item.totalCount}
+                </span>
+              ) : null}
+            </Link>
+          </div>
+          {isOpen ? (
+            <ul role="group" className="tree-group">
+              {renderLevel(item.id, level + 1)}
+            </ul>
+          ) : null}
+        </li>
+      );
+    });
+  };
+
   return (
-    <nav className="tree" aria-label="Dossiers">
-      <Branch nodes={roots} currentId={currentId} />
-    </nav>
+    <ul role="tree" aria-label="Dossiers" className="tree" onKeyDown={onKeyDown}>
+      {renderLevel(null, 1)}
+    </ul>
   );
 }

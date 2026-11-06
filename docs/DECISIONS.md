@@ -45,3 +45,7 @@ Playwright starts `next build && next start` rather than `next dev`: the dev ser
 ## 2026-11-06: production stack
 
 One Compose stack on vm-apps: Postgres 17 (pinned by digest, internal network only), a one-shot `migrate` service, the worker (with the Claude Code CLI pinned at 2.1.318) and the web app (Next.js standalone), joined to the reverse proxy's external network. No published port. The worker image also carries the account maintenance command used by `purge-comptes-orphelins`. Backups are daily `pg_dump` archives with a freshness check.
+
+## 2026-11-06: a three-pane explorer driven by the address
+
+The explorer keeps everything that matters in the URL (folder, open note, order, page size), so a place can be reloaded, shared and opened in a new tab, and the server renders it without client state. Only the open folders of the tree live in the browser, in a cookie the server reads, which avoids a second render after loading. Lists never load note content, and long folders show 50 notes at a time.

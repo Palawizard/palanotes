@@ -63,6 +63,15 @@ The system prompt (`packages/llm/src/prompt.ts`) says the entry and the index ar
 
 The worker parses the answer with `parseSortPlan` (Zod), checks that every folder path is valid and that every `append` targets a note of the same account, and only then stores the plan in `sort_runs`. Anything else marks the entry `failed` with a short message for the user. Logs carry the entry id, the mode, the model and the token counts, never the note text or a credential.
 
+## Explorer
+
+`/dossiers` is a three-pane explorer: the folder tree, the notes of one folder (or the recent notes), and the open note.
+
+- The tree lives in `app/(app)/dossiers/layout.tsx`, which Next keeps across navigation, so it keeps its scroll position and open folders. It follows the WAI-ARIA tree pattern (`components/folder-tree.tsx`): one tab stop, arrows, Home and End, first-letter jump, Enter to open. Open folders are saved in the `palanotes_tree` cookie, so the server renders the tree as it was left.
+- The list and the note are the page: `/dossiers/recents`, `/dossiers/<folder>`, with `?note=<id>` for the open note, `?tri=modifiee|creee|titre` for the order and `?n=` for the number of notes shown (50 at a time). Lists read note rows without their content (`listNoteRowsInFolder`, `listRecentNoteRows`); sorting is done in `@palanotes/core` (`sortNotes`, French collation, natural numbers).
+- Counts: each folder shows its notes plus those of its subfolders (`folderTotals`), and the list header says how many are directly in the folder.
+- On a phone the panes stack: folders, then a folder's notes, then one note, each with a back link and the folder path. Between 48 and 75rem the tree stays and the list gives way to the open note.
+
 ## Search
 
 The goal is to find a note even when it was filed in the wrong place, typed without accents, or misspelled. Search never writes an answer: it lists notes.
