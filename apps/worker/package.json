@@ -1,0 +1,19 @@
+{
+  "name": "@palanotes/worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@palanotes/core": "workspace:*",
+    "@palanotes/db": "workspace:*",
+    "@palanotes/llm": "workspace:*",
+    "pg-boss": "12.38.1",
+    "tsx": "4.23.15"
+  }
+}

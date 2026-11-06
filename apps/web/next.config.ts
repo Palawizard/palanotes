@@ -1,0 +1,10 @@
+import type { NextConfig } from 'next';
+
+const config: NextConfig = {
+  basePath: process.env.BASE_PATH ?? '/notes',
+  output: 'standalone',
+  transpilePackages: ['@palanotes/core', '@palanotes/db', '@palanotes/llm'],
+  poweredByHeader: false,
+};
+
+export default config;
