@@ -485,6 +485,29 @@ a {
   max-width: 75ch;
 }
 
+/* Search */
+
+.search-form {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.search-field {
+  flex: 1;
+  font-size: 1.0625rem;
+}
+
+.search-excerpt {
+  color: var(--ink-muted);
+}
+
+mark {
+  background: var(--selection);
+  color: var(--ink);
+  border-radius: 2px;
+  padding: 0 0.1em;
+}
+
 /* Forms */
 
 .field {
