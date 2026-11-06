@@ -65,7 +65,13 @@ The worker parses the answer with `parseSortPlan` (Zod), checks that every folde
 
 ## Search
 
-The goal is to find a note even when it was filed in the wrong place. Each note gets a title, a summary and tags at filing time; Postgres full-text search (`french` configuration, `unaccent`, `pg_trgm` for typos) covers the title, summary, tags and content. Every result shows its folder path. Embedding search (pgvector) can be added later if full-text search is not enough.
+The goal is to find a note even when it was filed in the wrong place, typed without accents, or misspelled. Search never writes an answer: it lists notes.
+
+- A text search configuration `french_unaccent` (French stemming, accents removed) and a trigger keep two columns of `notes` up to date: `search` (`tsvector`: title weight A, summary and tags B, content C, GIN index) and `search_text` (lowercase text without accents, trigram GIN index).
+- `searchNotes` (`packages/db/src/repo/search.ts`) keeps a note when the whole query matches the full-text index, or when every word of the query matches either the full-text index or, for typos, the trigram word similarity (threshold 0.4). Results are ranked by full-text rank, then similarity, then date, and limited to the signed-in account.
+- Excerpts come from `ts_headline` with control characters around matched words; the page turns them into `<mark>`. Each result shows its folder path.
+
+Embedding search (pgvector) can be added later if this is not enough.
 
 ## Data
 
