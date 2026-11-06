@@ -12,6 +12,7 @@ export type EntryAction = 'accept' | 'reject' | 'retry' | 'undo';
 interface PocketProps {
   entries: EntryView[];
   newId: string | null;
+  filingId: string | null;
   busyId: string | null;
   messages: Record<string, string>;
   onAction: (entryId: string, action: EntryAction) => void;
@@ -19,7 +20,7 @@ interface PocketProps {
 
 const EXPANDABLE = new Set(['proposed', 'applied', 'failed', 'rejected']);
 
-export function Pocket({ entries, newId, busyId, messages, onAction }: PocketProps) {
+export function Pocket({ entries, newId, filingId, busyId, messages, onAction }: PocketProps) {
   const [open, setOpen] = useState<string | null>(null);
   const [autoOpened, setAutoOpened] = useState<string | null>(null);
 
@@ -67,8 +68,8 @@ export function Pocket({ entries, newId, busyId, messages, onAction }: PocketPro
               <li
                 key={entry.id}
                 className="pocket-row"
-                data-new={entry.id === newId}
                 data-open={isOpen}
+                data-filing={entry.id === filingId}
               >
                 {expandable ? (
                   <button
@@ -162,7 +163,12 @@ function EntryDetails({
         </p>
       ) : null}
       <details className="pocket-raw">
-        <summary>Texte d’origine</summary>
+        <summary>
+          <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true" focusable="false">
+            <path d="M3 1.5 7 5l-4 3.5" fill="none" stroke="currentColor" strokeWidth="1.5" />
+          </svg>
+          Texte d’origine
+        </summary>
         <pre>{entry.content}</pre>
       </details>
       {message ? (
