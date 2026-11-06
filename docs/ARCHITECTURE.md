@@ -17,13 +17,13 @@ browser ──HTTPS──> Cloudflare (palawi.fr) ──tunnel──> Caddy / ga
 
 ## Packages
 
-| Package | Contents | Depends on |
-|---|---|---|
-| `packages/core` | domain types and rules: filing plan (Zod schema), folder paths | zod |
-| `packages/db` | Drizzle schema, client, SQL migrations | drizzle-orm, postgres |
-| `packages/llm` | `LlmClient` interface, per-account mode selection, then both implementations | nothing yet |
-| `apps/web` | pages, HTTP routes (`/api/...`), OIDC sign-in, search | core, db, llm |
-| `apps/worker` | `sort-entry` queue: builds the context, calls the model, stores the plan, applies it in direct mode | core, db, llm |
+| Package         | Contents                                                                                            | Depends on            |
+| --------------- | --------------------------------------------------------------------------------------------------- | --------------------- |
+| `packages/core` | domain types and rules: filing plan (Zod schema), folder paths                                      | zod                   |
+| `packages/db`   | Drizzle schema, client, SQL migrations                                                              | drizzle-orm, postgres |
+| `packages/llm`  | `LlmClient` interface, per-account mode selection, then both implementations                        | nothing yet           |
+| `apps/web`      | pages, HTTP routes (`/api/...`), OIDC sign-in, search                                               | core, db, llm         |
+| `apps/worker`   | `sort-entry` queue: builds the context, calls the model, stores the plan, applies it in direct mode | core, db, llm         |
 
 The domain code in `packages/core` depends on neither Next.js nor pg-boss.
 

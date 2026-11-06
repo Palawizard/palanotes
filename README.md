@@ -24,17 +24,17 @@ The app runs at `http://localhost:3000/notes`, and `http://localhost:3000/notes/
 
 ## Scripts
 
-| Command | Purpose |
-|---|---|
-| `pnpm dev` | web app and worker in development mode |
-| `pnpm build` | production build of the web app |
-| `pnpm typecheck` | type check every package |
-| `pnpm test` | Vitest tests |
-| `pnpm lint` | ESLint on the web app |
-| `pnpm format` / `pnpm format:check` | Prettier |
-| `pnpm db:up` / `pnpm db:down` | development Postgres (port 5434) |
-| `pnpm db:generate` | new migration after a change to `packages/db/src/schema.ts` |
-| `pnpm db:migrate` | apply migrations |
+| Command                             | Purpose                                                     |
+| ----------------------------------- | ----------------------------------------------------------- |
+| `pnpm dev`                          | web app and worker in development mode                      |
+| `pnpm build`                        | production build of the web app                             |
+| `pnpm typecheck`                    | type check every package                                    |
+| `pnpm test`                         | Vitest tests                                                |
+| `pnpm lint`                         | ESLint on the web app                                       |
+| `pnpm format` / `pnpm format:check` | Prettier                                                    |
+| `pnpm db:up` / `pnpm db:down`       | development Postgres (port 5434)                            |
+| `pnpm db:generate`                  | new migration after a change to `packages/db/src/schema.ts` |
+| `pnpm db:migrate`                   | apply migrations                                            |
 
 ## Layout
 
