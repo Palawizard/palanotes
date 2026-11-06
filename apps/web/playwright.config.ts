@@ -21,10 +21,11 @@ export default defineConfig({
       env: e2eEnv,
     },
     {
-      command: `next dev --port ${E2E_PORT}`,
+      // A production build: closer to what ships, and free of the dev server's hot reload.
+      command: `next build && next start --port ${E2E_PORT}`,
       url: `http://localhost:${E2E_PORT}/notes/api/health`,
       reuseExistingServer: false,
-      timeout: 120_000,
+      timeout: 300_000,
       env: e2eEnv,
     },
   ],
