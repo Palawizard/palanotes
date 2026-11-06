@@ -3,6 +3,7 @@ import { E2E_OIDC_PORT, E2E_PORT, e2eEnv } from './e2e/env';
 
 export default defineConfig({
   testDir: './e2e',
+  testIgnore: ['screens/**'],
   fullyParallel: false,
   workers: 1,
   timeout: 60_000,
