@@ -6,6 +6,7 @@ import { listNotesInFolder } from '@palanotes/db';
 import { FolderTree } from '@/components/folder-tree';
 import { NoteList } from '@/components/note-list';
 import { RenameFolder } from '@/components/rename-folder';
+import { Breadcrumb } from '@/components/breadcrumb';
 import { getCurrentUser } from '@/server/auth';
 import { getDb } from '@/server/db';
 import { loadFolderTree } from '@/server/folders';
@@ -38,15 +39,13 @@ export default async function FolderPage({ params }: { params: Promise<{ id: str
         <FolderTree roots={tree.roots} currentId={folder.id} />
       </div>
       <section className="browse-main" aria-labelledby="folder-title">
-        {trail.length > 0 ? (
-          <nav className="crumbs" aria-label="Chemin">
-            {trail.map((node) => (
-              <Link key={node.id} href={`/dossiers/${node.id}`}>
-                {node.name}
-              </Link>
-            ))}
-          </nav>
-        ) : null}
+        <Breadcrumb
+          items={[
+            { label: 'Dossiers', href: '/dossiers' },
+            ...trail.map((node) => ({ label: node.name, href: `/dossiers/${node.id}` })),
+            { label: folder.name },
+          ]}
+        />
         <RenameFolder folderId={folder.id} name={folder.name} />
         {folder.children.length > 0 ? (
           <ul className="subfolders" aria-label="Sous-dossiers">

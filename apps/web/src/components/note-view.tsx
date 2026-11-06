@@ -2,10 +2,11 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
-import { formatWhen } from '@/lib/format';
+import { formatDay, formatFull } from '@/lib/format';
 import { withoutLeadingTitle } from '@/lib/markdown-text';
 import { mutate } from '@/lib/mutate';
 import { Markdown } from './markdown';
+import { TagList } from './tag-list';
 
 interface NoteData {
   id: string;
@@ -117,10 +118,12 @@ export function NoteView({
     <>
       <header className="note-head">
         <h1 className="page-title">{note.title}</h1>
-        <p className="note-meta">
-          <time dateTime={note.updatedAt}>Modifiée {formatWhen(note.updatedAt)}</time>
-          {note.tags.length > 0 ? <span>{note.tags.join(', ')}</span> : null}
-        </p>
+        <div className="note-meta">
+          <time dateTime={note.updatedAt} title={formatFull(note.updatedAt)}>
+            Modifiée le {formatDay(note.updatedAt)}
+          </time>
+          <TagList tags={note.tags} />
+        </div>
         <div className="form-actions">
           <button
             type="button"
