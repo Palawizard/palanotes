@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { previewOf } from '@/server/entry-view';
+import { previewOf, withoutLeadingTitle } from '@/server/entry-view';
 import { RateLimiter } from '@/server/rate-limit';
 
 describe('previewOf', () => {
@@ -23,5 +23,18 @@ describe('RateLimiter', () => {
     expect(limiter.allow('u', 20)).toBe(false);
     expect(limiter.allow('other', 20)).toBe(true);
     expect(limiter.allow('u', 1011)).toBe(true);
+  });
+});
+
+describe('withoutLeadingTitle', () => {
+  it('drops a first heading that repeats the title', () => {
+    expect(withoutLeadingTitle('# Modèle OSI\n\nSept couches.', 'Modèle OSI')).toBe(
+      'Sept couches.',
+    );
+    expect(withoutLeadingTitle('## modèle osi\nSept', 'Modèle OSI')).toBe('Sept');
+  });
+  it('keeps other content', () => {
+    expect(withoutLeadingTitle('# Autre\n\nTexte', 'Modèle OSI')).toBe('# Autre\n\nTexte');
+    expect(withoutLeadingTitle('Texte', 'Modèle OSI')).toBe('Texte');
   });
 });
