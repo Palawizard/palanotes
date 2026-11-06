@@ -93,8 +93,10 @@ export function displayExcerpt(raw: string, title: string, query: string): strin
   let text = plainExcerpt(raw);
   const bare = withoutMarkers(text);
   if (title && normalize(bare).startsWith(normalize(title))) {
-    text = dropVisible(text, title.length).replace(/^[\s:–-]+/, '');
+    text = dropVisible(text, title.length);
   }
+  // A fragment can start or end on the separator placed between two lines of the note.
+  text = text.replace(/^[\s:–·-]+/, '').replace(/[\s·]+$/, '');
   if (text.split(START).length === 1) {
     text = markSimilarWords(text, query);
   }

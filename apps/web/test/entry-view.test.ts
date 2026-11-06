@@ -59,6 +59,12 @@ describe('plainExcerpt', () => {
 });
 
 describe('displayExcerpt', () => {
+  it('never starts or ends on a line separator', () => {
+    expect(displayExcerpt('· Fiche à relire · ', 'Synthèse', 'fiche')).toBe(
+      '\u0001Fiche\u0002 à relire …',
+    );
+  });
+
   it('drops a leading copy of the title and marks the cut', () => {
     expect(
       displayExcerpt('# Modèle OSI\n\nSept couches : physique, liaison', 'Modèle OSI', 'osi'),
