@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { previewOf, withoutLeadingTitle } from '@/server/entry-view';
+import { withoutLeadingTitle } from '@/lib/markdown-text';
+import { previewOf } from '@/server/entry-view';
 import { RateLimiter } from '@/server/rate-limit';
 
 describe('previewOf', () => {
