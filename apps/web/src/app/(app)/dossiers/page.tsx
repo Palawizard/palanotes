@@ -28,17 +28,22 @@ export default async function FoldersPage({
       <div className="page-stack">
         <h1 className="page-title">Dossiers</h1>
         {trashCount > 0 ? (
-          <p className="empty-state">
-            Tu n’as plus aucun dossier, mais la corbeille en garde{' '}
-            {trashCount > 1 ? `${trashCount}` : 'un'}.{' '}
-            <Link href="/dossiers/corbeille">Ouvrir la corbeille</Link> pour{' '}
-            {trashCount > 1 ? 'les' : 'le'} restaurer.
-          </p>
+          <div className="empty-block">
+            <p className="empty-state">
+              Tu n’as plus aucun dossier, mais la corbeille en garde{' '}
+              {trashCount > 1 ? `${trashCount}` : 'un'}.
+            </p>
+            <Link href="/dossiers/corbeille" className="button">
+              Ouvrir la corbeille
+            </Link>
+          </div>
         ) : (
-          <p className="empty-state">
-            Rien n’est encore rangé. <Link href="/">Écris ta première note</Link>, elle arrivera
-            ici.
-          </p>
+          <div className="empty-block">
+            <p className="empty-state">Rien n’est encore rangé. Ta première note arrivera ici.</p>
+            <Link href="/" className="button">
+              Écrire une note
+            </Link>
+          </div>
         )}
       </div>
     );
