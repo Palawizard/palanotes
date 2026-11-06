@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import type { EntryView } from '@/server/entry-view';
+import type { EntryStatus } from '@palanotes/db';
+import type { ActionView, EntryView } from '@/server/entry-view';
 import { formatWhen } from '@/lib/format';
+import { Icon } from './icons';
 import { Markdown } from './markdown';
 import { STATUS_LABELS, StatusMark } from './status-mark';
 
@@ -19,7 +21,24 @@ interface PocketProps {
   onAction: (entryId: string, action: EntryAction) => void;
 }
 
-const EXPANDABLE = new Set(['proposed', 'applied', 'failed', 'rejected']);
+const EXPANDABLE = new Set<EntryStatus>(['proposed', 'applied', 'failed', 'rejected']);
+const TO_DO = new Set<EntryStatus>(['pending', 'processing', 'proposed', 'failed']);
+const SUMMARY: { status: EntryStatus; one: string; many: string }[] = [
+  { status: 'proposed', one: 'à valider', many: 'à valider' },
+  { status: 'failed', one: 'échec', many: 'échecs' },
+  { status: 'processing', one: 'en cours', many: 'en cours' },
+  { status: 'pending', one: 'en attente', many: 'en attente' },
+];
+
+// Where the filing sends the entry, for the row: the folder, or the note it extends.
+function destination(entry: EntryView): string | null {
+  const action = entry.run?.actions[0];
+  if (!action || entry.status === 'rejected' || entry.run?.status === 'undone') return null;
+  const where = action.type === 'create' ? action.folderPath : `« ${action.noteTitle} »`;
+  return entry.run && entry.run.actions.length > 1
+    ? `${where} et ${entry.run.actions.length - 1} autre${entry.run.actions.length > 2 ? 's' : ''}`
+    : where;
+}
 
 export function Pocket({
   entries,
@@ -40,6 +59,68 @@ export function Pocket({
     setOpen(fresh.id);
   }
 
+  const toDo = entries.filter((entry) => TO_DO.has(entry.status));
+  const done = entries.filter((entry) => !TO_DO.has(entry.status));
+  const counts = SUMMARY.map((item) => ({
+    ...item,
+    count: entries.filter((entry) => entry.status === item.status).length,
+  })).filter((item) => item.count > 0);
+
+  const row = (entry: EntryView) => {
+    const expandable = EXPANDABLE.has(entry.status);
+    const isOpen = expandable && open === entry.id;
+    const where = destination(entry);
+    const summary = (
+      <>
+        <span className="pocket-text">{entry.preview}</span>
+        <span className="pocket-when">
+          <time dateTime={entry.createdAt}>{formatWhen(entry.createdAt)}</time>
+          {where ? (
+            <span className="pocket-where">
+              <Icon name={entry.status === 'applied' ? 'folder' : 'move'} size={14} />
+              {entry.status === 'applied' ? where : `vers ${where}`}
+            </span>
+          ) : null}
+        </span>
+        <span className="pocket-status" data-status={entry.status}>
+          <StatusMark status={entry.status} />
+          {STATUS_LABELS[entry.status]}
+        </span>
+      </>
+    );
+    return (
+      <li
+        key={entry.id}
+        className="pocket-row"
+        data-open={isOpen}
+        data-filing={entry.id === filingId}
+        data-settled={entry.id === settledId}
+      >
+        {expandable ? (
+          <button
+            type="button"
+            className="pocket-summary"
+            aria-expanded={isOpen}
+            aria-controls={`entry-${entry.id}`}
+            onClick={() => setOpen(isOpen ? null : entry.id)}
+          >
+            {summary}
+          </button>
+        ) : (
+          <div className="pocket-summary">{summary}</div>
+        )}
+        {isOpen ? (
+          <EntryDetails
+            entry={entry}
+            busy={busyId === entry.id}
+            message={messages[entry.id]}
+            onAction={onAction}
+          />
+        ) : null}
+      </li>
+    );
+  };
+
   return (
     <section className="pocket" aria-labelledby="pocket-title">
       <div className="pocket-head">
@@ -47,9 +128,21 @@ export function Pocket({
           Pochette
         </h2>
         {entries.length > 0 ? (
-          <span className="pocket-count">
-            {entries.length} {entries.length > 1 ? 'entrées récentes' : 'entrée récente'}
-          </span>
+          <p className="pocket-summary-line">
+            {counts.length === 0 ? (
+              <span className="pocket-tally" data-status="applied">
+                <StatusMark status="applied" />
+                Tout est rangé
+              </span>
+            ) : (
+              counts.map((item) => (
+                <span key={item.status} className="pocket-tally" data-status={item.status}>
+                  <StatusMark status={item.status} />
+                  {item.count} {item.count > 1 ? item.many : item.one}
+                </span>
+              ))
+            )}
+          </p>
         ) : null}
       </div>
       {entries.length === 0 ? (
@@ -57,57 +150,46 @@ export function Pocket({
           Rien pour l’instant. Ce que tu valides arrive ici, puis part dans son dossier.
         </p>
       ) : (
-        <ol className="pocket-list">
-          {entries.map((entry) => {
-            const expandable = EXPANDABLE.has(entry.status);
-            const isOpen = expandable && open === entry.id;
-            const summary = (
-              <>
-                <span className="pocket-text">{entry.preview}</span>
-                <time className="pocket-when" dateTime={entry.createdAt}>
-                  {formatWhen(entry.createdAt)}
-                </time>
-                <span className="pocket-status" data-status={entry.status}>
-                  <StatusMark status={entry.status} />
-                  {STATUS_LABELS[entry.status]}
-                </span>
-              </>
-            );
-            return (
-              <li
-                key={entry.id}
-                className="pocket-row"
-                data-open={isOpen}
-                data-filing={entry.id === filingId}
-                data-settled={entry.id === settledId}
-              >
-                {expandable ? (
-                  <button
-                    type="button"
-                    className="pocket-summary"
-                    aria-expanded={isOpen}
-                    aria-controls={`entry-${entry.id}`}
-                    onClick={() => setOpen(isOpen ? null : entry.id)}
-                  >
-                    {summary}
-                  </button>
-                ) : (
-                  <div className="pocket-summary">{summary}</div>
-                )}
-                {isOpen ? (
-                  <EntryDetails
-                    entry={entry}
-                    busy={busyId === entry.id}
-                    message={messages[entry.id]}
-                    onAction={onAction}
-                  />
-                ) : null}
-              </li>
-            );
-          })}
-        </ol>
+        <>
+          {toDo.length > 0 ? (
+            <>
+              <h3 className="pocket-group">À traiter</h3>
+              <ol className="pocket-list">{toDo.map(row)}</ol>
+            </>
+          ) : null}
+          {done.length > 0 ? (
+            <>
+              <h3 className="pocket-group">Récemment rangées</h3>
+              <ol className="pocket-list">{done.map(row)}</ol>
+            </>
+          ) : null}
+        </>
       )}
     </section>
+  );
+}
+
+function PlanCard({ action }: { action: ActionView }) {
+  return (
+    <article className="plan-card">
+      <p className="plan-where">
+        <span className="plan-where-label">
+          {action.type === 'create' ? 'Nouvelle note dans' : 'Ajout à la note'}
+        </span>
+        <span className="plan-where-path">
+          <Icon name={action.type === 'create' ? 'folder' : 'note'} size={14} />
+          {action.type === 'create'
+            ? action.folderPath
+            : `« ${action.noteTitle} »${action.folderPath ? `, dans ${action.folderPath}` : ''}`}
+        </span>
+      </p>
+      <h4 className="plan-title">
+        {action.type === 'create' ? action.title : `Nouvelle section : ${action.sectionTitle}`}
+      </h4>
+      <div className="plan-preview">
+        <Markdown>{action.content}</Markdown>
+      </div>
+    </article>
   );
 }
 
@@ -123,13 +205,14 @@ function EntryDetails({
   onAction: (entryId: string, action: EntryAction) => void;
 }) {
   const run = entry.run;
-  const button = (action: EntryAction, label: string, primary = false) => (
+  const button = (action: EntryAction, label: string, kind: 'primary' | 'quiet' = 'quiet') => (
     <button
       type="button"
-      className={primary ? 'button' : 'button button-quiet'}
+      className={kind === 'primary' ? 'button' : 'button button-quiet'}
       disabled={busy}
       onClick={() => onAction(entry.id, action)}
     >
+      {action === 'accept' ? <Icon name="check" /> : null}
       {label}
     </button>
   );
@@ -142,45 +225,15 @@ function EntryDetails({
       ) : null}
       {run && (entry.status === 'proposed' || entry.status === 'applied') ? (
         <>
+          {run.actions.map((action, index) => (
+            <PlanCard key={index} action={action} />
+          ))}
           <p className="pocket-explanation">
             {run.status === 'undone' ? 'Rangement annulé. ' : ''}
             {run.explanation}
           </p>
-          {run.actions.map((action, index) => (
-            <article className="plan-card" key={index}>
-              <p className="plan-where">
-                {action.type === 'create'
-                  ? `Nouvelle note dans ${action.folderPath}`
-                  : `Ajout à « ${action.noteTitle} »${action.folderPath ? `, dans ${action.folderPath}` : ''}`}
-              </p>
-              <h3 className="plan-title">
-                {action.type === 'create' ? action.title : action.sectionTitle}
-              </h3>
-              <div className="plan-preview">
-                <Markdown>{action.content}</Markdown>
-              </div>
-            </article>
-          ))}
         </>
       ) : null}
-      {entry.status === 'applied' && run && run.noteIds.length > 0 ? (
-        <p className="plan-links">
-          {run.noteIds.map((noteId, index) => (
-            <Link key={noteId} href={`/note/${noteId}`}>
-              {run.noteIds.length > 1 ? `Ouvrir la note ${index + 1}` : 'Ouvrir la note'}
-            </Link>
-          ))}
-        </p>
-      ) : null}
-      <details className="pocket-raw">
-        <summary>
-          <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true" focusable="false">
-            <path d="M3 1.5 7 5l-4 3.5" fill="none" stroke="currentColor" strokeWidth="1.5" />
-          </svg>
-          Texte d’origine
-        </summary>
-        <pre>{entry.content}</pre>
-      </details>
       {message ? (
         <p className="pocket-error" role="alert">
           {message}
@@ -189,16 +242,34 @@ function EntryDetails({
       <div className="pocket-actions">
         {entry.status === 'proposed' ? (
           <>
-            {button('accept', 'Accepter', true)}
+            {button('accept', 'Accepter', 'primary')}
             {button('reject', 'Refuser')}
+            <span className="pocket-actions-gap" />
             {button('retry', 'Relancer')}
           </>
         ) : null}
+        {entry.status === 'applied' && run && run.noteIds.length > 0 ? (
+          <span className="plan-links">
+            {run.noteIds.map((noteId, index) => (
+              <Link key={noteId} href={`/note/${noteId}`} className="button button-small">
+                <Icon name="note" />
+                {run.noteIds.length > 1 ? `Ouvrir la note ${index + 1}` : 'Ouvrir la note'}
+              </Link>
+            ))}
+          </span>
+        ) : null}
         {entry.status === 'applied' ? button('undo', 'Annuler le rangement') : null}
         {entry.status === 'failed' || entry.status === 'rejected'
-          ? button('retry', 'Relancer', true)
+          ? button('retry', 'Relancer', 'primary')
           : null}
       </div>
+      <details className="pocket-raw">
+        <summary>
+          <Icon name="chevronRight" size={12} />
+          Texte d’origine
+        </summary>
+        <pre>{entry.content}</pre>
+      </details>
     </div>
   );
 }
