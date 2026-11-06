@@ -5,7 +5,8 @@ test('an anonymous visitor is sent through sign-in and lands on the home page', 
   context,
 }) => {
   await page.goto('./');
-  await expect(page.getByText('Bonjour Palawi')).toBeVisible();
+  await expect(page.getByLabel('Ta note')).toBeVisible();
+  await expect(page.getByText('Palawi')).toBeVisible();
 
   const session = (await context.cookies()).find((c) => c.name === 'palawi_notes_session');
   expect(session).toMatchObject({ path: '/notes', httpOnly: true, secure: true, sameSite: 'Lax' });
@@ -26,4 +27,12 @@ test('a mutation from another origin is refused', async ({ request }) => {
     headers: { origin: 'https://evil.example' },
   });
   expect(response.status()).toBe(403);
+});
+
+test('signing out clears the session', async ({ page }) => {
+  await page.goto('./');
+  await page.getByRole('button', { name: 'Se déconnecter' }).click();
+  await expect(page.getByRole('heading', { name: 'À bientôt' })).toBeVisible();
+  const response = await page.request.get('api/entries');
+  expect(response.status()).toBe(401);
 });
