@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { z } from 'zod';
 import { findNote } from '@palanotes/db';
+import { Breadcrumb } from '@/components/breadcrumb';
 import { NoteView } from '@/components/note-view';
 import { getCurrentUser } from '@/server/auth';
 import { getDb } from '@/server/db';
@@ -31,14 +31,13 @@ export default async function NotePage({ params }: { params: Promise<{ id: strin
 
   return (
     <article className="page-stack note-page">
-      <nav className="crumbs" aria-label="Chemin">
-        <Link href="/dossiers">Dossiers</Link>
-        {trail.map((node) => (
-          <Link key={node.id} href={`/dossiers/${node.id}`}>
-            {node.name}
-          </Link>
-        ))}
-      </nav>
+      <Breadcrumb
+        items={[
+          { label: 'Dossiers', href: '/dossiers' },
+          ...trail.map((node) => ({ label: node.name, href: `/dossiers/${node.id}` })),
+          { label: note.title },
+        ]}
+      />
       <NoteView
         note={{
           id: note.id,

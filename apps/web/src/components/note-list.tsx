@@ -1,29 +1,32 @@
-import Link from 'next/link';
 import type { Note } from '@palanotes/db';
-import { formatWhen } from '@/lib/format';
+import { NoteRow } from './note-row';
 
 export function NoteList({
   notes,
   folderPaths,
+  label,
 }: {
   notes: Note[];
   folderPaths?: Map<string, string>;
+  label?: string;
 }) {
+  const now = new Date();
   return (
-    <ul className="note-list">
+    <ul className="note-rows" aria-label={label}>
       {notes.map((note) => (
-        <li key={note.id} className="note-item">
-          <Link href={`/note/${note.id}`} className="note-link">
-            {note.title}
-          </Link>
-          <p className="note-summary">{note.summary}</p>
-          <p className="note-meta">
-            {folderPaths?.get(note.folderId) ? <span>{folderPaths.get(note.folderId)}</span> : null}
-            <time dateTime={note.updatedAt.toISOString()}>
-              {formatWhen(note.updatedAt.toISOString())}
-            </time>
-            {note.tags.length > 0 ? <span>{note.tags.join(', ')}</span> : null}
-          </p>
+        <li key={note.id}>
+          <NoteRow
+            href={`/note/${note.id}`}
+            now={now}
+            note={{
+              id: note.id,
+              title: note.title,
+              excerpt: note.summary,
+              tags: note.tags,
+              date: note.updatedAt.toISOString(),
+              folderPath: folderPaths?.get(note.folderId),
+            }}
+          />
         </li>
       ))}
     </ul>
