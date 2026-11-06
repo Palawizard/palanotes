@@ -1,6 +1,8 @@
 import { cookies } from 'next/headers';
 import type { ReactNode } from 'react';
 import { RecentLink } from '@/components/explorer-nav';
+import { ExplorerShell, TreeHead } from '@/components/explorer-shell';
+import { FolderActionsProvider } from '@/components/folder-actions';
 import { FolderTree } from '@/components/folder-tree';
 import { parseTreeCookie, TREE_COOKIE } from '@/lib/tree-cookie';
 import { getCurrentUser } from '@/server/auth';
@@ -21,19 +23,17 @@ export default async function ExplorerLayout({ children }: { children: ReactNode
     return children;
   }
   return (
-    <div className="explorer">
-      <nav className="explorer-tree" aria-labelledby="tree-title">
-        <div className="pane-head">
-          <h2 className="pane-title" id="tree-title">
-            Dossiers
-          </h2>
-        </div>
-        <div className="pane-scroll">
-          <RecentLink />
-          <FolderTree items={items} savedOpen={savedOpen} />
-        </div>
-      </nav>
-      {children}
-    </div>
+    <FolderActionsProvider folders={items}>
+      <ExplorerShell>
+        <nav className="explorer-tree" aria-labelledby="tree-title">
+          <TreeHead />
+          <div className="pane-scroll">
+            <RecentLink />
+            <FolderTree items={items} savedOpen={savedOpen} />
+          </div>
+        </nav>
+        {children}
+      </ExplorerShell>
+    </FolderActionsProvider>
   );
 }

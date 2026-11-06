@@ -1,24 +1,38 @@
 import { apiPath } from './paths';
 
-// JSON request to one of our route handlers; returns the error message to show, or null.
-export async function mutate(
+export type SendResult<T> = { ok: true; data: T } | { ok: false; message: string };
+
+// JSON request to one of our route handlers. Returns the parsed answer, or the message
+// to show when it failed.
+export async function send<T = unknown>(
   path: string,
-  method: 'PATCH' | 'POST',
+  method: 'PATCH' | 'POST' | 'DELETE',
   body: unknown,
   fallback: string,
-): Promise<string | null> {
+): Promise<SendResult<T>> {
   try {
     const response = await fetch(apiPath(path), {
       method,
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(body),
+      headers: body === undefined ? undefined : { 'content-type': 'application/json' },
+      body: body === undefined ? undefined : JSON.stringify(body),
     });
+    const data = (await response.json().catch(() => ({}))) as T & { message?: string };
     if (response.ok) {
-      return null;
+      return { ok: true, data };
     }
-    const data = (await response.json().catch(() => ({}))) as { message?: string };
-    return data.message ?? fallback;
+    return { ok: false, message: data.message ?? fallback };
   } catch {
-    return 'Connexion perdue. Réessaie.';
+    return { ok: false, message: 'Connexion perdue. Réessaie.' };
   }
+}
+
+// Same, for callers that only need the error message, or null on success.
+export async function mutate(
+  path: string,
+  method: 'PATCH' | 'POST' | 'DELETE',
+  body: unknown,
+  fallback: string,
+): Promise<string | null> {
+  const result = await send(path, method, body, fallback);
+  return result.ok ? null : result.message;
 }

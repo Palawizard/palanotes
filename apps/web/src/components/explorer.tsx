@@ -82,12 +82,10 @@ export function BackLink({
 
 export function NotePane({
   note,
-  folders,
   backHref,
   backLabel,
 }: {
   note: NotePaneData | null;
-  folders: { id: string; path: string }[];
   backHref: string;
   backLabel: string;
 }) {
@@ -121,7 +119,6 @@ export function NotePane({
             folderId: note.folderId,
             updatedAt: note.updatedAt,
           }}
-          folders={folders}
         />
       </div>
     </article>

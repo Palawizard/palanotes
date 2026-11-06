@@ -38,12 +38,6 @@ export async function loadNotePane(
   };
 }
 
-export function folderChoices(tree: FolderTree): { id: string; path: string }[] {
-  return [...tree.byId.values()]
-    .map((node) => ({ id: node.id, path: node.path }))
-    .sort((a, b) => a.path.localeCompare(b.path, 'fr'));
-}
-
 export function toRowData(
   note: NoteRowRecord,
   date: 'createdAt' | 'updatedAt',
@@ -55,6 +49,7 @@ export function toRowData(
     excerpt: note.summary,
     tags: note.tags,
     date: note[date].toISOString(),
+    folderId: note.folderId,
     folderPath,
   };
 }

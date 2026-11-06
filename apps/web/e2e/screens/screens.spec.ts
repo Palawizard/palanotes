@@ -60,6 +60,31 @@ const SCREENS: Screen[] = [
   },
   { name: 'recents', path: async () => './dossiers/recents' },
   {
+    name: 'menu-dossier',
+    path: async () => `./dossiers/${await idOf('folders', 'name', 'TCP-IP')}`,
+    prepare: async (page) => {
+      await page.getByRole('button', { name: 'Actions sur TCP-IP' }).last().click();
+    },
+  },
+  {
+    name: 'dialogue-fusion',
+    path: async () => `./dossiers/${await idOf('folders', 'name', 'TCP-IP')}`,
+    prepare: async (page) => {
+      await page.getByRole('button', { name: 'Actions sur TCP-IP' }).last().click();
+      await page.getByRole('menuitem', { name: 'Fusionner dans…' }).click();
+      await page.getByRole('combobox').fill('réseau');
+      await page.keyboard.press('ArrowDown');
+    },
+  },
+  {
+    name: 'dialogue-note',
+    path: async () =>
+      `./dossiers/${await idOf('folders', 'name', 'TCP-IP')}?note=${await idOf('notes', 'title', 'Adressage IPv4 et masques')}`,
+    prepare: async (page) => {
+      await page.getByRole('button', { name: 'Déplacer vers…' }).click();
+    },
+  },
+  {
     name: 'note',
     path: async () => `./note/${await idOf('notes', 'title', 'Adressage IPv4 et masques')}`,
   },

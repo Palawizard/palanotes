@@ -8,11 +8,11 @@ import { Breadcrumb } from '@/components/breadcrumb';
 import { BackLink, ExplorerMain, NotePane, SortLinks } from '@/components/explorer';
 import { Icon } from '@/components/icons';
 import { NoteRow } from '@/components/note-row';
-import { RenameFolder } from '@/components/rename-folder';
+import { FolderMenuButton } from '@/components/explorer-shell';
 import { explorerHref, PAGE_SIZE, parseShown } from '@/lib/explorer-url';
 import { getCurrentUser } from '@/server/auth';
 import { getDb } from '@/server/db';
-import { folderChoices, loadNotePane, toRowData } from '@/server/explorer';
+import { loadNotePane, toRowData } from '@/server/explorer';
 import { loadFolderTree } from '@/server/folders';
 
 export const metadata: Metadata = { title: 'Dossier' };
@@ -75,7 +75,12 @@ export default async function FolderPage({
               items={trail.map((node) => ({ label: node.name, href: `/dossiers/${node.id}` }))}
               endsHere={false}
             />
-            <RenameFolder folderId={folder.id} name={folder.name} />
+            <div className="list-title-row">
+              <h1 className="pane-heading" id="list-title">
+                {folder.name}
+              </h1>
+              <FolderMenuButton folderId={folder.id} name={folder.name} />
+            </div>
             <div className="list-tools">
               <p className="list-meta">{countText(folder.noteCount, folder.totalCount)}</p>
               {rows.length > 1 ? (
@@ -133,14 +138,7 @@ export default async function FolderPage({
           </div>
         </>
       }
-      note={
-        <NotePane
-          note={note}
-          folders={folderChoices(tree)}
-          backHref={explorerHref(place)}
-          backLabel={folder.name}
-        />
-      }
+      note={<NotePane note={note} backHref={explorerHref(place)} backLabel={folder.name} />}
     />
   );
 }

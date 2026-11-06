@@ -2,13 +2,23 @@
 
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
+import {
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type DragEvent,
+  type KeyboardEvent,
+} from 'react';
+import { currentDrag, endDrag } from '@/lib/drag';
 import { serializeTreeCookie, TREE_COOKIE } from '@/lib/tree-cookie';
 import type { FolderItem } from '@/server/folders';
+import { useFolderActions } from './folder-actions';
 import { Icon } from './icons';
 
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
 const YEAR = 60 * 60 * 24 * 365;
+const OPEN_DELAY = 700;
 
 interface VisibleItem {
   item: FolderItem;
@@ -67,14 +77,19 @@ export function FolderTree({ items, savedOpen }: { items: FolderItem[]; savedOpe
   const [open, setOpen] = useState<Set<string>>(
     () => new Set([...savedOpen, ...ancestorsOf(currentId)]),
   );
-  const [shownFor, setShownFor] = useState(currentId);
-  if (shownFor !== currentId) {
-    // A new current folder: open the way to it, keep everything else as it was.
-    setShownFor(currentId);
-    setOpen((previous) => new Set([...previous, ...ancestorsOf(currentId)]));
+  const way = ancestorsOf(currentId);
+  const wayKey = `${currentId}:${way.join('.')}`;
+  const [shownFor, setShownFor] = useState(wayKey);
+  if (shownFor !== wayKey) {
+    // A new current folder, or the current one moved: open the way to it, keep the rest.
+    setShownFor(wayKey);
+    setOpen((previous) => new Set([...previous, ...way]));
   }
   const [focusId, setFocusId] = useState<string | null>(null);
   const refs = useRef(new Map<string, HTMLLIElement>());
+  const actions = useFolderActions();
+  const [dropId, setDropId] = useState<string | null>(null);
+  const openTimer = useRef<number | undefined>(undefined);
 
   const visible = useMemo(() => {
     const list: VisibleItem[] = [];
@@ -118,6 +133,57 @@ export function FolderTree({ items, savedOpen }: { items: FolderItem[]; savedOpe
     saveOpen(copy);
   }
 
+  function canDrop(targetId: string): boolean {
+    const drag = currentDrag();
+    if (!drag || drag.from === targetId) return false;
+    return drag.kind === 'note' || !actions.subtree(drag.id).has(targetId);
+  }
+
+  function onDragOver(event: DragEvent, item: FolderItem, hasChildren: boolean) {
+    if (!canDrop(item.id)) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+    if (dropId !== item.id) {
+      setDropId(item.id);
+      window.clearTimeout(openTimer.current);
+      // Hovering a closed folder while dragging opens it, to reach its subfolders.
+      if (hasChildren && !open.has(item.id)) {
+        openTimer.current = window.setTimeout(() => toggle(item.id, true), OPEN_DELAY);
+      }
+    }
+  }
+
+  function onDragLeave(event: DragEvent, id: string) {
+    if (!event.currentTarget.contains(event.relatedTarget as Node | null) && dropId === id) {
+      setDropId(null);
+      window.clearTimeout(openTimer.current);
+    }
+  }
+
+  function onDrop(event: DragEvent, targetId: string) {
+    const drag = currentDrag();
+    setDropId(null);
+    window.clearTimeout(openTimer.current);
+    if (!drag || !canDrop(targetId)) return;
+    event.preventDefault();
+    endDrag();
+    if (drag.kind === 'note') {
+      void actions.moveNote(
+        { id: drag.id, title: drag.label, folderId: drag.from ?? '' },
+        targetId,
+      );
+    } else {
+      void actions.moveFolder(drag.id, targetId);
+    }
+  }
+
+  function openMenuFor(id: string, fromKeyboard: { x: number; y: number } | null) {
+    const node = refs.current.get(id) ?? null;
+    const row = node?.querySelector('.tree-row')?.getBoundingClientRect();
+    const position = fromKeyboard ?? { x: (row?.left ?? 0) + 24, y: row?.bottom ?? 0 };
+    actions.openMenu(id, position, node);
+  }
+
   function onKeyDown(event: KeyboardEvent<HTMLUListElement>) {
     const index = visible.findIndex((entry) => entry.item.id === tabStop);
     const entry = visible[index];
@@ -159,6 +225,16 @@ export function FolderTree({ items, savedOpen }: { items: FolderItem[]; savedOpe
         handled();
         router.push(`/dossiers/${item.id}`);
         break;
+      case 'ContextMenu':
+        handled();
+        openMenuFor(item.id, null);
+        break;
+      case 'F10':
+        if (event.shiftKey) {
+          handled();
+          openMenuFor(item.id, null);
+        }
+        break;
       default:
         if (event.key.length === 1 && /\p{L}|\p{N}/u.test(event.key)) {
           handled();
@@ -188,6 +264,7 @@ export function FolderTree({ items, savedOpen }: { items: FolderItem[]; savedOpe
             else refs.current.delete(item.id);
           }}
           role="treeitem"
+          data-folder={item.id}
           aria-level={level}
           aria-setsize={entry.setSize}
           aria-posinset={entry.posInSet}
@@ -198,12 +275,27 @@ export function FolderTree({ items, savedOpen }: { items: FolderItem[]; savedOpe
           onFocus={(event) => {
             if (event.target === event.currentTarget) setFocusId(item.id);
           }}
+          onContextMenu={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            setFocusId(item.id);
+            openMenuFor(item.id, { x: event.clientX, y: event.clientY });
+          }}
           className="tree-item"
         >
           <div
             className="tree-row"
             data-current={isCurrent || undefined}
+            data-drop={dropId === item.id || undefined}
             style={{ '--level': level - 1 } as CSSProperties}
+            draggable
+            data-drag="folder"
+            data-id={item.id}
+            data-label={item.name}
+            data-from={item.parentId ?? ''}
+            onDragOver={(event) => onDragOver(event, item, hasChildren)}
+            onDragLeave={(event) => onDragLeave(event, item.id)}
+            onDrop={(event) => onDrop(event, item.id)}
           >
             <span
               className="tree-toggle"
@@ -228,6 +320,23 @@ export function FolderTree({ items, savedOpen }: { items: FolderItem[]; savedOpe
                 </span>
               ) : null}
             </Link>
+            <button
+              type="button"
+              className="tree-more icon-button"
+              tabIndex={-1}
+              aria-label={`Actions sur ${item.name}`}
+              onClick={(event) => {
+                const rect = event.currentTarget.getBoundingClientRect();
+                setFocusId(item.id);
+                actions.openMenu(
+                  item.id,
+                  { x: rect.left, y: rect.bottom + 4 },
+                  event.currentTarget,
+                );
+              }}
+            >
+              <Icon name="more" />
+            </button>
           </div>
           {isOpen ? (
             <ul role="group" className="tree-group">

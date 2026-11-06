@@ -1,23 +1,25 @@
 import { z } from 'zod';
-import { FolderNameTakenError, renameFolder } from '@palanotes/db';
+import { deleteEmptyFolder, moveFolder, renameFolder } from '@palanotes/db';
 import { getCurrentUser } from '@/server/auth';
 import { getDb } from '@/server/db';
+import {
+  badRequest,
+  folderErrorResponse,
+  folderName,
+  NAME_MESSAGE,
+  notFoundResponse,
+} from '@/server/folder-errors';
 
 export const dynamic = 'force-dynamic';
 
-const body = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1)
-    .max(80)
-    .refine((value) => !value.includes('/'), 'no slash'),
-});
+const body = z.union([
+  z.object({ name: folderName }).strict(),
+  z.object({ parentId: z.uuid().nullable() }).strict(),
+]);
 
-export async function PATCH(
-  request: Request,
-  context: { params: Promise<{ id: string }> },
-): Promise<Response> {
+type Context = { params: Promise<{ id: string }> };
+
+export async function PATCH(request: Request, context: Context): Promise<Response> {
   const user = await getCurrentUser();
   if (!user) {
     return Response.json({ error: 'unauthorized' }, { status: 401 });
@@ -25,24 +27,43 @@ export async function PATCH(
   const id = z.uuid().safeParse((await context.params).id);
   const parsed = body.safeParse(await request.json().catch(() => null));
   if (!id.success || !parsed.success) {
-    return Response.json(
-      { error: 'bad_request', message: 'Nom invalide : 80 caractères au plus, sans « / ».' },
-      { status: 400 },
-    );
+    return badRequest(NAME_MESSAGE);
+  }
+  const db = getDb();
+  try {
+    const folder =
+      'name' in parsed.data
+        ? await renameFolder(db, user.id, id.data, parsed.data.name)
+        : await moveFolder(db, user.id, id.data, parsed.data.parentId);
+    if (!folder) {
+      return notFoundResponse();
+    }
+    return Response.json({
+      folder: { id: folder.id, name: folder.name, parentId: folder.parentId },
+    });
+  } catch (error) {
+    const response = folderErrorResponse(error);
+    if (response) return response;
+    throw error;
+  }
+}
+
+export async function DELETE(_request: Request, context: Context): Promise<Response> {
+  const user = await getCurrentUser();
+  if (!user) {
+    return Response.json({ error: 'unauthorized' }, { status: 401 });
+  }
+  const id = z.uuid().safeParse((await context.params).id);
+  if (!id.success) {
+    return notFoundResponse();
   }
   try {
-    const folder = await renameFolder(getDb(), user.id, id.data, parsed.data.name);
-    if (!folder) {
-      return Response.json({ error: 'not_found' }, { status: 404 });
-    }
-    return Response.json({ folder: { id: folder.id, name: folder.name } });
+    return (await deleteEmptyFolder(getDb(), user.id, id.data))
+      ? new Response(null, { status: 204 })
+      : notFoundResponse();
   } catch (error) {
-    if (error instanceof FolderNameTakenError) {
-      return Response.json(
-        { error: 'conflict', message: 'Un dossier porte déjà ce nom ici.' },
-        { status: 409 },
-      );
-    }
+    const response = folderErrorResponse(error);
+    if (response) return response;
     throw error;
   }
 }

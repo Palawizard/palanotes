@@ -49,3 +49,7 @@ One Compose stack on vm-apps: Postgres 17 (pinned by digest, internal network on
 ## 2026-11-06: a three-pane explorer driven by the address
 
 The explorer keeps everything that matters in the URL (folder, open note, order, page size), so a place can be reloaded, shared and opened in a new tab, and the server renders it without client state. Only the open folders of the tree live in the browser, in a cookie the server reads, which avoids a second render after loading. Lists never load note content, and long folders show 50 notes at a time.
+
+## 2026-11-06: native drag and drop, with « Déplacer vers… » as the main path
+
+Notes and folders are dragged with the browser's own drag and drop, without a library: drop targets are only the rows of the folder tree, which is simple enough to handle by hand. Native dragging is unreliable on touch screens and cannot be done from the keyboard, so every move also exists as « Déplacer vers… » with a filterable folder list (WCAG 2.2, 2.5.7). Folders are never deleted with their content: only an empty folder can be deleted, and merging moves every note before removing the emptied folder.
