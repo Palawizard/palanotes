@@ -158,6 +158,10 @@ a {
   gap: 0.125rem;
 }
 
+.rail-foot > .rail-link {
+  margin-bottom: 1rem;
+}
+
 .rail-user {
   padding: 0 0.5rem;
   font-weight: 700;
@@ -1008,6 +1012,17 @@ button.pocket-summary {
     opacity 220ms var(--ease-out);
   transform: translateX(2rem);
   opacity: 0;
+}
+
+/* Back in place as filed: it fades in rather than snapping back. */
+.pocket-row[data-settled='true'] > .pocket-summary {
+  animation: pocket-settle 180ms var(--ease-out);
+}
+
+@keyframes pocket-settle {
+  from {
+    opacity: 0;
+  }
 }
 
 .pocket-text {

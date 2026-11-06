@@ -13,6 +13,7 @@ interface PocketProps {
   entries: EntryView[];
   newId: string | null;
   filingId: string | null;
+  settledId: string | null;
   busyId: string | null;
   messages: Record<string, string>;
   onAction: (entryId: string, action: EntryAction) => void;
@@ -20,7 +21,15 @@ interface PocketProps {
 
 const EXPANDABLE = new Set(['proposed', 'applied', 'failed', 'rejected']);
 
-export function Pocket({ entries, newId, filingId, busyId, messages, onAction }: PocketProps) {
+export function Pocket({
+  entries,
+  newId,
+  filingId,
+  settledId,
+  busyId,
+  messages,
+  onAction,
+}: PocketProps) {
   const [open, setOpen] = useState<string | null>(null);
   const [autoOpened, setAutoOpened] = useState<string | null>(null);
 
@@ -70,6 +79,7 @@ export function Pocket({ entries, newId, filingId, busyId, messages, onAction }:
                 className="pocket-row"
                 data-open={isOpen}
                 data-filing={entry.id === filingId}
+                data-settled={entry.id === settledId}
               >
                 {expandable ? (
                   <button

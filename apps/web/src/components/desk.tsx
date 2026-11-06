@@ -21,6 +21,7 @@ export function Desk({ initialEntries }: { initialEntries: EntryView[] }) {
   const [newId, setNewId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [filingId, setFilingId] = useState<string | null>(null);
+  const [settledId, setSettledId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Record<string, string>>({});
   const unsettled = entries.some((entry) => UNSETTLED.has(entry.status));
 
@@ -69,6 +70,7 @@ export function Desk({ initialEntries }: { initialEntries: EntryView[] }) {
           setFilingId(entryId);
           await new Promise((resolve) => setTimeout(resolve, FILING_MS));
           setFilingId(null);
+          setSettledId(entryId);
         }
         setEntries(next);
       } else {
@@ -94,6 +96,7 @@ export function Desk({ initialEntries }: { initialEntries: EntryView[] }) {
         entries={entries}
         newId={newId}
         filingId={filingId}
+        settledId={settledId}
         busyId={busyId}
         messages={messages}
         onAction={onAction}
