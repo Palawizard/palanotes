@@ -132,8 +132,6 @@ button.pocket-summary {
 
 .pocket-explanation {
   color: var(--ink-muted);
-  font-size: var(--text-meta);
-  line-height: var(--leading-meta);
 }
 
 .pocket-note {

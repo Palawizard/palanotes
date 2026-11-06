@@ -526,8 +526,6 @@ a.tag {
 
 .settings-help {
   color: var(--ink-muted);
-  font-size: var(--text-meta);
-  line-height: var(--leading-meta);
 }
 
 .settings-card {
