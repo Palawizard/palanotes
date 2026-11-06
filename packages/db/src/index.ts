@@ -5,3 +5,4 @@ export * from './repo/entries';
 export * from './repo/folders';
 export * from './repo/notes';
 export * from './repo/sort-runs';
+export * from './repo/apply';
