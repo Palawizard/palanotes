@@ -18,7 +18,8 @@
     "db:generate": "pnpm --filter @palanotes/db generate",
     "db:migrate": "pnpm --filter @palanotes/db migrate",
     "prepare": "node scripts/install-hooks.mjs",
-    "check:private": "node scripts/check-private-files.mjs"
+    "check:private": "node scripts/check-private-files.mjs",
+    "e2e": "pnpm --filter @palanotes/web e2e"
   },
   "devDependencies": {
     "@types/node": "22.20.5",

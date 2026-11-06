@@ -38,3 +38,31 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17.6
+        env:
+          POSTGRES_USER: palanotes
+          POSTGRES_PASSWORD: palanotes
+          POSTGRES_DB: palanotes_e2e
+        ports:
+          - 5434:5432
+        options: >-
+          --health-cmd "pg_isready -U palanotes"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @palanotes/web exec playwright install --with-deps chromium
+      - run: pnpm e2e
