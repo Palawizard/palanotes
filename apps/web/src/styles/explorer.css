@@ -508,7 +508,7 @@
   left: 50%;
   bottom: 1.25rem;
   z-index: 40;
-  max-width: min(32rem, calc(100vw - 2rem));
+  max-width: min(36rem, calc(100vw - 2rem));
   padding: 0.5rem 0.875rem;
   border: 1px solid var(--rule-strong);
   border-radius: var(--radius);
@@ -516,10 +516,43 @@
   color: var(--ink);
   box-shadow: var(--shadow-float);
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: max-content;
   transform: translate(-50%, 0);
   transition:
     opacity 180ms var(--ease-out),
     transform 180ms var(--ease-out);
+}
+
+.explorer-status-text {
+  min-width: 0;
+}
+
+.explorer-status-undo {
+  flex-shrink: 0;
+  border-color: transparent;
+  margin: -0.25rem -0.5rem -0.25rem 0;
+  padding: 0.25rem 0.5rem;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .explorer-status-undo:hover {
+    background: var(--hover);
+  }
+}
+
+.explorer-status-key {
+  font-size: var(--text-meta);
+  font-weight: 400;
+  color: var(--ink-muted);
+}
+
+@media (hover: none), (pointer: coarse) {
+  .explorer-status-key {
+    display: none;
+  }
 }
 
 .explorer-status:not([data-shown]) {

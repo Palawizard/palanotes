@@ -101,7 +101,9 @@ test('a folder moves with the keyboard, never into its own subfolders', async ({
   await expect(page.getByRole('navigation', { name: 'Chemin' })).toContainText('Perso');
 });
 
-test('a new folder can be created, and deleted while it is empty', async ({ page }) => {
+test('a new folder can be created, then deleted into the trash and removed for good', async ({
+  page,
+}) => {
   await page.goto('./dossiers/recents');
   await page.getByRole('button', { name: 'Nouveau dossier' }).click();
   const create = page.getByRole('dialog', { name: 'Nouveau dossier' });
@@ -113,15 +115,65 @@ test('a new folder can be created, and deleted while it is empty', async ({ page
   await page.getByRole('button', { name: 'Actions sur Brouillons' }).last().click();
   await page.getByRole('menuitem', { name: 'Supprimer…' }).click();
   const confirm = page.getByRole('dialog', { name: 'Supprimer le dossier' });
+  await expect(confirm).toContainText('est vide. Il ira dans la corbeille pendant 30 jours.');
   await confirm.getByRole('button', { name: 'Supprimer' }).click();
-  await expect(page.getByRole('status')).toHaveText('Dossier « Brouillons » supprimé.');
+  await expect(page.getByRole('status')).toHaveText('« Brouillons » mis à la corbeille.');
   await expect(tree(page).getByRole('treeitem', { name: /^Brouillons(?: \d+)?$/ })).toHaveCount(0);
 
-  await openFolder(page, ['Courses']);
-  await page.getByRole('button', { name: 'Actions sur Courses' }).last().click();
-  await expect(
-    page.getByRole('menuitem', { name: 'Supprimer (dossier vide seulement)' }),
-  ).toBeDisabled();
+  await page.getByRole('link', { name: /^Corbeille/ }).click();
+  const rows = page.getByRole('list', { name: 'Dossiers supprimés' });
+  await rows.getByRole('button', { name: 'Supprimer définitivement Brouillons' }).click();
+  const forGood = page.getByRole('dialog', { name: 'Supprimer définitivement' });
+  await expect(forGood).toContainText('Ce n’est pas annulable.');
+  await forGood.getByRole('button', { name: 'Supprimer' }).click();
+  await expect(page.getByRole('status')).toHaveText('« Brouillons » supprimé définitivement.');
+  await expect(rows.getByText('Brouillons', { exact: true })).toHaveCount(0);
+});
+
+test('a folder with notes goes to the trash and comes back with Annuler, Ctrl+Z or the trash', async ({
+  page,
+}) => {
+  const courses = () => tree(page).getByRole('treeitem', { name: /^Courses(?: \d+)?$/ });
+  async function deleteCourses() {
+    await openFolder(page, ['Courses']);
+    await page.getByRole('button', { name: 'Actions sur Courses' }).last().click();
+    await page.getByRole('menuitem', { name: 'Supprimer…' }).click();
+    const confirm = page.getByRole('dialog', { name: 'Supprimer le dossier' });
+    await expect(confirm).toContainText('et tout ce qu’il contient iront dans la corbeille');
+    await expect(confirm).toContainText('Tu pourras tout restaurer pendant 30 jours.');
+    await confirm.getByRole('button', { name: 'Supprimer' }).click();
+    await expect(page.getByRole('status')).toHaveText(
+      /^« Courses » mis à la corbeille avec \d+ notes?/,
+    );
+    await expect(courses()).toHaveCount(0);
+  }
+
+  await page.goto('./dossiers/recents');
+  const total = () => courses().locator('[id^="tree-total-"]').first();
+  const totalBefore = await total().textContent();
+
+  await deleteCourses();
+  await page.getByRole('button', { name: /^Annuler/ }).click();
+  await expect(page.getByRole('status')).toHaveText('« Courses » restauré.');
+  await expect(page.getByRole('heading', { level: 1, name: 'Courses' })).toBeVisible();
+  await expect(total()).toHaveText(totalBefore ?? '');
+
+  await deleteCourses();
+  await page.keyboard.press('Control+z');
+  await expect(page.getByRole('status')).toHaveText('« Courses » restauré.');
+  await expect(courses()).toHaveCount(1);
+
+  await deleteCourses();
+  await page.getByRole('link', { name: /^Corbeille/ }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Corbeille' })).toBeVisible();
+  const row = page.getByRole('list', { name: 'Dossiers supprimés' }).getByRole('listitem').filter({
+    hasText: 'Courses',
+  });
+  await expect(row).toContainText('supprimé le');
+  await expect(row).toContainText('encore 30 jours');
+  await row.getByRole('button', { name: 'Restaurer' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Courses' })).toBeVisible();
+  await expect(total()).toHaveText(totalBefore ?? '');
 });
 
 test.describe('on a phone', () => {

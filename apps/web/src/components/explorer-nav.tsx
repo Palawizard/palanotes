@@ -20,3 +20,21 @@ export function RecentLink() {
     </Link>
   );
 }
+
+// The trash closes the tree, like the last tab of a binder.
+export function TrashLink({ count }: { count: number }) {
+  const pathname = usePathname();
+  const current = pathname === '/dossiers/corbeille';
+  return (
+    <Link
+      href="/dossiers/corbeille"
+      className="tree-row tree-pinned tree-trash"
+      data-current={current || undefined}
+      aria-current={current ? 'page' : undefined}
+    >
+      <Icon name="trash" className="tree-icon" />
+      <span className="tree-name">Corbeille</span>
+      {count > 0 ? <span className="tree-count">{count}</span> : null}
+    </Link>
+  );
+}

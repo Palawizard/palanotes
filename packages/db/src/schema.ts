@@ -171,3 +171,28 @@ export const noteVersions = pgTable(
     index('note_versions_sort_run_idx').on(t.sortRunId),
   ],
 );
+
+// A deleted folder with everything it held, kept for 30 days so the deletion can be undone.
+// The payload is a copy of the rows as they were; the live tables keep no deleted rows, so
+// no other query has to filter them out.
+export const trashItems = pgTable(
+  'trash_items',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    folderId: uuid('folder_id').notNull(),
+    parentId: uuid('parent_id'),
+    name: text('name').notNull(),
+    path: text('path').array().notNull(),
+    noteCount: integer('note_count').notNull(),
+    folderCount: integer('folder_count').notNull(),
+    payload: jsonb('payload').notNull(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('trash_items_user_deleted_idx').on(t.userId, t.deletedAt.desc()),
+    index('trash_items_deleted_idx').on(t.deletedAt),
+  ],
+);
