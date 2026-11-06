@@ -5,3 +5,5 @@ export const QUEUES = {
 export interface SortEntryJob {
   entryId: string;
 }
+
+export const ENTRY_MAX_LENGTH = 20_000;
