@@ -17,11 +17,13 @@ export function NoteRow({
   href,
   current = false,
   now,
+  scroll,
 }: {
   note: NoteRowData;
   href: string;
   current?: boolean;
   now?: Date;
+  scroll?: boolean;
 }) {
   return (
     <Link
@@ -29,6 +31,7 @@ export function NoteRow({
       className="note-row"
       aria-current={current ? 'page' : undefined}
       prefetch={false}
+      scroll={scroll}
     >
       <span className="note-row-head">
         <span className="note-row-title">{note.title}</span>

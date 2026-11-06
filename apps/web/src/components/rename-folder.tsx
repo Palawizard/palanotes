@@ -37,7 +37,7 @@ export function RenameFolder({ folderId, name }: { folderId: string; name: strin
   if (!editing) {
     return (
       <div className="title-row">
-        <h1 className="page-title" id="folder-title">
+        <h1 className="pane-heading" id="list-title">
           {name}
         </h1>
         <button
