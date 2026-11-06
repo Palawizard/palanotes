@@ -1,0 +1,27 @@
+{
+  "name": "palanotes",
+  "private": true,
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel --filter \"./apps/*\" dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "lint": "pnpm --filter @palanotes/web lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:up": "docker compose -f docker/compose.dev.yaml up -d",
+    "db:down": "docker compose -f docker/compose.dev.yaml down",
+    "db:generate": "pnpm --filter @palanotes/db generate",
+    "db:migrate": "pnpm --filter @palanotes/db migrate"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "prettier": "3.9.10",
+    "typescript": "6.0.3",
+    "vitest": "5.1.0"
+  }
+}

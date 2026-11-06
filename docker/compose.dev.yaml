@@ -1,0 +1,16 @@
+name: palanotes-dev
+
+services:
+  postgres:
+    image: postgres:17.6
+    environment:
+      POSTGRES_USER: palanotes
+      POSTGRES_PASSWORD: palanotes
+      POSTGRES_DB: palanotes
+    ports:
+      - '127.0.0.1:5434:5432'
+    volumes:
+      - postgres:/var/lib/postgresql/data
+
+volumes:
+  postgres:
