@@ -6,3 +6,15 @@ export function withoutLeadingTitle(content: string, title: string): string {
   }
   return content;
 }
+
+// Plain text for an excerpt: Markdown markers (headings, lists, emphasis, quotes, tables,
+// code fences, link targets) removed, whitespace collapsed.
+export function plainExcerpt(text: string): string {
+  return text
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/^\s*(#{1,6}|[-*+]|>|\d+\.)\s+/gm, '')
+    .replace(/^\s*\|?[\s|:-]+\|?\s*$/gm, ' ')
+    .replace(/[*_`|]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}

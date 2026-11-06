@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { withoutLeadingTitle } from '@/lib/markdown-text';
+import { plainExcerpt, withoutLeadingTitle } from '@/lib/markdown-text';
 import { previewOf } from '@/server/entry-view';
 import { RateLimiter } from '@/server/rate-limit';
 
@@ -37,5 +37,14 @@ describe('withoutLeadingTitle', () => {
   it('keeps other content', () => {
     expect(withoutLeadingTitle('# Autre\n\nTexte', 'Modèle OSI')).toBe('# Autre\n\nTexte');
     expect(withoutLeadingTitle('Texte', 'Modèle OSI')).toBe('Texte');
+  });
+});
+
+describe('plainExcerpt', () => {
+  it('removes Markdown markers but keeps highlight markers and words', () => {
+    expect(
+      plainExcerpt('# Modèle \u0001OSI\u0002\n\n- **TCP** est fiable\n| a | b |\n|---|---|'),
+    ).toBe('Modèle \u0001OSI\u0002 TCP est fiable a b');
+    expect(plainExcerpt('voir [la doc](https://example.com)')).toBe('voir la doc');
   });
 });
