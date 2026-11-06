@@ -33,3 +33,11 @@ A model error, a refusal or an invalid plan marks the entry `failed` with a shor
 ## 2026-11-06: undo through note snapshots
 
 Every change a filing makes to a note writes a full snapshot in `note_versions` (folder, title, summary, tags, content), and the applied run records the ids it created or extended. Undo replays those snapshots instead of computing a reverse diff. It is refused when a touched note was modified after the filing, because restoring would silently drop that later change. An undone filing returns to review and can be accepted again.
+
+## 2026-11-06: search with Postgres only
+
+Search uses Postgres full-text search with an accent-insensitive French configuration plus `pg_trgm` word similarity for typos, matched word by word so one misspelled word does not hide a note and an unrelated word does not match everything. `unaccent` is not immutable, so the indexed columns are filled by a trigger rather than generated. No search engine or embeddings for the first version.
+
+## 2026-11-06: end-to-end tests on a production build
+
+Playwright starts `next build && next start` rather than `next dev`: the dev server's hot reload sometimes reloaded pages in a loop during long runs, and a production build is closer to what ships.

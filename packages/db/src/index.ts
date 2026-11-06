@@ -6,3 +6,4 @@ export * from './repo/folders';
 export * from './repo/notes';
 export * from './repo/sort-runs';
 export * from './repo/apply';
+export * from './repo/search';

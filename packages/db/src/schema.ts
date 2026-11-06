@@ -1,5 +1,6 @@
 import {
   type AnyPgColumn,
+  customType,
   index,
   integer,
   jsonb,
@@ -40,6 +41,13 @@ export const sortRunStatusEnum = pgEnum('sort_run_status', [
   'undone',
 ]);
 
+// Maintained by the notes_search_update trigger (see migration 0002_search).
+const tsvector = customType<{ data: string }>({
+  dataType() {
+    return 'tsvector';
+  },
+});
+
 const timestamps = {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
@@ -66,7 +74,10 @@ export const folders = pgTable(
     name: text('name').notNull(),
     ...timestamps,
   },
-  (t) => [unique('folders_name_unique').on(t.userId, t.parentId, t.name).nullsNotDistinct()],
+  (t) => [
+    unique('folders_name_unique').on(t.userId, t.parentId, t.name).nullsNotDistinct(),
+    index('folders_parent_idx').on(t.parentId),
+  ],
 );
 
 // Raw text exactly as typed. Never edited or deleted by the sorting, so a bad
@@ -100,9 +111,16 @@ export const notes = pgTable(
     content: text('content').notNull(),
     summary: text('summary').notNull(),
     tags: text('tags').array().notNull().default([]),
+    search: tsvector('search'),
+    searchText: text('search_text'),
     ...timestamps,
   },
-  (t) => [index('notes_user_folder_idx').on(t.userId, t.folderId)],
+  (t) => [
+    index('notes_user_folder_idx').on(t.userId, t.folderId),
+    index('notes_folder_idx').on(t.folderId),
+    index('notes_search_idx').using('gin', t.search),
+    index('notes_search_text_trgm_idx').using('gin', t.searchText.op('gin_trgm_ops')),
+  ],
 );
 
 export const sortRuns = pgTable(
@@ -126,7 +144,7 @@ export const sortRuns = pgTable(
     undoneAt: timestamp('undone_at', { withTimezone: true }),
     ...timestamps,
   },
-  (t) => [index('sort_runs_entry_idx').on(t.entryId)],
+  (t) => [index('sort_runs_entry_idx').on(t.entryId), index('sort_runs_user_idx').on(t.userId)],
 );
 
 // One row per change to a note: a snapshot of the note as it was created, or as it was
@@ -147,5 +165,8 @@ export const noteVersions = pgTable(
     content: text('content').notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index('note_versions_note_idx').on(t.noteId)],
+  (t) => [
+    index('note_versions_note_idx').on(t.noteId),
+    index('note_versions_sort_run_idx').on(t.sortRunId),
+  ],
 );
