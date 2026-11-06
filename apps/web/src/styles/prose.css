@@ -1,0 +1,101 @@
+/* Rendered Markdown of a note */
+
+.prose-note {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75em;
+  overflow-wrap: anywhere;
+}
+
+.prose-note h1,
+.prose-note h2,
+.prose-note h3,
+.prose-note h4 {
+  font-weight: 700;
+  line-height: 1.25;
+  margin-top: 0.5em;
+}
+
+.prose-note h1 {
+  font-size: var(--text-title);
+}
+
+.prose-note > :first-child {
+  margin-top: 0;
+}
+
+.prose-note ul,
+.prose-note ol {
+  padding-left: 1.4em;
+}
+
+.prose-note ul {
+  list-style: disc;
+}
+
+.prose-note ol {
+  list-style: decimal;
+}
+
+.prose-note li + li {
+  margin-top: 0.2em;
+}
+
+.prose-note li:has(> input[type='checkbox']) {
+  list-style: none;
+  margin-left: -1.4em;
+}
+
+.prose-note input[type='checkbox'] {
+  accent-color: var(--filed);
+  margin-right: 0.4em;
+}
+
+.prose-note blockquote {
+  border-left: 1px solid var(--rule-strong);
+  padding-left: 1em;
+  color: var(--ink-muted);
+}
+
+.prose-note code {
+  font-family: var(--font-mono);
+  background: var(--ground);
+  border-radius: 3px;
+  padding: 0.05em 0.3em;
+}
+
+.prose-note pre {
+  font-family: var(--font-mono);
+  background: var(--ground);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+}
+
+.prose-note pre code {
+  background: none;
+  padding: 0;
+}
+
+.prose-note table {
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.prose-note th,
+.prose-note td {
+  border: 1px solid var(--rule);
+  padding: 0.25em 0.6em;
+  text-align: left;
+}
+
+.prose-note a {
+  color: inherit;
+  text-decoration-color: var(--kraft-deep);
+}
+
+.prose-note hr {
+  border: 0;
+  border-top: 1px solid var(--rule);
+}
