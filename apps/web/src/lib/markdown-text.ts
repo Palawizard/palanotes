@@ -102,3 +102,14 @@ export function displayExcerpt(raw: string, title: string, query: string): strin
   }
   return text;
 }
+
+// The start of a note for a preview: cut at a line end, with an open code block closed.
+export function openingOf(content: string, title: string, length = 600): string {
+  const body = withoutLeadingTitle(content, title);
+  if (body.length <= length) return body;
+  const cut = body.slice(0, length);
+  const lineEnd = cut.lastIndexOf('\n');
+  let text = lineEnd > length / 2 ? cut.slice(0, lineEnd) : `${cut.trimEnd()} …`;
+  if ((text.match(/^```/gm) ?? []).length % 2 === 1) text += '\n```';
+  return text;
+}
