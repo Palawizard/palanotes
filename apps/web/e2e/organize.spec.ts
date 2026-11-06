@@ -8,13 +8,13 @@ function tree(page: Page) {
 
 async function openFolder(page: Page, path: string[]): Promise<void> {
   for (const name of path.slice(0, -1)) {
-    const item = tree(page).getByRole('treeitem', { name: new RegExp(`^${name},`) });
+    const item = tree(page).getByRole('treeitem', { name: new RegExp(`^${name}(?: \\d+)?$`) });
     if ((await item.getAttribute('aria-expanded')) !== 'true') {
       await item.locator('.tree-toggle').first().click();
     }
   }
   await tree(page)
-    .getByRole('treeitem', { name: new RegExp(`^${path.at(-1)},`) })
+    .getByRole('treeitem', { name: new RegExp(`^${path.at(-1)}(?: \\d+)?$`) })
     .locator('.tree-link')
     .first()
     .click();
@@ -29,7 +29,7 @@ test('a note dragged onto a folder of the tree moves there', async ({ page }) =>
     .getByRole('link', { name: /Nettoyer le clavier/ });
   await row.dragTo(
     tree(page)
-      .getByRole('treeitem', { name: /^Archives,/ })
+      .getByRole('treeitem', { name: /^Archives(?: \d+)?$/ })
       .locator('.tree-row'),
   );
 
@@ -37,17 +37,16 @@ test('a note dragged onto a folder of the tree moves there', async ({ page }) =>
     '« Nettoyer le clavier » déplacée dans Archives.',
   );
   await expect(row).toHaveCount(0);
-  await expect(tree(page).getByRole('treeitem', { name: /^Archives,/ })).toHaveAttribute(
-    'aria-label',
-    'Archives, 1 note',
-  );
+  await expect(
+    tree(page).getByRole('treeitem', { name: /^Archives(?: \d+)?$/ }),
+  ).toHaveAccessibleDescription('1 note');
 });
 
 test('two folders merge from the context menu, notes included', async ({ page }) => {
   await page.goto('./dossiers/recents');
   await openFolder(page, ['Perso', 'Lectures', 'Essais']);
   await tree(page)
-    .getByRole('treeitem', { name: /^Essais,/ })
+    .getByRole('treeitem', { name: /^Essais(?: \d+)?$/ })
     .click({ button: 'right' });
   await page.getByRole('menuitem', { name: 'Fusionner dans…' }).click();
 
@@ -64,13 +63,13 @@ test('two folders merge from the context menu, notes included', async ({ page })
   await expect(
     page.getByRole('list', { name: 'Notes de Romans' }).getByRole('listitem'),
   ).toHaveCount(5);
-  await expect(tree(page).getByRole('treeitem', { name: /^Essais,/ })).toHaveCount(0);
+  await expect(tree(page).getByRole('treeitem', { name: /^Essais(?: \d+)?$/ })).toHaveCount(0);
 });
 
 test('a folder moves with the keyboard, never into its own subfolders', async ({ page }) => {
   await page.goto('./dossiers/recents');
   await openFolder(page, ['Projets', 'Jeu multijoueur']);
-  const game = tree(page).getByRole('treeitem', { name: /^Jeu multijoueur,/ });
+  const game = tree(page).getByRole('treeitem', { name: /^Jeu multijoueur(?: \d+)?$/ });
   await game.focus();
   await page.keyboard.press('Shift+F10');
   await expect(page.getByRole('menu', { name: 'Actions sur Jeu multijoueur' })).toBeVisible();
@@ -116,7 +115,7 @@ test('a new folder can be created, and deleted while it is empty', async ({ page
   const confirm = page.getByRole('dialog', { name: 'Supprimer le dossier' });
   await confirm.getByRole('button', { name: 'Supprimer' }).click();
   await expect(page.getByRole('status')).toHaveText('Dossier « Brouillons » supprimé.');
-  await expect(tree(page).getByRole('treeitem', { name: /^Brouillons,/ })).toHaveCount(0);
+  await expect(tree(page).getByRole('treeitem', { name: /^Brouillons(?: \d+)?$/ })).toHaveCount(0);
 
   await openFolder(page, ['Courses']);
   await page.getByRole('button', { name: 'Actions sur Courses' }).last().click();
@@ -131,7 +130,7 @@ test.describe('on a phone', () => {
   test('a note moves through « Déplacer vers… » instead of dragging', async ({ page }) => {
     await page.goto('./dossiers');
     await tree(page)
-      .getByRole('treeitem', { name: /^Idées en vrac,/ })
+      .getByRole('treeitem', { name: /^Idées en vrac(?: \d+)?$/ })
       .tap();
     await page
       .getByRole('list', { name: 'Notes de Idées en vrac' })

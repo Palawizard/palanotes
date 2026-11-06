@@ -47,7 +47,7 @@ test('a filed note can be read, edited, moved, and its folder renamed', async ({
 
   await page.getByRole('link', { name: 'Dossiers', exact: true }).first().click();
   const tree = page.getByRole('tree', { name: 'Dossiers' });
-  await expect(tree.getByRole('treeitem', { name: /^Réseaux,/ })).toBeVisible();
+  await expect(tree.getByRole('treeitem', { name: /^Réseaux(?: \d+)?$/ })).toBeVisible();
 });
 
 test('a note of another id shows the not found page', async ({ page }) => {
