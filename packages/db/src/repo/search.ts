@@ -34,6 +34,20 @@ const STRICT_SIMILARITY = 0.4;
 const FUZZY_MIN_LENGTH = 4;
 const OPENING_LENGTH = 700;
 
+// The note as plain sentences for the excerpt: code blocks and tables dropped, heading,
+// list and quote markers removed, each line ending with « · » so items do not run together.
+const PLAIN_CONTENT = sql.raw(
+  [
+    String.raw`regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(n.content,`,
+    String.raw`'${'`'}{3}[^${'`'}]*${'`'}{3}', ' ', 'g'),`,
+    String.raw`'^\s*\|?[\s|:-]+\|?\s*$', '', 'gn'),`,
+    String.raw`'^\s*\|.*\|\s*$', '', 'gn'),`,
+    String.raw`'^\s*(#{1,6}|[-*+]|>|\d+\.)\s+(\[[ xX]\]\s+)?', '', 'gn'),`,
+    String.raw`'\*\*|${'`'}', '', 'g'),`,
+    String.raw`'\s*\n+\s*', ' · ', 'g')`,
+  ].join(' '),
+);
+
 interface Row {
   id: string;
   title: string;
@@ -130,7 +144,7 @@ export async function searchNotes(
         where length(word) >= 2
       )
       select n.id, n.title, n.folder_id, n.tags, n.summary, n.created_at, n.updated_at,
-             ts_headline('public.french_unaccent', n.content, q.tsq,
+             ts_headline('public.french_unaccent', ${PLAIN_CONTENT}, q.tsq,
                ${`StartSel=${HIGHLIGHT_START}, StopSel=${HIGHLIGHT_END}, MaxWords=32, MinWords=12, MaxFragments=2, FragmentDelimiter=" … "`}) as excerpt,
              left(n.content, ${OPENING_LENGTH}) as opening
       from notes n, q

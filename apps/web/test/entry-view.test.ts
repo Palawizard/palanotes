@@ -50,7 +50,10 @@ describe('plainExcerpt', () => {
   it('removes Markdown markers but keeps highlight markers and words', () => {
     expect(
       plainExcerpt('# Modèle \u0001OSI\u0002\n\n- **TCP** est fiable\n| a | b |\n|---|---|'),
-    ).toBe('Modèle \u0001OSI\u0002 TCP est fiable a b');
+    ).toBe('Modèle \u0001OSI\u0002 TCP est fiable a · b');
+    expect(plainExcerpt("c'est l'**encapsulation** de `lan_admin`")).toBe(
+      "c'est l'encapsulation de lan_admin",
+    );
     expect(plainExcerpt('voir [la doc](https://example.com)')).toBe('voir la doc');
   });
 });

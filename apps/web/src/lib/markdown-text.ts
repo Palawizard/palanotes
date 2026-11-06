@@ -14,7 +14,9 @@ export function plainExcerpt(text: string): string {
     .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
     .replace(/^\s*(#{1,6}|[-*+]|>|\d+\.)\s+/gm, '')
     .replace(/^\s*\|?[\s|:-]+\|?\s*$/gm, ' ')
-    .replace(/[*_`|]+/g, ' ')
+    .replace(/^\s*\|(.*)\|\s*$/gm, '$1')
+    .replace(/\*\*|__|`|(?<!\w)[*_](?!\s)|(?<=\S)[*_](?!\w)/g, '')
+    .replace(/\s*\|\s*/g, ' · ')
     .replace(/\s+/g, ' ')
     .trim();
 }
