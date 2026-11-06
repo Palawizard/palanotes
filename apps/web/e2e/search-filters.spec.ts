@@ -17,7 +17,7 @@ test.describe('search on a wide screen', () => {
         name: /^Dossier seul Cours \/ Réseaux? \/ TCP-IP, retirer ce filtre$/,
       }),
     ).toBeVisible();
-    const cards = page.locator('.result');
+    const cards = page.locator('article.result');
     for (const path of await cards.locator('.result-path').allTextContents()) {
       expect(path).toMatch(/^Cours \/ Réseaux? \/ TCP-IP$/);
     }
@@ -44,16 +44,16 @@ test.describe('search on a wide screen', () => {
       'aria-pressed',
       'false',
     );
-    const direct = await page.locator('.result').count();
+    const direct = await page.locator('article.result').count();
     await page.getByRole('button', { name: 'Inclure les sous-dossiers' }).click();
     await expect(page).not.toHaveURL(/sous=0/);
-    await expect.poll(() => page.locator('.result').count()).toBeGreaterThan(direct);
+    await expect.poll(() => page.locator('article.result').count()).toBeGreaterThan(direct);
   });
 
   test('hovering or focusing a card shows the start of the note', async ({ page }) => {
     await page.goto('./recherche?q=sous-réseaux');
     // Other tests rename and move folders: look for a note they leave alone.
-    const card = page.locator('.result').filter({ hasText: 'Adressage IPv4 et masques' });
+    const card = page.locator('article.result').filter({ hasText: 'Adressage IPv4 et masques' });
     const preview = card.locator('.result-preview');
     await expect(preview).toBeHidden();
     await card.hover();
@@ -69,7 +69,7 @@ test.describe('search on a wide screen', () => {
     await page.goto('./recherche?q=crêpes&tag=réseau');
     await expect(page.getByText('Rien trouvé pour « crêpes » avec ces filtres.')).toBeVisible();
     await page.getByRole('link', { name: 'Chercher sans le filtre tag « réseau »' }).click();
-    await expect(page.locator('.result').first()).toContainText('Crêpes');
+    await expect(page.locator('article.result').first()).toContainText('Crêpes');
   });
 });
 
@@ -78,8 +78,12 @@ test.describe('search on a phone', () => {
 
   test('a result opens the note, and the way back keeps the search', async ({ page }) => {
     await page.goto('./recherche?q=dahl&tag=cuisine');
-    const count = await page.locator('.result').count();
-    await page.locator('.result').filter({ hasText: 'Dahl de lentilles corail' }).tap();
+    // The loading skeleton also draws `.result` cards: count only real results, once shown.
+    const results = page.locator('article.result');
+    await expect(page.getByRole('heading', { level: 2, name: /pour « dahl »/ })).toBeVisible();
+    const count = await results.count();
+    expect(count).toBeGreaterThan(0);
+    await page.locator('article.result').filter({ hasText: 'Dahl de lentilles corail' }).tap();
     await expect(
       page.getByRole('heading', { level: 1, name: 'Dahl de lentilles corail' }),
     ).toBeVisible();
@@ -87,6 +91,6 @@ test.describe('search on a phone', () => {
     await expect(page).toHaveURL(/q=dahl/);
     await expect(page).toHaveURL(/tag=cuisine/);
     await expect(page.getByRole('searchbox')).toHaveValue('dahl');
-    await expect(page.locator('.result')).toHaveCount(count);
+    await expect(results).toHaveCount(count);
   });
 });
