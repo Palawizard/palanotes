@@ -39,3 +39,55 @@ export function samePath(a: readonly string[], b: readonly string[]): boolean {
     )
   );
 }
+
+export interface CountedFolder extends FolderNode {
+  noteCount: number;
+}
+
+// Number of notes in each folder and all its subfolders. A folder caught in a broken cycle
+// counts its own notes only.
+export function folderTotals(folders: readonly CountedFolder[]): Map<string, number> {
+  const children = childrenByParent(folders);
+  const totals = new Map<string, number>();
+  const visit = (folder: CountedFolder, seen: Set<string>): number => {
+    const known = totals.get(folder.id);
+    if (known !== undefined) return known;
+    let total = folder.noteCount;
+    for (const child of children.get(folder.id) ?? []) {
+      if (!seen.has(child.id)) {
+        total += visit(child, new Set(seen).add(child.id));
+      }
+    }
+    totals.set(folder.id, total);
+    return total;
+  };
+  for (const folder of folders) {
+    visit(folder, new Set([folder.id]));
+  }
+  return totals;
+}
+
+// The folder itself and every folder below it.
+export function subtreeIds(folders: readonly FolderNode[], rootId: string): Set<string> {
+  const children = childrenByParent(folders);
+  const ids = new Set<string>();
+  const stack = [rootId];
+  while (stack.length > 0) {
+    const id = stack.pop() as string;
+    if (ids.has(id)) continue;
+    ids.add(id);
+    for (const child of children.get(id) ?? []) stack.push(child.id);
+  }
+  return ids;
+}
+
+function childrenByParent<T extends FolderNode>(folders: readonly T[]): Map<string, T[]> {
+  const children = new Map<string, T[]>();
+  for (const folder of folders) {
+    if (!folder.parentId) continue;
+    const list = children.get(folder.parentId) ?? [];
+    list.push(folder);
+    children.set(folder.parentId, list);
+  }
+  return children;
+}
