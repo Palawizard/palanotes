@@ -129,7 +129,7 @@ export function Composer({ onSubmitted }: { onSubmitted: (entry: EntryView) => v
               {text.length.toLocaleString('fr-FR')} / {ENTRY_MAX_LENGTH.toLocaleString('fr-FR')}
             </span>
           ) : null}
-          <span className="max-md:hidden" aria-hidden="true">
+          <span className="sheet-shortcut max-md:hidden" aria-hidden="true">
             <kbd>Ctrl</kbd> + <kbd>Entrée</kbd>
           </span>
           <button type="submit" className="button" disabled={sending || over}>
