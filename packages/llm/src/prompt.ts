@@ -21,7 +21,7 @@ Choose between two actions:
 - "create": anything else. Reuse an existing folder whenever one fits, spelled exactly as in the index; otherwise propose a short new folder, at most three levels, such as "Cours / Réseau" or "Perso / Courses".
 Use one action in almost every case. Use several only when the entry clearly mixes unrelated subjects.
 
-Format the content as clean Markdown in the language of the entry: fix obvious typos and layout, add headings or lists when they help, keep every piece of information, invent nothing, and leave out the filing hint itself. A short entry stays short. Titles are short and specific. Summaries are one or two sentences. Tags are one to five lowercase keywords.
+Format the content as clean Markdown in the language of the entry: fix obvious typos and layout, add headings or lists when they help, keep every piece of information, invent nothing, and leave out the filing hint itself. Put code, commands and file contents in fenced code blocks, and always tag the fence with the language in lowercase so it can be coloured: csharp, python, javascript, typescript, java, c, cpp, go, rust, php, sql, bash, powershell, json, yaml, xml, html, css, dockerfile, ini, diff, and so on. Detect the language from the code itself and the context (a C# course gets csharp, a shell command gets bash). Use text only for output, diagrams or anything that is not code. Inline code (a keyword, a variable, a command name inside a sentence) stays in single backticks. A short entry stays short. Titles are short and specific. Summaries are one or two sentences. Tags are one to five lowercase keywords.
 
 Write the explanation as one short sentence in French addressed to the user, such as "Ajouté à ta note Modèle OSI, dans Cours / Réseau."`;
 
