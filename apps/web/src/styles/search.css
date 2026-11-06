@@ -87,8 +87,9 @@
 }
 
 .search-body {
+  --aside: clamp(15rem, 22vw, 19rem);
   display: grid;
-  grid-template-columns: minmax(0, 46rem) minmax(13rem, 17rem);
+  grid-template-columns: minmax(0, 46rem) var(--aside);
   gap: 2rem;
   align-items: start;
 }
@@ -232,7 +233,7 @@ mark {
     z-index: 5;
     top: -1px;
     left: calc(100% + 1rem);
-    width: min(26rem, calc(100vw - 100% - 22rem));
+    width: calc(var(--aside) + 1rem);
     max-height: 22rem;
     overflow: hidden;
     padding: 1rem 1.25rem;
@@ -240,7 +241,6 @@ mark {
     border: 1px solid var(--rule-strong);
     border-radius: var(--radius);
     box-shadow: var(--shadow-float);
-    mask-image: linear-gradient(to bottom, #000 80%, transparent);
     opacity: 0;
     visibility: hidden;
     transform: translateX(-0.25rem);
@@ -249,6 +249,12 @@ mark {
       opacity 140ms var(--ease-out),
       transform 140ms var(--ease-out),
       visibility 0s linear 140ms;
+  }
+
+  /* Above the sticky filter column, which the preview covers. */
+  .result:hover,
+  .result:has(.result-link:focus-visible) {
+    z-index: 6;
   }
 
   .result:hover .result-preview,
@@ -269,6 +275,23 @@ mark {
 
 .result-preview-title {
   font-weight: 700;
+}
+
+/* The cut at the bottom fades into the paper, which stays opaque over the filters. */
+.result-preview::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 3.5rem;
+  border-radius: 0 0 var(--radius) var(--radius);
+  background: linear-gradient(to bottom, transparent, var(--paper));
+  pointer-events: none;
+}
+
+/* The opening paragraphs only: tables and code read badly in a narrow preview. */
+.result-preview .prose-note table,
+.result-preview .prose-note pre {
+  display: none;
 }
 
 .result-preview .prose-note h1,
@@ -367,7 +390,7 @@ mark {
   width: 1rem;
   height: 1rem;
   border: 1px solid var(--rule-strong);
-  border-radius: 3px;
+  border-radius: 4px;
   background: var(--paper);
 }
 
@@ -397,7 +420,8 @@ mark {
   gap: 0.75rem;
   align-items: flex-start;
   padding: 1.25rem;
-  border: 1px dashed var(--rule-strong);
+  background: var(--ground);
+  border: 1px solid var(--rule);
   border-radius: var(--radius);
 }
 
@@ -412,7 +436,10 @@ mark {
 }
 
 .no-result-tries a {
+  text-decoration: underline;
+  text-decoration-color: var(--kraft-deep);
   text-underline-offset: 0.25em;
+  font-weight: 700;
 }
 
 .skeleton {
@@ -455,6 +482,20 @@ mark {
     cursor: pointer;
     padding: 0.5rem 0.875rem;
     font-weight: 700;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .refine-phone summary::-webkit-details-marker {
+    display: none;
+  }
+  .refine-phone summary svg {
+    color: var(--ink-muted);
+    transition: transform 160ms var(--ease-out);
+  }
+  .refine-phone[open] summary svg {
+    transform: rotate(90deg);
   }
   .refine-phone .refine-body {
     display: flex;

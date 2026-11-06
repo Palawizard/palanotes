@@ -44,7 +44,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  border-radius: 999px;
+  border-radius: var(--radius);
   font-size: var(--text-meta);
   line-height: var(--leading-meta);
   font-weight: 700;
