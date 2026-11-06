@@ -15,6 +15,7 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
+      - run: node scripts/check-private-files.mjs
       - run: pnpm install --frozen-lockfile
       - run: pnpm format:check
       - run: pnpm lint
