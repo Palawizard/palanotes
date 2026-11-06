@@ -7,6 +7,7 @@ export interface NoteRowData {
   excerpt: string;
   tags: string[];
   date: string;
+  folderId?: string;
   folderPath?: string;
 }
 
@@ -25,6 +26,7 @@ export function NoteRow({
   now?: Date;
   scroll?: boolean;
 }) {
+  // Rows can be dragged onto a folder of the tree; folderId tells the tree where it comes from.
   return (
     <Link
       href={href}
@@ -32,6 +34,11 @@ export function NoteRow({
       aria-current={current ? 'page' : undefined}
       prefetch={false}
       scroll={scroll}
+      draggable={note.folderId ? true : undefined}
+      data-drag={note.folderId ? 'note' : undefined}
+      data-id={note.id}
+      data-label={note.title}
+      data-from={note.folderId}
     >
       <span className="note-row-head">
         <span className="note-row-title">{note.title}</span>
