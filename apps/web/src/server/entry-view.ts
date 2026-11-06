@@ -5,6 +5,7 @@ export interface EntryView {
   preview: string;
   status: EntryStatus;
   createdAt: string;
+  error: string | null;
 }
 
 const PREVIEW_LENGTH = 140;
@@ -24,5 +25,6 @@ export function toEntryView(entry: Entry): EntryView {
     preview: previewOf(entry.content),
     status: entry.status,
     createdAt: entry.createdAt.toISOString(),
+    error: entry.status === 'failed' ? entry.error : null,
   };
 }

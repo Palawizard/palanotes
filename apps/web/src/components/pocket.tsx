@@ -27,6 +27,7 @@ export function Pocket({ entries, newId }: { entries: EntryView[]; newId: string
               <time className="pocket-when" dateTime={entry.createdAt}>
                 {formatWhen(entry.createdAt)}
               </time>
+              {entry.error ? <span className="pocket-error">{entry.error}</span> : null}
               <span className="pocket-status" data-status={entry.status}>
                 <StatusMark status={entry.status} />
                 {STATUS_LABELS[entry.status]}
