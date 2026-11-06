@@ -1,6 +1,6 @@
 import { eq, sql } from 'drizzle-orm';
-import type { DbOrTx } from '../client.js';
-import { users } from '../schema.js';
+import type { DbOrTx } from '../client';
+import { users } from '../schema';
 
 export type User = typeof users.$inferSelect;
 export type SortMode = User['sortMode'];

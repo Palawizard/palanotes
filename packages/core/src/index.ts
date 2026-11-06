@@ -1,2 +1,2 @@
-export * from './sort-plan.js';
-export * from './folder-path.js';
+export * from './sort-plan';
+export * from './folder-path';

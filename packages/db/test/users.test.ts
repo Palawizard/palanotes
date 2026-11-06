@@ -1,7 +1,7 @@
 import { afterAll, describe, expect, it } from 'vitest';
-import { closeDb } from '../src/client.js';
-import { findUserById, setSortMode, upsertUser } from '../src/repo/users.js';
-import { createTestDb } from './db.js';
+import { closeDb } from '../src/client';
+import { findUserById, setSortMode, upsertUser } from '../src/repo/users';
+import { createTestDb } from './db';
 
 const db = createTestDb();
 afterAll(() => closeDb(db));
