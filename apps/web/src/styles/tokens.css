@@ -27,6 +27,13 @@
   /* Menus and dialogs float above the page; nothing else casts a shadow there. */
   --shadow-float: 0 1px 2px oklch(0.3 0.03 60 / 0.1), 0 12px 32px -12px oklch(0.3 0.03 60 / 0.28);
   --scrim: oklch(0.24 0.035 55 / 0.32);
+  /* Code colours: earthy, muted, all AA on --ground. */
+  --code-keyword: oklch(0.46 0.12 32);
+  --code-string: oklch(0.46 0.1 140);
+  --code-type: oklch(0.46 0.08 240);
+  --code-number: oklch(0.47 0.1 65);
+  --code-function: oklch(0.45 0.08 300);
+  --code-comment: oklch(0.53 0.02 60);
 
   /* Two reading sizes; the meta size is for dates, paths, tags and counts only. */
   --text-body: 1rem;
@@ -63,5 +70,11 @@
     --ink-faint: oklch(0.62 0.014 80);
     --shadow-float: 0 1px 2px oklch(0 0 0 / 0.4), 0 16px 36px -12px oklch(0 0 0 / 0.7);
     --scrim: oklch(0 0 0 / 0.5);
+    --code-keyword: oklch(0.76 0.11 35);
+    --code-string: oklch(0.79 0.1 135);
+    --code-type: oklch(0.78 0.07 235);
+    --code-number: oklch(0.81 0.1 75);
+    --code-function: oklch(0.78 0.08 305);
+    --code-comment: oklch(0.65 0.014 80);
   }
 }
