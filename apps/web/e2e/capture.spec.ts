@@ -87,6 +87,47 @@ test('a proposal can be accepted, then undone, then rejected and retried', async
   await expect(row.getByRole('button', { name: /À valider/ })).toBeVisible({ timeout: 20_000 });
 });
 
+test('a filed entry leaves the pocket when its folder goes to the trash, and comes back with it', async ({
+  page,
+}) => {
+  await page.goto('./');
+  await page
+    .getByLabel('Ta note')
+    .fill('Pesto : basilic, pignons, parmesan\nà ranger avec mes sauces');
+  await page.getByRole('button', { name: 'Valider', exact: true }).click();
+  const row = page.getByRole('listitem').filter({ hasText: 'Pesto : basilic' });
+  await row.getByRole('button', { name: 'Accepter' }).click({ timeout: 20_000 });
+  await expect(row.getByRole('button', { name: /Rangée/ })).toBeVisible();
+
+  await page.goto('./dossiers/recents');
+  const sauces = page
+    .getByRole('tree', { name: 'Dossiers' })
+    .getByRole('treeitem', { name: /^Sauces(?: \d+)?$/ });
+  await sauces.locator('.tree-link').first().click();
+  await page.getByRole('button', { name: 'Actions sur Sauces' }).last().click();
+  await page.getByRole('menuitem', { name: 'Supprimer…' }).click();
+  await page
+    .getByRole('dialog', { name: 'Supprimer le dossier' })
+    .getByRole('button', { name: 'Supprimer' })
+    .click();
+  await expect(page.getByRole('status')).toHaveText(/^« Sauces » mis à la corbeille/);
+
+  await page.goto('./');
+  await expect(page.getByLabel('Ta note')).toBeVisible();
+  await expect(row).toHaveCount(0);
+
+  await page.goto('./dossiers/corbeille');
+  await page
+    .getByRole('list', { name: 'Dossiers supprimés' })
+    .getByRole('listitem')
+    .filter({ hasText: 'Sauces' })
+    .getByRole('button', { name: 'Restaurer' })
+    .click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Sauces' })).toBeVisible();
+  await page.goto('./');
+  await expect(row.getByRole('button', { name: /Rangée/ })).toBeVisible();
+});
+
 test('direct mode files without asking and can be undone', async ({ page }) => {
   await page.goto('./reglages');
   await page.getByLabel(/Ranger tout de suite/).check();

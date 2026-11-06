@@ -51,6 +51,21 @@ export function previewOf(content: string): string {
   return line.length > PREVIEW_LENGTH ? `${line.slice(0, PREVIEW_LENGTH - 1).trimEnd()}…` : line;
 }
 
+// A filed entry whose notes have all been deleted since (their folder went to the trash)
+// has nothing left to show: the pocket drops it. It comes back if the folder is restored.
+// One surviving note is enough to keep it.
+export function filedNotesAllGone(
+  status: EntryStatus,
+  run: Pick<SortRun, 'status' | 'applied'> | undefined,
+  liveNoteIds: ReadonlySet<string>,
+): boolean {
+  if (status !== 'applied' || run?.status !== 'applied' || !run.applied) {
+    return false;
+  }
+  const filed = [...run.applied.createdNoteIds, ...run.applied.appendedNoteIds];
+  return filed.length > 0 && filed.every((id) => !liveNoteIds.has(id));
+}
+
 export function toEntryView(entry: Entry, run: RunView | null = null): EntryView {
   return {
     id: entry.id,
@@ -92,7 +107,12 @@ export async function loadPocket(db: Db, userId: string): Promise<EntryView[]> {
   );
   const paths = buildFolderPaths(folders);
 
-  return entries.map((entry) => {
+  const live = new Set(notes.keys());
+  const shown = entries.filter(
+    (entry) => !filedNotesAllGone(entry.status, runs.get(entry.id), live),
+  );
+
+  return shown.map((entry) => {
     const run = runs.get(entry.id);
     const plan = run ? plans.get(run.id) : undefined;
     if (!run || !plan) {
