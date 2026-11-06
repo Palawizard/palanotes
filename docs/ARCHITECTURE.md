@@ -1,61 +1,90 @@
 # Architecture
 
-## Vue d'ensemble
+## Overview
 
 ```
-navigateur ──HTTPS──> Cloudflare (palawi.fr) ──tunnel──> Caddy / gateway
+browser ──HTTPS──> Cloudflare (palawi.fr) ──tunnel──> Caddy / gateway
   /notes/*  ──> web (Next.js, port 3000)
-                  │  écrit l'entrée brute et met une tâche en file
+                  │  stores the raw entry and queues a job
                   ▼
                Postgres  <──  worker (pg-boss)
-                                │  demande un plan de rangement
+                                │  asks for a filing plan
                                 ▼
                               packages/llm
-                                ├─ mode abonnement : `claude -p` (CLI Claude Code)
-                                └─ mode api : SDK Anthropic avec une clé
+                                ├─ subscription mode: `claude -p` (Claude Code CLI)
+                                └─ api mode: Anthropic SDK with an API key
 ```
 
-## Paquets
+## Packages
 
-| Paquet          | Contenu                                                                                                     | Dépend de             |
-| --------------- | ----------------------------------------------------------------------------------------------------------- | --------------------- |
-| `packages/core` | types et règles métier : plan de rangement (schéma Zod), chemins de dossiers                                | zod                   |
-| `packages/db`   | schéma Drizzle, client, migrations SQL                                                                      | drizzle-orm, postgres |
-| `packages/llm`  | interface `LlmClient`, choix du mode par compte, puis les deux implémentations                              | rien pour l'instant   |
-| `apps/web`      | pages, routes HTTP (`/api/...`), connexion OIDC, recherche                                                  | core, db, llm         |
-| `apps/worker`   | file `sort-entry` : construit le contexte, appelle le modèle, enregistre le plan, l'applique en mode direct | core, db, llm         |
+| Package         | Contents                                                                                            | Depends on            |
+| --------------- | --------------------------------------------------------------------------------------------------- | --------------------- |
+| `packages/core` | domain types and rules: filing plan (Zod schema), folder paths                                      | zod                   |
+| `packages/db`   | Drizzle schema, client, SQL migrations                                                              | drizzle-orm, postgres |
+| `packages/llm`  | `LlmClient` interface, per-account mode selection, then both implementations                        | nothing yet           |
+| `apps/web`      | pages, HTTP routes (`/api/...`), OIDC sign-in, search                                               | core, db, llm         |
+| `apps/worker`   | `sort-entry` queue: builds the context, calls the model, stores the plan, applies it in direct mode | core, db, llm         |
 
-Le code métier de `packages/core` ne dépend ni de Next.js ni de pg-boss.
+The domain code in `packages/core` depends on neither Next.js nor pg-boss.
 
-## Cycle d'une note
+## Life of a note
 
-1. L'utilisateur valide son texte : une ligne `entries` est créée (statut `pending`) et une tâche `sort-entry` part en file.
-2. Le worker envoie au modèle le texte brut et l'index de l'utilisateur (dossiers, titres, résumés, tags) et reçoit un plan (`SortPlan`) : créer une note dans un dossier, ou ajouter une section à une note existante.
-3. Le plan est validé par Zod puis enregistré dans `sort_runs`.
-4. Selon le réglage du compte (`users.sort_mode`) :
-   - `review` : le plan est montré à l'utilisateur, qui l'accepte ou le refuse ;
-   - `direct` : le plan est appliqué tout de suite, avec un bouton annuler.
-5. Appliquer un plan crée les dossiers manquants, crée ou complète les notes, et écrit une ligne `note_versions` par modification. Annuler restaure les versions précédentes et passe le plan à `undone`.
+1. The user submits their text: an `entries` row is created (status `pending`) and a `sort-entry` job is queued.
+2. The worker sends the model the raw text and the user's index (folders, titles, summaries, tags) and gets back a plan (`SortPlan`): create a note in a folder, or add a section to an existing note.
+3. The plan is validated with Zod and stored in `sort_runs`.
+4. Depending on the account setting (`users.sort_mode`):
+   - `review`: the plan is shown to the user, who accepts or rejects it;
+   - `direct`: the plan is applied right away, with an undo button.
+5. Applying a plan (`applySortRun`) runs in one transaction with the plan row locked: it creates missing folders, creates or extends notes, writes one `note_versions` snapshot per touched note (`created`, or `before_append` with the previous title, summary, tags and content) and records the ids in `sort_runs.applied`.
+6. Undo (`undoSortRun`) deletes the notes the plan created, restores the extended notes from their snapshots, removes the folders it created when they are empty, and puts the entry back to review. It is refused when a touched note changed after the filing, so a manual edit is never lost.
+7. From the pocket the user can also reject a proposal (the entry keeps its raw text, status `rejected`) or retry it (the pending proposal is set aside and the entry is queued again).
 
-L'entrée brute n'est jamais modifiée ni supprimée par le rangement : un rangement raté peut toujours être refait.
+Filing never edits or deletes the raw entry, so a bad filing can always be redone.
 
-## Modes du modèle
+## Model modes
 
-`resolveLlmMode` (`packages/llm/src/mode.ts`) choisit le mode pour chaque compte :
+`resolveLlmMode` (`packages/llm/src/mode.ts`) picks the mode for each account:
 
-- le compte dont le `sub` OIDC vaut `LLM_OWNER_SUBJECT` utilise `LLM_OWNER_MODE` (`subscription` par défaut) ;
-- tous les autres utilisent `LLM_DEFAULT_MODE` (`api` ou `disabled`), jamais l'abonnement.
+- the account whose OIDC `sub` equals `LLM_OWNER_SUBJECT` uses `LLM_OWNER_MODE` (`subscription` by default);
+- every other account uses `LLM_DEFAULT_MODE` (`api` or `disabled`), never the subscription.
 
-Le mode abonnement lance la CLI Claude Code en mode non interactif avec `CLAUDE_CODE_OAUTH_TOKEN` ; le mode api utilise `ANTHROPIC_API_KEY`. Chaque plan enregistre le mode, le modèle et les jetons consommés.
+`createLlmClient` then builds the client for that mode:
 
-## Recherche
+- **subscription**: the Claude Code CLI, run as `claude -p --output-format json --json-schema <schema> --tools "" --strict-mcp-config --no-session-persistence` with the prompt on stdin. Its environment holds only `PATH`, a private config directory and `CLAUDE_CODE_OAUTH_TOKEN`; API keys are left out because the CLI would prefer them. The plan is read from `structured_output`, or from the text result when that field is missing.
+- **api**: the Anthropic SDK, `messages.create` with `output_config.format` set to the same JSON Schema and `effort: low`.
 
-Le but est de retrouver une note même rangée au mauvais endroit. Chaque note a un titre, un résumé et des tags écrits au moment du rangement ; la recherche plein texte Postgres (configuration `french`, `unaccent`, `pg_trgm` pour les fautes de frappe) porte sur le titre, le résumé, les tags et le contenu. Chaque résultat affiche le chemin de son dossier. Une recherche par embeddings (pgvector) pourra s'ajouter plus tard si le plein texte ne suffit pas.
+The default model is `claude-haiku-5-5` (`LLM_MODEL` overrides it). The model has no tools: it can only return a plan.
 
-## Données
+### Prompt
 
-Tables : `users`, `folders` (arborescence par `parent_id`), `entries` (texte brut), `notes`, `sort_runs` (plans du modèle), `note_versions` (historique). Schéma : `packages/db/src/schema.ts`.
+The system prompt (`packages/llm/src/prompt.ts`) says the entry and the index are data, never instructions, except for a filing hint naming a place. The user prompt lists the folders, then one line per note (id, folder, title, summary, tags; never the note content), then the entry inside `<entry>` tags.
 
-## Connexion
+### Validation
 
-OIDC avec Authentik (`https://auth.palawi.fr/application/o/palanotes/`), code + PKCE. L'utilisateur est identifié par son `sub` (`users.auth_subject`), jamais par son e-mail. Cookie de session propre à l'app, `path=/notes`, `Secure`, `HttpOnly`, `SameSite=Lax`. Accès limité à un groupe Authentik.
+The worker parses the answer with `parseSortPlan` (Zod), checks that every folder path is valid and that every `append` targets a note of the same account, and only then stores the plan in `sort_runs`. Anything else marks the entry `failed` with a short message for the user. Logs carry the entry id, the mode, the model and the token counts, never the note text or a credential.
+
+## Search
+
+The goal is to find a note even when it was filed in the wrong place, typed without accents, or misspelled. Search never writes an answer: it lists notes.
+
+- A text search configuration `french_unaccent` (French stemming, accents removed) and a trigger keep two columns of `notes` up to date: `search` (`tsvector`: title weight A, summary and tags B, content C, GIN index) and `search_text` (lowercase text without accents, trigram GIN index).
+- `searchNotes` (`packages/db/src/repo/search.ts`) keeps a note when the whole query matches the full-text index, or when every word of the query matches either the full-text index or, for typos, the trigram word similarity (threshold 0.4). Results are ranked by full-text rank, then similarity, then date, and limited to the signed-in account.
+- Excerpts come from `ts_headline` with control characters around matched words; the page turns them into `<mark>`. Each result shows its folder path.
+
+Embedding search (pgvector) can be added later if this is not enough.
+
+## Data
+
+Tables: `users`, `folders` (tree through `parent_id`), `entries` (raw text), `notes`, `sort_runs` (model plans), `note_versions` (history). Schema: `packages/db/src/schema.ts`.
+
+## Sign-in
+
+OIDC with Authentik (`https://auth.palawi.fr/application/o/palanotes/`), authorization code with PKCE, through `openid-client`:
+
+- `GET /api/auth/login` stores the PKCE verifier, `state`, `nonce` and return path in a short-lived signed cookie, then redirects to Authentik;
+- `GET /api/auth/callback` checks them, creates or updates the `users` row from the ID token `sub`, and sets the session cookie;
+- `POST /api/auth/logout` clears the session.
+
+Users are identified by their `sub` (`users.auth_subject`), never by their email. The session cookie `palawi_notes_session` is a signed JWT that belongs to the app only, with `path=/notes`, `Secure`, `HttpOnly` and `SameSite=Lax`. Access is limited to an Authentik group.
+
+`src/proxy.ts` checks the cookie signature on every request (pages are redirected to sign-in, API routes answer 401) and refuses state-changing requests from another origin. Pages and route handlers then load the account from the database with `getCurrentUser()`; every query is filtered by that account.

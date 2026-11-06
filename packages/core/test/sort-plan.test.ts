@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseSortPlan } from '../src/sort-plan.js';
+import { parseSortPlan } from '../src/sort-plan';
 
 const existingNoteId = '0b6f1f1e-3c1a-4a52-9a43-6f0c2a8d9e10';
 

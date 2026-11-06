@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { resolveLlmMode, type LlmModeConfig } from '../src/mode.js';
+import { resolveLlmMode, type LlmModeConfig } from '../src/mode';
 
 const config: LlmModeConfig = {
   ownerSubject: 'owner-sub',

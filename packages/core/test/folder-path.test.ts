@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatFolderPath, parseFolderPath } from '../src/folder-path.js';
+import { formatFolderPath, parseFolderPath } from '../src/folder-path';
 
 describe('parseFolderPath', () => {
   it('splits and trims segments', () => {
