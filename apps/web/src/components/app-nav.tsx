@@ -5,10 +5,14 @@ import { usePathname } from 'next/navigation';
 
 const LINKS = [
   { href: '/', label: 'Écrire' },
+  { href: '/dossiers', label: 'Dossiers' },
   { href: '/reglages', label: 'Réglages' },
 ] as const;
 
 function isActive(pathname: string, href: string): boolean {
+  if (href === '/dossiers') {
+    return pathname.startsWith('/dossiers') || pathname.startsWith('/note/');
+  }
   return href === '/' ? pathname === '/' : pathname.startsWith(href);
 }
 
