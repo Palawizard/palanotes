@@ -1,5 +1,5 @@
 import 'server-only';
-import { FolderMoveError, FolderNameTakenError, FolderNotEmptyError } from '@palanotes/db';
+import { FolderMoveError, FolderNameTakenError } from '@palanotes/db';
 import { z } from 'zod';
 
 export const folderName = z
@@ -24,15 +24,6 @@ export function folderErrorResponse(error: unknown): Response | null {
       {
         error: 'conflict',
         message: 'Un dossier ne peut pas aller dans lui-même ni dans un de ses sous-dossiers.',
-      },
-      { status: 409 },
-    );
-  }
-  if (error instanceof FolderNotEmptyError) {
-    return Response.json(
-      {
-        error: 'conflict',
-        message: 'Ce dossier n’est pas vide : déplace ou fusionne son contenu d’abord.',
       },
       { status: 409 },
     );

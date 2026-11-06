@@ -3,12 +3,10 @@ import { eq } from 'drizzle-orm';
 import { closeDb } from '../src/client';
 import {
   createFolder,
-  deleteEmptyFolder,
   ensureFolderPath,
   findFolder,
   FolderMoveError,
   FolderNameTakenError,
-  FolderNotEmptyError,
   listFoldersWithCounts,
   mergeFolder,
   moveFolder,
@@ -134,25 +132,5 @@ describe('mergeFolder', () => {
     expect(await mergeFolder(db, bob.id, parent, bobFolder)).toBeNull();
     expect(await mergeFolder(db, alice.id, parent, bobFolder)).toBeNull();
     expect(await findFolder(db, alice.id, parent)).not.toBeNull();
-  });
-});
-
-describe('deleteEmptyFolder', () => {
-  it('deletes only an empty folder of the account', async () => {
-    const alice = await createTestUser(db);
-    const bob = await createTestUser(db);
-    const full = await folder(alice, ['Plein']);
-    await note(alice, full, 'Garde-moi');
-    const parent = await folder(alice, ['Parent']);
-    await folder(alice, ['Parent', 'Enfant']);
-    const empty = await folder(alice, ['Vide']);
-
-    await expect(deleteEmptyFolder(db, alice.id, full)).rejects.toBeInstanceOf(FolderNotEmptyError);
-    await expect(deleteEmptyFolder(db, alice.id, parent)).rejects.toBeInstanceOf(
-      FolderNotEmptyError,
-    );
-    expect(await deleteEmptyFolder(db, bob.id, empty)).toBe(false);
-    expect(await deleteEmptyFolder(db, alice.id, empty)).toBe(true);
-    expect(await findFolder(db, alice.id, empty)).toBeNull();
   });
 });

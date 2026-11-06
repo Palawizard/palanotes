@@ -29,6 +29,13 @@
       "when": 1793974598909,
       "tag": "0003_recent_notes",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793980066895,
+      "tag": "0004_folder_trash",
+      "breakpoints": true
     }
   ]
 }
