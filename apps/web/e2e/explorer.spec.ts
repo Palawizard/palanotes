@@ -10,19 +10,19 @@ test.describe('explorer on a wide screen', () => {
 
     await tree.getByRole('treeitem', { name: /^Administratif/ }).focus();
     await page.keyboard.press('c');
-    await expect(tree.getByRole('treeitem', { name: /^Cours,/ })).toBeFocused();
+    await expect(tree.getByRole('treeitem', { name: /^Cours(?: \d+)?$/ })).toBeFocused();
     await page.keyboard.press('ArrowRight');
-    await expect(tree.getByRole('treeitem', { name: /^Cours,/ })).toHaveAttribute(
+    await expect(tree.getByRole('treeitem', { name: /^Cours(?: \d+)?$/ })).toHaveAttribute(
       'aria-expanded',
       'true',
     );
     await page.keyboard.press('r');
-    await expect(tree.getByRole('treeitem', { name: /^Réseaux?,/ })).toBeFocused();
+    await expect(tree.getByRole('treeitem', { name: /^Réseaux?(?: \d+)?$/ })).toBeFocused();
     await page.keyboard.press('ArrowRight');
     await page.keyboard.press('t');
-    const tcp = tree.getByRole('treeitem', { name: /^TCP-IP,/ });
+    const tcp = tree.getByRole('treeitem', { name: /^TCP-IP(?: \d+)?$/ });
     await expect(tcp).toBeFocused();
-    await expect(tcp).toHaveAttribute('aria-label', 'TCP-IP, 13 notes dont 5 ici');
+    await expect(tcp).toHaveAccessibleDescription('13 notes dont 5 ici');
     await page.keyboard.press('Enter');
 
     await expect(page.getByRole('heading', { level: 1, name: 'TCP-IP' })).toBeVisible();
@@ -38,14 +38,16 @@ test.describe('explorer on a wide screen', () => {
       'aria-current',
       'page',
     );
-    await expect(tree.getByRole('treeitem', { name: /^Couche transport,/ })).toHaveCount(0);
+    await expect(tree.getByRole('treeitem', { name: /^Couche transport(?: \d+)?$/ })).toHaveCount(
+      0,
+    );
   });
 
   test('notes sort by title and the choice stays in the address', async ({ page }) => {
     await page.goto('./dossiers/recents');
     await page
       .getByRole('tree')
-      .getByRole('treeitem', { name: /^Courses,/ })
+      .getByRole('treeitem', { name: /^Courses(?: \d+)?$/ })
       .click();
     await page.getByRole('navigation', { name: 'Trier les notes' }).getByText('Titre').click();
     await expect(page).toHaveURL(/tri=titre/);
@@ -63,10 +65,10 @@ test.describe('explorer on a wide screen', () => {
     await page.goto('./dossiers/recents');
     const tree = page.getByRole('tree');
     await tree
-      .getByRole('treeitem', { name: /^Perso,/ })
+      .getByRole('treeitem', { name: /^Perso(?: \d+)?$/ })
       .locator('.tree-toggle')
       .click();
-    await tree.getByRole('treeitem', { name: /^Journal,/ }).click();
+    await tree.getByRole('treeitem', { name: /^Journal(?: \d+)?$/ }).click();
     const list = page.getByRole('list', { name: 'Notes de Journal' });
     await expect(list.getByRole('listitem')).toHaveCount(50);
     await page.getByRole('link', { name: 'Afficher 20 notes de plus' }).click();
@@ -83,7 +85,7 @@ test.describe('explorer on a phone', () => {
     await expect(tree).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Récents' })).toBeHidden();
 
-    await tree.getByRole('treeitem', { name: /^Idées en vrac,/ }).tap();
+    await tree.getByRole('treeitem', { name: /^Idées en vrac(?: \d+)?$/ }).tap();
     await expect(page.getByRole('heading', { level: 1, name: 'Idées en vrac' })).toBeVisible();
     await expect(tree).toBeHidden();
 

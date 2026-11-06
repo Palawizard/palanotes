@@ -26,21 +26,21 @@ Signing in needs an OIDC provider (see `.env.example`). To try the app with real
 
 ## Scripts
 
-| Command                                | Purpose                                                                                                                                       |
-| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm dev`                             | web app and worker in development mode                                                                                                        |
-| `pnpm build`                           | production build of the web app                                                                                                               |
-| `pnpm typecheck`                       | type check every package                                                                                                                      |
-| `pnpm test`                            | Vitest tests (unit, and integration on Postgres: `TEST_DATABASE_URL`, default `postgres://palanotes:palanotes@localhost:5434/palanotes_test`) |
-| `pnpm e2e`                             | Playwright end-to-end tests (fake sign-in and fake model; needs the database `palanotes_e2e`)                                                 |
-| `pnpm check:private`                   | refuse private working files in the repository                                                                                                |
-| `pnpm lint`                            | ESLint on the web app                                                                                                                         |
-| `pnpm format` / `pnpm format:check`    | Prettier                                                                                                                                      |
-| `pnpm db:up` / `pnpm db:down`          | development Postgres (port 5434)                                                                                                              |
-| `pnpm db:generate`                     | new migration after a change to `packages/db/src/schema.ts`                                                                                   |
-| `pnpm db:migrate`                      | apply migrations                                                                                                                              |
-| `pnpm db:demo --subject <sub>`         | load the demo account (about 50 folders, 345 notes over a year) into an empty account of a local database; refused in production              |
-| `pnpm --filter @palanotes/web screens` | screenshots of every screen with the demo account, at 1440, 1280 and 390 px, light and dark (`SCREENS_DIR` sets the folder)                   |
+| Command                                | Purpose                                                                                                                                                  |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev`                             | web app and worker in development mode                                                                                                                   |
+| `pnpm build`                           | production build of the web app                                                                                                                          |
+| `pnpm typecheck`                       | type check every package                                                                                                                                 |
+| `pnpm test`                            | Vitest tests (unit, and integration on Postgres: `TEST_DATABASE_URL`, default `postgres://palanotes:palanotes@localhost:5434/palanotes_test`)            |
+| `pnpm e2e`                             | Playwright end-to-end tests (fake sign-in and fake model; needs the database `palanotes_e2e`)                                                            |
+| `pnpm check:private`                   | refuse private working files in the repository                                                                                                           |
+| `pnpm lint`                            | ESLint on the web app                                                                                                                                    |
+| `pnpm format` / `pnpm format:check`    | Prettier                                                                                                                                                 |
+| `pnpm db:up` / `pnpm db:down`          | development Postgres (port 5434)                                                                                                                         |
+| `pnpm db:generate`                     | new migration after a change to `packages/db/src/schema.ts`                                                                                              |
+| `pnpm db:migrate`                      | apply migrations                                                                                                                                         |
+| `pnpm db:demo --subject <sub>`         | load the demo account (about 50 folders, 345 notes over a year) into an empty account of a local database; refused in production                         |
+| `pnpm --filter @palanotes/web screens` | screenshots of every screen with the demo account, at 1440, 1280 and 390 px, light and dark, plus timings in `perf.json` (`SCREENS_DIR` sets the folder) |
 
 ## Layout
 

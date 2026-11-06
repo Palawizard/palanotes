@@ -46,10 +46,12 @@
   border-bottom: 1px solid var(--rule);
 }
 
-.explorer-tree .pane-head {
-  min-height: 3.25rem;
+/* The tree and note headers share one height, so their rules line up across the spread. */
+.explorer-tree .pane-head,
+.note-pane-head {
+  height: 3.5rem;
   justify-content: center;
-  padding-block: 0.75rem;
+  padding-block: 0;
 }
 
 .pane-title {
@@ -330,9 +332,8 @@
 .note-pane-head {
   flex-direction: row;
   align-items: center;
+  justify-content: flex-start;
   gap: 0.75rem;
-  min-height: 3.25rem;
-  padding-block: 0.75rem;
 }
 
 .note-pane-body {
@@ -408,9 +409,11 @@
     padding: 0.5rem 0.25rem 3rem;
   }
   .note-pane-head {
+    height: auto;
     flex-direction: column;
     align-items: flex-start;
     gap: 0.25rem;
+    padding-block: 0.75rem 0.625rem;
   }
   .note-pane-body {
     padding: 1rem 0.75rem 3rem;

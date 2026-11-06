@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { subtreeIds } from '@palanotes/core';
 import { listTopTags, searchNotes, type SearchHit } from '@palanotes/db';
+import { Icon } from '@/components/icons';
 import { ResultCard } from '@/components/result-card';
 import {
   activeChips,
@@ -172,7 +173,10 @@ export default async function SearchPage({
             </h2>
             {all.length > 0 ? (
               <details className="refine refine-phone">
-                <summary>Affiner</summary>
+                <summary>
+                  <Icon name="chevronRight" size={12} />
+                  Affiner
+                </summary>
                 <div className="refine-body">{refine}</div>
               </details>
             ) : null}

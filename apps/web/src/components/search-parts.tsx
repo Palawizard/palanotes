@@ -91,10 +91,9 @@ export function FilterChips({ chips, clearHref }: { chips: Chip[]; clearHref: st
             <Link
               href={chip.removeHref}
               className="chip"
-              aria-label={`Retirer le filtre ${chip.label} : ${chip.value}`}
+              aria-label={`${chip.label} ${chip.value}, retirer ce filtre`}
             >
-              <span className="chip-label">{chip.label}</span>
-              {chip.value}
+              <span className="chip-label">{chip.label}</span> {chip.value}
               <span className="chip-remove">
                 <Icon name="close" size={12} />
               </span>

@@ -245,112 +245,103 @@ export function FolderTree({ items, savedOpen }: { items: FolderItem[]; savedOpe
     }
   }
 
-  const visibleById = new Map(visible.map((entry) => [entry.item.id, entry]));
-
-  const renderLevel = (parentId: string | null, level: number) => {
-    const entries = (children.get(parentId) ?? []).flatMap((item) => {
-      const entry = visibleById.get(item.id);
-      return entry && entry.level === level ? [entry] : [];
-    });
-    return entries.map((entry) => {
-      const { item, hasChildren } = entry;
-      const isOpen = hasChildren && open.has(item.id);
-      const isCurrent = item.id === currentId;
-      return (
-        <li
-          key={item.id}
-          ref={(node) => {
-            if (node) refs.current.set(item.id, node);
-            else refs.current.delete(item.id);
-          }}
-          role="treeitem"
-          data-folder={item.id}
-          aria-level={level}
-          aria-setsize={entry.setSize}
-          aria-posinset={entry.posInSet}
-          aria-expanded={hasChildren ? isOpen : undefined}
-          aria-selected={isCurrent}
-          aria-label={`${item.name}, ${countLabel(item)}`}
-          tabIndex={item.id === tabStop ? 0 : -1}
-          onFocus={(event) => {
-            if (event.target === event.currentTarget) setFocusId(item.id);
-          }}
-          onContextMenu={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            setFocusId(item.id);
-            openMenuFor(item.id, { x: event.clientX, y: event.clientY });
-          }}
-          className="tree-item"
-        >
-          <div
-            className="tree-row"
-            data-current={isCurrent || undefined}
-            data-drop={dropId === item.id || undefined}
-            style={{ '--level': level - 1 } as CSSProperties}
-            draggable
-            data-drag="folder"
-            data-id={item.id}
-            data-label={item.name}
-            data-from={item.parentId ?? ''}
-            onDragOver={(event) => onDragOver(event, item, hasChildren)}
-            onDragLeave={(event) => onDragLeave(event, item.id)}
-            onDrop={(event) => onDrop(event, item.id)}
-          >
-            <span
-              className="tree-toggle"
-              data-open={isOpen || undefined}
-              aria-hidden="true"
-              onClick={hasChildren ? () => toggle(item.id) : undefined}
-            >
-              {hasChildren ? <Icon name="chevronRight" size={14} /> : null}
-            </span>
-            <Link
-              href={`/dossiers/${item.id}`}
-              className="tree-link"
-              tabIndex={-1}
-              onClick={() => setFocusId(item.id)}
-              title={item.path}
-            >
-              <Icon name="folder" className="tree-icon" />
-              <span className="tree-name">{item.name}</span>
-              {item.totalCount > 0 ? (
-                <span className="tree-count" aria-hidden="true">
-                  {item.totalCount}
-                </span>
-              ) : null}
-            </Link>
-            <button
-              type="button"
-              className="tree-more icon-button"
-              tabIndex={-1}
-              aria-label={`Actions sur ${item.name}`}
-              onClick={(event) => {
-                const rect = event.currentTarget.getBoundingClientRect();
-                setFocusId(item.id);
-                actions.openMenu(
-                  item.id,
-                  { x: rect.left, y: rect.bottom + 4 },
-                  event.currentTarget,
-                );
-              }}
-            >
-              <Icon name="more" />
-            </button>
-          </div>
-          {isOpen ? (
-            <ul role="group" className="tree-group">
-              {renderLevel(item.id, level + 1)}
-            </ul>
-          ) : null}
-        </li>
-      );
-    });
-  };
-
+  // A flat list of tree items, the level given by aria-level: each item's name is exactly
+  // its visible text, without the text of its subfolders.
   return (
     <ul role="tree" aria-label="Dossiers" className="tree" onKeyDown={onKeyDown}>
-      {renderLevel(null, 1)}
+      {visible.map((entry) => {
+        const { item, hasChildren, level } = entry;
+        const isOpen = hasChildren && open.has(item.id);
+        const isCurrent = item.id === currentId;
+        return (
+          <li
+            key={item.id}
+            ref={(node) => {
+              if (node) refs.current.set(item.id, node);
+              else refs.current.delete(item.id);
+            }}
+            role="treeitem"
+            data-folder={item.id}
+            aria-level={level}
+            aria-setsize={entry.setSize}
+            aria-posinset={entry.posInSet}
+            aria-expanded={hasChildren ? isOpen : undefined}
+            aria-selected={isCurrent}
+            aria-labelledby={`tree-name-${item.id} tree-total-${item.id}`}
+            aria-describedby={`tree-count-${item.id}`}
+            tabIndex={item.id === tabStop ? 0 : -1}
+            onFocus={(event) => {
+              if (event.target === event.currentTarget) setFocusId(item.id);
+            }}
+            onContextMenu={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              setFocusId(item.id);
+              openMenuFor(item.id, { x: event.clientX, y: event.clientY });
+            }}
+            className="tree-item"
+          >
+            <div
+              className="tree-row"
+              data-current={isCurrent || undefined}
+              data-drop={dropId === item.id || undefined}
+              style={{ '--level': level - 1 } as CSSProperties}
+              draggable
+              data-drag="folder"
+              data-id={item.id}
+              data-label={item.name}
+              data-from={item.parentId ?? ''}
+              onDragOver={(event) => onDragOver(event, item, hasChildren)}
+              onDragLeave={(event) => onDragLeave(event, item.id)}
+              onDrop={(event) => onDrop(event, item.id)}
+            >
+              <span
+                className="tree-toggle"
+                data-open={isOpen || undefined}
+                aria-hidden="true"
+                onClick={hasChildren ? () => toggle(item.id) : undefined}
+              >
+                {hasChildren ? <Icon name="chevronRight" size={14} /> : null}
+              </span>
+              <Link
+                href={`/dossiers/${item.id}`}
+                className="tree-link"
+                tabIndex={-1}
+                onClick={() => setFocusId(item.id)}
+                title={item.path}
+              >
+                <Icon name="folder" className="tree-icon" />
+                <span className="tree-name" id={`tree-name-${item.id}`}>
+                  {item.name}
+                </span>{' '}
+                <span className="sr-only" id={`tree-count-${item.id}`}>
+                  {countLabel(item)}
+                </span>{' '}
+                <span className="tree-count" id={`tree-total-${item.id}`}>
+                  {item.totalCount > 0 ? item.totalCount : ''}
+                </span>
+              </Link>
+              <button
+                type="button"
+                className="tree-more icon-button"
+                tabIndex={-1}
+                aria-label={`Actions sur ${item.name}`}
+                onClick={(event) => {
+                  const rect = event.currentTarget.getBoundingClientRect();
+                  setFocusId(item.id);
+                  actions.openMenu(
+                    item.id,
+                    { x: rect.left, y: rect.bottom + 4 },
+                    event.currentTarget,
+                  );
+                }}
+              >
+                <Icon name="more" />
+              </button>
+            </div>
+          </li>
+        );
+      })}
     </ul>
   );
 }

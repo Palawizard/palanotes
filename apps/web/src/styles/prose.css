@@ -143,10 +143,12 @@
   border-collapse: collapse;
   font-variant-numeric: tabular-nums;
   scrollbar-width: thin;
+  overflow-wrap: normal;
 }
 
 .prose-note th,
 .prose-note td {
+  white-space: nowrap;
   border: 1px solid var(--rule);
   padding: 0.375em 0.75em;
   text-align: left;

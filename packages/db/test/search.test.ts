@@ -76,6 +76,20 @@ describe('searchNotes', () => {
     expect(hit?.excerpt).toContain(`${HIGHLIGHT_START}transport${HIGHLIGHT_END}`);
   });
 
+  it('builds excerpts from plain sentences, without Markdown or tables', async () => {
+    await add(
+      user,
+      ['Cours'],
+      'Pare-feu',
+      '# Pare-feu\n\n- un **alias** par réseau (`lan_admin`)\n- règles lues de haut en bas\n\n| Port | Usage |\n| --- | --- |\n| 22 | SSH |\n\n```sh\nnft list ruleset\n```',
+    );
+    const [hit] = await searchNotes(db, user.id, 'alias');
+    expect(hit?.excerpt).not.toMatch(/[|*`#]/);
+    expect(hit?.excerpt).toContain('lan_admin');
+    expect(hit?.excerpt).toContain(' · ');
+    expect(hit?.excerpt).not.toContain('nft list');
+  });
+
   it('keeps the index up to date when a note is edited', async () => {
     const note = await add(user, ['Divers'], 'Brouillon', 'rien de spécial');
     expect(await searchNotes(db, user.id, 'kubernetes')).toEqual([]);

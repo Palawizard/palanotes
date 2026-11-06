@@ -14,7 +14,7 @@ test.describe('search on a wide screen', () => {
     const chips = page.getByRole('list', { name: 'Filtres actifs' });
     await expect(
       chips.getByRole('link', {
-        name: /^Retirer le filtre Dossier seul : Cours \/ Réseaux? \/ TCP-IP$/,
+        name: /^Dossier seul Cours \/ Réseaux? \/ TCP-IP, retirer ce filtre$/,
       }),
     ).toBeVisible();
     const cards = page.locator('.result');
@@ -27,7 +27,7 @@ test.describe('search on a wide screen', () => {
     await expect(cards).toHaveCount(1);
     await expect(cards.first()).toContainText('DNS : résolution pas à pas');
 
-    await chips.getByRole('link', { name: /Retirer le filtre Dossier/ }).click();
+    await chips.getByRole('link', { name: /^Dossier.*retirer ce filtre$/ }).click();
     await expect(page).not.toHaveURL(/dossier=/);
     await expect(page).toHaveURL(/tag=dns/);
     await expect(page.getByRole('searchbox')).toHaveValue('réseau');
