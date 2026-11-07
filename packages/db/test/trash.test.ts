@@ -14,6 +14,7 @@ import {
   purgeExpiredTrash,
   restoreTrashItem,
   trashFolder,
+  trashNote,
 } from '../src/repo/trash';
 import { notes, noteVersions, sortRuns, trashItems } from '../src/schema';
 import type { User } from '../src/repo/users';
@@ -99,7 +100,13 @@ describe('restoreTrashItem', () => {
 
     const restored = await restoreTrashItem(db, user.id, item.id);
 
-    expect(restored).toEqual({ folderId: reseau, name: 'Réseau', parentId: cours, renamed: false });
+    expect(restored).toEqual({
+      kind: 'folder',
+      folderId: reseau,
+      name: 'Réseau',
+      parentId: cours,
+      renamed: false,
+    });
     expect((await findFolder(db, user.id, tcp))?.parentId).toBe(reseau);
     expect(await findNote(db, user.id, masque.id)).toEqual(before);
     expect((await findNote(db, user.id, handshake.id))?.folderId).toBe(tcp);
@@ -209,5 +216,66 @@ describe('emptying the trash', () => {
 
     expect(await purgeExpiredTrash(db, 30)).toBeGreaterThanOrEqual(1);
     expect((await listTrash(db, user.id)).map((item) => item.name)).toEqual(['Récent']);
+  });
+});
+
+describe('trashNote', () => {
+  it('deletes one note with its history and puts it back in its folder', async () => {
+    const user = await createTestUser(db);
+    const { reseau, masque } = await coursReseau(user);
+
+    const item = await trashNote(db, user.id, masque.id);
+
+    expect(item).toMatchObject({
+      kind: 'note',
+      noteId: masque.id,
+      folderId: reseau,
+      name: 'Masques de sous-réseau',
+      path: ['Cours', 'Réseau'],
+      noteCount: 1,
+      folderCount: 0,
+    });
+    expect(await findNote(db, user.id, masque.id)).toBeNull();
+    expect(await findFolder(db, user.id, reseau)).not.toBeNull();
+    expect(await searchNotes(db, user.id, 'masque')).toHaveLength(0);
+
+    const restored = await restoreTrashItem(db, user.id, item?.id ?? '');
+    expect(restored).toEqual({
+      kind: 'note',
+      noteId: masque.id,
+      folderId: reseau,
+      name: 'Masques de sous-réseau',
+      recreated: false,
+    });
+    const back = await findNote(db, user.id, masque.id);
+    expect(back?.content).toBe('Le masque /26 donne 62 hôtes utilisables.');
+    expect(back?.folderId).toBe(reseau);
+    const history = await db.select().from(noteVersions).where(eq(noteVersions.noteId, masque.id));
+    expect(history.length).toBeGreaterThan(0);
+    expect(await countTrash(db, user.id)).toBe(0);
+  });
+
+  it('makes the folder path again when the folder was deleted since', async () => {
+    const user = await createTestUser(db);
+    const { reseau, handshake } = await coursReseau(user);
+    const noteItem = await trashNote(db, user.id, handshake.id);
+    await trashFolder(db, user.id, reseau);
+
+    const restored = await restoreTrashItem(db, user.id, noteItem?.id ?? '');
+
+    expect(restored).toMatchObject({ kind: 'note', noteId: handshake.id, recreated: true });
+    const paths = (await listFolders(db, user.id)).map((folder) => folder.name);
+    expect(paths).toEqual(expect.arrayContaining(['Cours', 'Réseau', 'TCP']));
+    const back = await findNote(db, user.id, handshake.id);
+    expect(back?.folderId).toBe(restored?.folderId);
+  });
+
+  it('refuses a note of another account', async () => {
+    const owner = await createTestUser(db);
+    const other = await createTestUser(db);
+    const { masque } = await coursReseau(owner);
+
+    expect(await trashNote(db, other.id, masque.id)).toBeNull();
+    expect(await findNote(db, owner.id, masque.id)).not.toBeNull();
   });
 });

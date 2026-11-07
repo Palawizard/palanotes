@@ -175,6 +175,9 @@ export const noteVersions = pgTable(
 // A deleted folder with everything it held, kept for 30 days so the deletion can be undone.
 // The payload is a copy of the rows as they were; the live tables keep no deleted rows, so
 // no other query has to filter them out.
+// A trashed folder (with everything it held) or a single trashed note.
+export const trashKindEnum = pgEnum('trash_kind', ['folder', 'note']);
+
 export const trashItems = pgTable(
   'trash_items',
   {
@@ -182,7 +185,10 @@ export const trashItems = pgTable(
     userId: uuid('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
+    kind: trashKindEnum('kind').notNull().default('folder'),
+    // For a folder, the folder itself; for a note, the folder it was in.
     folderId: uuid('folder_id').notNull(),
+    noteId: uuid('note_id'),
     parentId: uuid('parent_id'),
     name: text('name').notNull(),
     path: text('path').array().notNull(),

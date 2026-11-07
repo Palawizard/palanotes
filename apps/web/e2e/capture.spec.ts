@@ -118,7 +118,7 @@ test('a filed entry leaves the pocket when its folder goes to the trash, and com
 
   await page.goto('./dossiers/corbeille');
   await page
-    .getByRole('list', { name: 'Dossiers supprimés' })
+    .getByRole('list', { name: 'Éléments supprimés' })
     .getByRole('listitem')
     .filter({ hasText: 'Sauces' })
     .getByRole('button', { name: 'Restaurer' })
