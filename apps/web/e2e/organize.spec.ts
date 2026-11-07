@@ -121,7 +121,7 @@ test('a new folder can be created, then deleted into the trash and removed for g
   await expect(tree(page).getByRole('treeitem', { name: /^Brouillons(?: \d+)?$/ })).toHaveCount(0);
 
   await page.getByRole('link', { name: /^Corbeille/ }).click();
-  const rows = page.getByRole('list', { name: 'Dossiers supprimés' });
+  const rows = page.getByRole('list', { name: 'Éléments supprimés' });
   await rows.getByRole('button', { name: 'Supprimer définitivement Brouillons' }).click();
   const forGood = page.getByRole('dialog', { name: 'Supprimer définitivement' });
   await expect(forGood).toContainText('Ce n’est pas annulable.');
@@ -166,7 +166,7 @@ test('a folder with notes goes to the trash and comes back with Annuler, Ctrl+Z 
   await deleteCourses();
   await page.getByRole('link', { name: /^Corbeille/ }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'Corbeille' })).toBeVisible();
-  const row = page.getByRole('list', { name: 'Dossiers supprimés' }).getByRole('listitem').filter({
+  const row = page.getByRole('list', { name: 'Éléments supprimés' }).getByRole('listitem').filter({
     hasText: 'Courses',
   });
   await expect(row).toContainText('supprimé le');
@@ -227,7 +227,7 @@ test('with every folder in the trash, the folders page still leads to the trash'
   } finally {
     // Put every folder back so the next tests find the demo account as it was.
     await page.goto('./dossiers/corbeille');
-    const rows = page.getByRole('list', { name: 'Dossiers supprimés' }).getByRole('listitem');
+    const rows = page.getByRole('list', { name: 'Éléments supprimés' }).getByRole('listitem');
     for (let left = await rows.count(); left > 0; left -= 1) {
       await rows.first().getByRole('button', { name: 'Restaurer' }).click();
       await page.waitForURL(/\/dossiers\/[0-9a-f-]{36}/);
@@ -238,4 +238,44 @@ test('with every folder in the trash, the folders page still leads to the trash'
   await expect(
     page.getByRole('tree', { name: 'Dossiers' }).locator('[role="treeitem"][aria-level="1"]'),
   ).toHaveCount(ids.length);
+});
+
+test('a note goes to the trash in one click and comes back with Ctrl+Z or the trash', async ({
+  page,
+}) => {
+  await page.goto('./dossiers/recents');
+  await openFolder(page, ['Idées en vrac']);
+  const list = page.getByRole('list', { name: 'Notes de Idées en vrac' });
+  await list.getByRole('link').first().click();
+  const heading = page.locator('h1.note-title');
+  await expect(heading).toBeVisible();
+  const title = (await heading.textContent()) ?? '';
+  const row = list.getByRole('link', {
+    name: new RegExp(title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')),
+  });
+
+  async function deleteIt() {
+    await page.getByRole('button', { name: 'Supprimer', exact: true }).click();
+    await expect(page.getByRole('status')).toHaveText(`« ${title} » mise à la corbeille.`);
+    await expect(row).toHaveCount(0);
+    await expect(page).not.toHaveURL(/note=/);
+  }
+
+  await deleteIt();
+  await page.keyboard.press('Control+z');
+  await expect(page.getByRole('status')).toHaveText(`« ${title} » restaurée.`);
+  await expect(heading).toHaveText(title);
+  await expect(row).toHaveCount(1);
+
+  await deleteIt();
+  await page.getByRole('link', { name: /^Corbeille/ }).click();
+  const trashed = page
+    .getByRole('list', { name: 'Éléments supprimés' })
+    .getByRole('listitem')
+    .filter({ hasText: title });
+  await expect(trashed).toContainText('Était dans Idées en vrac');
+  await expect(trashed).toContainText('Note · supprimée le');
+  await trashed.getByRole('button', { name: 'Restaurer' }).click();
+  await expect(page.getByRole('status')).toHaveText(`« ${title} » restaurée.`);
+  await expect(heading).toHaveText(title);
 });

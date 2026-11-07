@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { parseFolderPath } from '@palanotes/core';
-import { ensureFolderPath, updateNote, type NoteChanges } from '@palanotes/db';
+import { ensureFolderPath, trashNote, updateNote, type NoteChanges } from '@palanotes/db';
 import { getCurrentUser } from '@/server/auth';
 import { getDb } from '@/server/db';
 
@@ -53,4 +53,27 @@ export async function PATCH(
     return Response.json({ error: 'not_found' }, { status: 404 });
   }
   return Response.json({ note: { id: note.id, folderId: note.folderId } });
+}
+
+// Sends the note to the trash, where it stays 30 days.
+export async function DELETE(
+  _request: Request,
+  context: { params: Promise<{ id: string }> },
+): Promise<Response> {
+  const user = await getCurrentUser();
+  if (!user) {
+    return Response.json({ error: 'unauthorized' }, { status: 401 });
+  }
+  const id = z.uuid().safeParse((await context.params).id);
+  if (!id.success) {
+    return Response.json({ error: 'not_found' }, { status: 404 });
+  }
+  const item = await trashNote(getDb(), user.id, id.data);
+  if (!item) {
+    return Response.json(
+      { error: 'not_found', message: 'Cette note n’existe plus. Recharge la page.' },
+      { status: 404 },
+    );
+  }
+  return Response.json({ trash: { id: item.id, name: item.name } });
 }

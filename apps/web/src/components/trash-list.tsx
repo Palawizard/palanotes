@@ -6,12 +6,14 @@ import { trashExpiresAt } from '@palanotes/core';
 import { held } from '@/lib/counts';
 import { formatDay, formatDaysLeft, formatFull } from '@/lib/format';
 import { send } from '@/lib/mutate';
+import { restoredHref, restoredText, type RestoredItem } from '@/lib/restored';
 import { Dialog } from './dialog';
 import { useFolderActions } from './folder-actions';
 import { Icon } from './icons';
 
 export interface TrashRow {
   id: string;
+  kind: 'folder' | 'note';
   name: string;
   path: string[];
   noteCount: number;
@@ -21,11 +23,18 @@ export interface TrashRow {
 
 type Confirm = { kind: 'one'; item: TrashRow } | { kind: 'all' } | null;
 
-function where(path: string[]): string {
-  return path.length > 1 ? `Était dans ${path.slice(0, -1).join(' / ')}` : 'Était tout en haut';
+// A folder's path ends with its own name; a note's path is the folder it was in.
+function where(item: TrashRow): string {
+  const parent = item.kind === 'note' ? item.path : item.path.slice(0, -1);
+  return parent.length > 0 ? `Était dans ${parent.join(' / ')}` : 'Était tout en haut';
 }
 
-// The deleted folders, newest first: each one goes back where it was, or goes for good.
+function what(item: TrashRow): string {
+  if (item.kind === 'note') return 'Note';
+  return item.noteCount + item.folderCount > 0 ? held(item.noteCount, item.folderCount) : 'Vide';
+}
+
+// The deleted folders and notes, newest first: each one goes back where it was, or goes for good.
 export function TrashList({ items, now }: { items: TrashRow[]; now: string }) {
   const router = useRouter();
   const { say } = useFolderActions();
@@ -36,7 +45,7 @@ export function TrashList({ items, now }: { items: TrashRow[]; now: string }) {
 
   async function restore(item: TrashRow) {
     setBusyId(item.id);
-    const result = await send<{ folder: { folderId: string; name: string; renamed: boolean } }>(
+    const result = await send<{ restored: RestoredItem }>(
       `/api/trash/${item.id}/restore`,
       'POST',
       undefined,
@@ -47,11 +56,8 @@ export function TrashList({ items, now }: { items: TrashRow[]; now: string }) {
       say(result.message);
       return;
     }
-    const { folderId, name, renamed } = result.data.folder;
-    say(
-      renamed ? `« ${item.name} » restauré sous le nom « ${name} ».` : `« ${item.name} » restauré.`,
-    );
-    router.push(`/dossiers/${folderId}`);
+    say(restoredText(result.data.restored, item.name));
+    router.push(restoredHref(result.data.restored));
     router.refresh();
   }
 
@@ -73,7 +79,7 @@ export function TrashList({ items, now }: { items: TrashRow[]; now: string }) {
     }
     say(
       confirm.kind === 'one'
-        ? `« ${confirm.item.name} » supprimé définitivement.`
+        ? `« ${confirm.item.name} » ${confirm.item.kind === 'note' ? 'supprimée' : 'supprimé'} définitivement.`
         : 'Corbeille vidée.',
     );
     setConfirm(null);
@@ -84,7 +90,7 @@ export function TrashList({ items, now }: { items: TrashRow[]; now: string }) {
     <>
       <div className="trash-head">
         <p className="list-meta">
-          Un dossier supprimé reste ici 30 jours avec ses notes, puis disparaît.
+          Une note ou un dossier supprimé reste ici 30 jours, puis disparaît.
         </p>
         {items.length > 0 ? (
           <button
@@ -103,20 +109,19 @@ export function TrashList({ items, now }: { items: TrashRow[]; now: string }) {
           <p>La corbeille est vide.</p>
         </div>
       ) : (
-        <ul className="trash-rows" aria-label="Dossiers supprimés">
+        <ul className="trash-rows" aria-label="Éléments supprimés">
           {items.map((item) => (
             <li key={item.id} className="trash-row">
-              <Icon name="folder" className="trash-row-icon" />
+              <Icon name={item.kind} className="trash-row-icon" />
               <div className="trash-row-text">
                 <p className="trash-row-name">{item.name}</p>
-                <p className="trash-row-meta">{where(item.path)}</p>
+                <p className="trash-row-meta">{where(item)}</p>
                 <p className="trash-row-meta">
-                  {item.noteCount + item.folderCount > 0
-                    ? held(item.noteCount, item.folderCount)
-                    : 'Vide'}
+                  {what(item)}
                   {' · '}
                   <time dateTime={item.deletedAt} title={formatFull(item.deletedAt)}>
-                    supprimé le {formatDay(item.deletedAt, today)}
+                    {item.kind === 'note' ? 'supprimée' : 'supprimé'} le{' '}
+                    {formatDay(item.deletedAt, today)}
                   </time>
                   {' · '}
                   {formatDaysLeft(trashExpiresAt(new Date(item.deletedAt)).toISOString(), today)}
@@ -155,9 +160,11 @@ export function TrashList({ items, now }: { items: TrashRow[]; now: string }) {
         title={confirm?.kind === 'all' ? 'Vider la corbeille' : 'Supprimer définitivement'}
         description={
           confirm?.kind === 'all'
-            ? `Les ${items.length} dossiers de la corbeille et leurs notes seront supprimés pour de bon. Ce n’est pas annulable.`
+            ? `Tout ce que contient la corbeille (${items.length === 1 ? '1 élément' : `${items.length} éléments`}) sera supprimé pour de bon. Ce n’est pas annulable.`
             : confirm?.kind === 'one'
-              ? `« ${confirm.item.name} » et ce qu’il contient seront supprimés pour de bon. Ce n’est pas annulable.`
+              ? confirm.item.kind === 'note'
+                ? `La note « ${confirm.item.name} » sera supprimée pour de bon. Ce n’est pas annulable.`
+                : `« ${confirm.item.name} » et ce qu’il contient seront supprimés pour de bon. Ce n’est pas annulable.`
               : undefined
         }
       >
