@@ -18,6 +18,7 @@ export default async function TrashPage() {
   const [items, tree] = await Promise.all([listTrash(db, user.id), loadFolderTree(db, user.id)]);
   const rows: TrashRow[] = items.map((item) => ({
     id: item.id,
+    kind: item.kind,
     name: item.name,
     path: item.path,
     noteCount: item.noteCount,
@@ -55,8 +56,8 @@ export default async function TrashPage() {
         <div className="pane-empty">
           <Icon name="undo" size={24} />
           <p>
-            Un dossier restauré retrouve sa place, avec ses notes, ses sous-dossiers et l’historique
-            de chaque note.
+            Ce qui est restauré retrouve sa place : une note revient dans son dossier, un dossier
+            avec ses notes, ses sous-dossiers et l’historique de chaque note.
           </p>
         </div>
       }

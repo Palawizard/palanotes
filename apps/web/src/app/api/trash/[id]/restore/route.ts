@@ -18,9 +18,9 @@ export async function POST(
   if (!id.success) {
     return trashNotFoundResponse();
   }
-  const folder = await restoreTrashItem(getDb(), user.id, id.data);
-  if (!folder) {
+  const restored = await restoreTrashItem(getDb(), user.id, id.data);
+  if (!restored) {
     return trashNotFoundResponse();
   }
-  return Response.json({ folder });
+  return Response.json({ restored });
 }

@@ -12,6 +12,7 @@ import {
   type ReactNode,
 } from 'react';
 import { send } from '@/lib/mutate';
+import { restoredHref, restoredText, type RestoredItem } from '@/lib/restored';
 import type { FolderItem } from '@/server/folders';
 import { Dialog } from './dialog';
 import { CREATE, FolderPicker, ROOT } from './folder-picker';
@@ -40,6 +41,7 @@ interface FolderActions {
   startMoveNote: (note: NoteRef) => void;
   moveNote: (note: NoteRef, folderId: string) => Promise<void>;
   moveFolder: (folderId: string, parentId: string | null) => Promise<void>;
+  deleteNote: (note: NoteRef) => Promise<void>;
   say: (message: string) => void;
 }
 
@@ -135,7 +137,7 @@ export function FolderActionsProvider({
   async function restoreTrashed() {
     if (!trashed) return;
     setTrashed(null);
-    const result = await send<{ folder: { folderId: string; name: string; renamed: boolean } }>(
+    const result = await send<{ restored: RestoredItem }>(
       `/api/trash/${trashed.id}/restore`,
       'POST',
       undefined,
@@ -145,14 +147,34 @@ export function FolderActionsProvider({
       say(result.message);
       return;
     }
-    const { folderId, name: restoredName, renamed } = result.data.folder;
-    say(
-      renamed
-        ? `« ${trashed.name} » restauré sous le nom « ${restoredName} ».`
-        : `« ${trashed.name} » restauré.`,
+    const { restored } = result.data;
+    say(restoredText(restored, trashed.name));
+    if (restored.kind === 'folder') refocus.current = restored.folderId;
+    router.push(restoredHref(restored));
+    router.refresh();
+  }
+
+  // Straight to the trash, without a confirmation: « Annuler », Ctrl+Z and the trash bring
+  // the note back. The list stays open on the folder the note was in.
+  async function deleteNote(note: NoteRef) {
+    const result = await send<{ trash: { id: string; name: string } }>(
+      `/api/notes/${note.id}`,
+      'DELETE',
+      undefined,
+      'Suppression impossible. Réessaie.',
     );
-    refocus.current = folderId;
-    router.push(`/dossiers/${folderId}`);
+    if (!result.ok) {
+      say(result.message);
+      return;
+    }
+    const { trash } = result.data;
+    setTrashed({ id: trash.id, name: trash.name });
+    say(`« ${trash.name} » mise à la corbeille.`, true);
+    const here = new URL(window.location.href);
+    here.searchParams.delete('note');
+    const base = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
+    const path = here.pathname.startsWith(base) ? here.pathname.slice(base.length) : here.pathname;
+    router.push(`${path || '/'}${here.search}`);
     router.refresh();
   }
 
@@ -383,6 +405,7 @@ export function FolderActionsProvider({
     startMoveNote: (note) => open({ kind: 'move-note', note }),
     moveNote,
     moveFolder: moveFolderTo,
+    deleteNote,
     say,
   };
 

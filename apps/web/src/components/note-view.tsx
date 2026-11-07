@@ -29,6 +29,7 @@ export function NoteView({ note }: { note: NoteData }) {
   const [content, setContent] = useState(note.content);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   function open(next: Mode) {
     setTitle(note.title);
@@ -140,6 +141,20 @@ export function NoteView({ note }: { note: NoteData }) {
             >
               <Icon name="move" />
               Déplacer vers…
+            </button>
+            <button
+              type="button"
+              className="button button-quiet button-small"
+              disabled={deleting}
+              onClick={() => {
+                setDeleting(true);
+                void actions
+                  .deleteNote({ id: note.id, title: note.title, folderId: note.folderId })
+                  .finally(() => setDeleting(false));
+              }}
+            >
+              <Icon name="trash" />
+              Supprimer
             </button>
           </div>
         </div>
