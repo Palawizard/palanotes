@@ -4,11 +4,11 @@
 import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
-import { OAuth2Server } from 'oauth2-mock-server';
 import postgres from 'postgres';
 import { closeDb, createDb, upsertUser } from '@palanotes/db';
 import { seedDemoAccount } from '@palanotes/db/demo';
 import { runMigrations } from '@palanotes/db/migrate';
+import { startFakeOidc } from '../scripts/fake-oidc';
 import { E2E_OIDC_PORT, E2E_SUBJECT, e2eEnv } from './env';
 
 const url = e2eEnv.DATABASE_URL ?? '';
@@ -24,15 +24,7 @@ const demo = await seedDemoAccount(db, owner.id);
 await closeDb(db);
 console.log(`[e2e] demo account: ${demo.folders} folders, ${demo.notes} notes`);
 
-const server = new OAuth2Server();
-await server.issuer.keys.generate('RS256');
-server.service.on('beforeTokenSigning', (token) => {
-  if (token.payload.aud) {
-    token.payload.sub = E2E_SUBJECT;
-    token.payload.name = 'Palawi';
-  }
-});
-await server.start(E2E_OIDC_PORT, 'localhost');
+const server = await startFakeOidc(E2E_OIDC_PORT, { subject: E2E_SUBJECT, name: 'Palawi' });
 console.log(`[e2e] fake OIDC provider on ${server.issuer.url}`);
 
 const workerDir = fileURLToPath(new URL('../../worker', import.meta.url));

@@ -16,19 +16,23 @@ Served at `https://palawi.fr/notes`, sign-in with a palawi.fr account (Authentik
 pnpm install
 cp .env.example .env
 pnpm db:up
-pnpm db:migrate
-pnpm dev
+pnpm dev:local
 ```
 
 The app runs at `http://localhost:3000/notes`, and `http://localhost:3000/notes/api/health` returns `{"status":"ok"}`.
 
-Signing in needs an OIDC provider (see `.env.example`). To try the app with realistic content, sign in once, then run `pnpm db:demo --subject <your OIDC sub>` on an empty account. Without a Claude token or API key, set `LLM_FAKE=1` to file entries with a deterministic fake model while developing.
+`pnpm dev:local` needs no sign-in provider. It applies the migrations, starts a fake OIDC provider on port 9401 (`DEV_OIDC_PORT`) that signs you in as one local account, then runs the web app and the worker. It reads the root `.env` and `.env.worker` but always points sign-in to the fake provider, so the `OIDC_*` values are ignored. The local account uses `LLM_OWNER_SUBJECT` as its subject, or `local-dev-user` when it is empty, and gets the owner's model mode. Without a Claude token (or an API key in `api` mode), entries are filed by a deterministic fake model. `SESSION_SECRET` can stay empty: a random one is used, and a restart signs you back in automatically.
+
+To try the app with realistic content, load the demo account into the local account: `pnpm db:demo --subject local-dev-user`.
+
+`pnpm dev` runs the same web app and worker against a real OIDC provider: fill the `OIDC_*` values and `SESSION_SECRET`, and run `pnpm db:migrate` first. Every command reads the root `.env`; variables already set in the shell take precedence.
 
 ## Scripts
 
 | Command                                | Purpose                                                                                                                                                  |
 | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm dev`                             | web app and worker in development mode                                                                                                                   |
+| `pnpm dev:local`                       | migrations, fake sign-in, web app and worker in development mode, without an OIDC provider                                                               |
+| `pnpm dev`                             | web app and worker in development mode, with the OIDC provider from `.env`                                                                               |
 | `pnpm build`                           | production build of the web app                                                                                                                          |
 | `pnpm typecheck`                       | type check every package                                                                                                                                 |
 | `pnpm test`                            | Vitest tests (unit, and integration on Postgres: `TEST_DATABASE_URL`, default `postgres://palanotes:palanotes@localhost:5434/palanotes_test`)            |
