@@ -4,14 +4,24 @@
 import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
-import { OAuth2Server } from 'oauth2-mock-server';
 import postgres from 'postgres';
 import { closeDb, createDb, upsertUser } from '@palanotes/db';
 import { seedDemoAccount } from '@palanotes/db/demo';
 import { runMigrations } from '@palanotes/db/migrate';
+import { startFakeOidc } from '../scripts/fake-oidc';
 import { E2E_OIDC_PORT, E2E_SUBJECT, e2eEnv } from './env';
 
 const url = e2eEnv.DATABASE_URL ?? '';
+const maintenanceUrl = new URL(url);
+const name = maintenanceUrl.pathname.slice(1);
+maintenanceUrl.pathname = '/postgres';
+const admin = postgres(maintenanceUrl.toString(), { max: 1, onnotice: () => undefined });
+const [exists] = await admin`select 1 from pg_database where datname = ${name}`;
+if (!exists) {
+  await admin`create database ${admin(name)}`;
+}
+await admin.end();
+
 const sql = postgres(url, { max: 1, onnotice: () => undefined });
 await sql.unsafe(
   'drop schema if exists public cascade; drop schema if exists drizzle cascade; drop schema if exists pgboss cascade; create schema public;',
@@ -24,15 +34,7 @@ const demo = await seedDemoAccount(db, owner.id);
 await closeDb(db);
 console.log(`[e2e] demo account: ${demo.folders} folders, ${demo.notes} notes`);
 
-const server = new OAuth2Server();
-await server.issuer.keys.generate('RS256');
-server.service.on('beforeTokenSigning', (token) => {
-  if (token.payload.aud) {
-    token.payload.sub = E2E_SUBJECT;
-    token.payload.name = 'Palawi';
-  }
-});
-await server.start(E2E_OIDC_PORT, 'localhost');
+const server = await startFakeOidc(E2E_OIDC_PORT, { subject: E2E_SUBJECT, name: 'Palawi' });
 console.log(`[e2e] fake OIDC provider on ${server.issuer.url}`);
 
 const workerDir = fileURLToPath(new URL('../../worker', import.meta.url));

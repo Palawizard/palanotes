@@ -13,8 +13,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "generate": "drizzle-kit generate",
-    "migrate": "tsx src/migrate-cli.ts",
-    "demo": "tsx src/demo-cli.ts"
+    "migrate": "tsx --env-file-if-exists=../../.env src/migrate-cli.ts",
+    "demo": "tsx --env-file-if-exists=../../.env src/demo-cli.ts"
   },
   "dependencies": {
     "@palanotes/core": "workspace:*",

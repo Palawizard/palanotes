@@ -69,3 +69,9 @@ Code blocks in notes are coloured by `rehype-highlight` (highlight.js through lo
 ## 2026-11-07: a note is deleted in one click
 
 « Supprimer » in the note header sends the note to the trash at once, without a confirmation dialog: one note is cheap to bring back, and a dialog on every deletion soon gets in the way. « Annuler » in the status line, Ctrl+Z and the trash (30 days) cover a mistake. The trash keeps notes in the same `trash_items` table as folders, with a `kind` column, so the purge, the list and « Vider la corbeille » need nothing new. A note always belongs to a folder, so when its folder was deleted after it, restoring makes the old folder path again rather than leaving the note nowhere. Folders keep their confirmation, since they can hold hundreds of notes.
+
+## 2026-11-16: local development through a fake OIDC provider
+
+`pnpm dev:local` runs the app without Authentik by starting `oauth2-mock-server` (already used by the end-to-end tests) as the sign-in provider, with every visitor signed in as one local account. The app keeps a single sign-in path: there is no bypass switch in the web code that a wrong production setting could turn on, and the local run goes through the same login, callback and session cookie as production. The script refuses to start when `NODE_ENV` is `production` and is left out of the Docker images.
+
+Next.js reads `.env` files from `apps/web` only, so `next.config.ts` loads the root `.env`, and the worker and database scripts use Node's `--env-file-if-exists`. Variables already set in the environment win, which keeps `compose.yaml` in charge in production.

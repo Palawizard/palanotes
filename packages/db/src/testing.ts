@@ -18,7 +18,8 @@ export async function prepareTestDatabase(name: string): Promise<void> {
   if (!/^[a-z_]+$/.test(name)) {
     throw new Error('test database name must be lowercase letters and underscores');
   }
-  const admin = postgres(serverUrl, { max: 1, onnotice: () => undefined });
+  // The maintenance database always exists, unlike the one named in TEST_DATABASE_URL.
+  const admin = postgres(testDatabaseUrl('postgres'), { max: 1, onnotice: () => undefined });
   const [exists] = await admin`select 1 from pg_database where datname = ${name}`;
   if (!exists) {
     await admin.unsafe(`create database ${name}`);
