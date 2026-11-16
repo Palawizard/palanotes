@@ -12,6 +12,16 @@ import { startFakeOidc } from '../scripts/fake-oidc';
 import { E2E_OIDC_PORT, E2E_SUBJECT, e2eEnv } from './env';
 
 const url = e2eEnv.DATABASE_URL ?? '';
+const maintenanceUrl = new URL(url);
+const name = maintenanceUrl.pathname.slice(1);
+maintenanceUrl.pathname = '/postgres';
+const admin = postgres(maintenanceUrl.toString(), { max: 1, onnotice: () => undefined });
+const [exists] = await admin`select 1 from pg_database where datname = ${name}`;
+if (!exists) {
+  await admin`create database ${admin(name)}`;
+}
+await admin.end();
+
 const sql = postgres(url, { max: 1, onnotice: () => undefined });
 await sql.unsafe(
   'drop schema if exists public cascade; drop schema if exists drizzle cascade; drop schema if exists pgboss cascade; create schema public;',
