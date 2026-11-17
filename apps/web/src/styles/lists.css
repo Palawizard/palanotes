@@ -65,7 +65,19 @@
 }
 
 .note-page {
-  max-width: 50rem;
+  max-width: 56rem;
+  width: 100%;
+  padding: clamp(1.25rem, 4vw, 3rem) clamp(1.125rem, 4.5vw, 3.5rem) clamp(2rem, 5vw, 3.5rem);
+  background: var(--plate);
+  border-radius: var(--radius-stage);
+  box-shadow: var(--shadow-2);
+  animation: note-set 340ms var(--ease-settle);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .note-page {
+    animation: note-fade 200ms ease;
+  }
 }
 
 .note-head {
