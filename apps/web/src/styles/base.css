@@ -1,19 +1,18 @@
 html {
-  background: var(--paper);
+  background: var(--table);
   color: var(--ink);
   font-family: var(--font-sans);
   font-size: 100%;
   -webkit-text-size-adjust: 100%;
+  font-feature-settings: 'ss01' on;
+  scrollbar-color: var(--rule-strong) transparent;
 }
 
 body {
   font-size: var(--text-body);
   line-height: var(--leading-body);
   min-height: 100dvh;
-}
-
-html {
-  scrollbar-color: var(--rule-strong) transparent;
+  -webkit-font-smoothing: antialiased;
 }
 
 ::selection {
@@ -22,13 +21,45 @@ html {
 }
 
 :focus-visible {
-  outline: 2px solid var(--ink);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: 2px;
+  border-radius: 3px;
+}
+
+input,
+textarea {
+  caret-color: var(--accent);
 }
 
 a {
   color: inherit;
-  text-underline-offset: 0.2em;
+  text-underline-offset: 0.22em;
   text-decoration-thickness: 1px;
+}
+
+time,
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* A folder's block, seen from above: its top in the folder's colour, its side face darker,
+   its shadow cast down and to the right like every plate. */
+.cube {
+  display: inline-block;
+  flex: none;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 3px;
+  background: var(--hue);
+  box-shadow:
+    1px 1px 0 color-mix(in oklch, var(--hue), var(--hue-face-mix) 32%),
+    2px 2px 0 color-mix(in oklch, var(--hue), var(--hue-face-mix) 38%),
+    3px 4px 5px -1px oklch(0.2 0.05 262 / 0.3);
+}
+
+/* A destination that does not exist yet: the outline of a block still to be built. */
+.cube[data-hue='none'] {
+  background: none;
+  border: 1.5px dashed var(--ink-faint);
+  box-shadow: none;
 }

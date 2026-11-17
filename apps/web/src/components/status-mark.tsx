@@ -40,7 +40,7 @@ export function StatusMark({ status }: { status: EntryStatus }) {
           <path
             d="M4.25 7.25 6.1 9l3.65-3.9"
             fill="none"
-            stroke="var(--paper)"
+            stroke="var(--plate)"
             strokeWidth="1.6"
             strokeLinecap="round"
             strokeLinejoin="round"

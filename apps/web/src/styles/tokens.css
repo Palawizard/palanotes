@@ -1,80 +1,167 @@
 :root {
   color-scheme: light dark;
 
-  /* Notebook: kraft cover, light grey paper, near-black ink. */
-  --paper: oklch(0.985 0.004 80);
-  --ground: oklch(0.948 0.01 75);
-  --kraft: oklch(0.66 0.085 65);
-  --kraft-deep: oklch(0.58 0.085 62);
-  --kraft-ink: oklch(0.24 0.035 55);
-  --rail-active: oklch(0.78 0.06 68);
-  --gutter: oklch(0.3 0.05 60 / 0.22);
-  --ink: oklch(0.25 0.018 60);
-  --ink-muted: oklch(0.48 0.02 60);
-  --rule: oklch(0.88 0.012 70);
-  --rule-strong: oklch(0.8 0.016 70);
-  --filed: oklch(0.47 0.1 155);
-  --failed: oklch(0.5 0.15 32);
-  --review: oklch(0.5 0.09 65);
-  --selection: oklch(0.86 0.06 70);
-  --shadow: 0 1px 2px oklch(0.3 0.03 60 / 0.08), 0 8px 24px -12px oklch(0.3 0.03 60 / 0.18);
+  /* An architect's model under one light from the top left: white plates on a blue-grey
+     table, each casting its shadow down and to the right. */
+  --table: oklch(0.925 0.013 250);
+  --plate: oklch(1 0 0);
+  --sunk: oklch(0.962 0.008 250);
+  --ink: oklch(0.25 0.03 262);
+  --ink-muted: oklch(0.47 0.025 262);
+  /* Chevrons, icons and other non-text marks: 3:1 against the plate and the table. */
+  --ink-faint: oklch(0.6 0.02 262);
+  --rule: oklch(0.92 0.01 255);
+  --rule-strong: oklch(0.84 0.015 255);
+  --accent: oklch(0.52 0.19 268);
+  --accent-deep: oklch(0.44 0.17 268);
+  --on-accent: oklch(1 0 0);
+  --filed: oklch(0.5 0.12 158);
+  --failed: oklch(0.52 0.19 28);
+  --review: var(--accent);
+  --selection: oklch(0.87 0.07 268);
+  --current: oklch(0.945 0.028 268);
+  --hover: oklch(0.25 0.03 262 / 0.045);
+  --scrim: oklch(0.25 0.03 262 / 0.35);
 
-  /* Rows: the current item is lightly highlighted, a hovered one barely tinted. */
-  --current: oklch(0.915 0.032 72);
-  --hover: oklch(0.25 0.018 60 / 0.045);
-  /* Chevrons, icons and other non-text marks: 3:1 against paper and ground. */
-  --ink-faint: oklch(0.58 0.02 60);
-  /* Menus and dialogs float above the page; nothing else casts a shadow there. */
-  --shadow-float: 0 1px 2px oklch(0.3 0.03 60 / 0.1), 0 12px 32px -12px oklch(0.3 0.03 60 / 0.28);
-  --scrim: oklch(0.24 0.035 55 / 0.32);
-  /* Code colours: earthy, muted, all AA on --ground. */
-  --code-keyword: oklch(0.46 0.12 32);
-  --code-string: oklch(0.46 0.1 140);
-  --code-type: oklch(0.46 0.08 240);
-  --code-number: oklch(0.47 0.1 65);
-  --code-function: oklch(0.45 0.08 300);
-  --code-comment: oklch(0.53 0.02 60);
+  /* Three heights: plates (rail, lists, entries), the working plate, and what floats. */
+  --edge: 0 0 0 1px oklch(0.3 0.04 262 / 0.05);
+  --shadow-1:
+    var(--edge), 0 1px 1px oklch(0.3 0.05 262 / 0.05), 2px 3px 6px -2px oklch(0.3 0.05 262 / 0.1),
+    6px 10px 18px -10px oklch(0.3 0.05 262 / 0.2);
+  --shadow-2:
+    var(--edge), 0 1px 1px oklch(0.3 0.05 262 / 0.05), 4px 6px 12px -4px oklch(0.3 0.05 262 / 0.11),
+    18px 28px 48px -22px oklch(0.3 0.05 262 / 0.3);
+  --shadow-float:
+    var(--edge), 3px 5px 10px -4px oklch(0.3 0.05 262 / 0.16),
+    22px 32px 60px -22px oklch(0.3 0.05 262 / 0.4);
+  --shadow-press: inset 0 1px 2px oklch(0.3 0.05 262 / 0.14);
 
-  /* Two reading sizes; the meta size is for dates, paths, tags and counts only. */
+  /* Programme colours, one per top-level folder; the side face of a block is its colour
+     darkened, the light being on the top left. */
+  --hue-0: oklch(0.55 0.19 268);
+  --hue-1: oklch(0.74 0.16 52);
+  --hue-2: oklch(0.72 0.13 165);
+  --hue-3: oklch(0.64 0.17 298);
+  --hue-4: oklch(0.86 0.15 92);
+  --hue-5: oklch(0.65 0.19 2);
+  --hue-6: oklch(0.62 0.1 215);
+  --hue-none: oklch(0.8 0.015 255);
+  --hue-face-mix: oklch(0.2 0.05 262);
+
+  /* Code colours, all AA on --sunk. */
+  --code-keyword: oklch(0.48 0.17 300);
+  --code-string: oklch(0.47 0.11 155);
+  --code-type: oklch(0.47 0.13 245);
+  --code-number: oklch(0.5 0.13 50);
+  --code-function: oklch(0.47 0.15 268);
+  --code-comment: oklch(0.52 0.02 262);
+
   --text-body: 1rem;
   --text-title: 1.5rem;
+  --text-heading: 1.25rem;
+  --text-display: clamp(2rem, 1.2rem + 2vw, 2.75rem);
   --text-meta: 0.875rem;
   --leading-body: 1.55;
   --leading-meta: 1.45;
-  --radius: 6px;
+
+  --radius: 8px;
+  --radius-small: 5px;
+  --radius-plate: 14px;
+  --radius-stage: 18px;
 
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  /* Plates have mass: they overshoot a little before they settle. */
+  --ease-settle: cubic-bezier(0.34, 1.36, 0.64, 1);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    /* Burnt kraft cover, slate paper. */
-    --paper: oklch(0.25 0.012 250);
-    --ground: oklch(0.205 0.01 250);
-    --kraft: oklch(0.38 0.055 60);
-    --kraft-deep: oklch(0.33 0.05 60);
-    --kraft-ink: oklch(0.93 0.02 75);
-    --rail-active: oklch(0.33 0.05 60);
-    --gutter: oklch(0 0 0 / 0.55);
-    --ink: oklch(0.93 0.01 80);
-    --ink-muted: oklch(0.74 0.015 80);
-    --rule: oklch(0.33 0.012 250);
-    --rule-strong: oklch(0.42 0.014 250);
-    --filed: oklch(0.76 0.11 155);
-    --failed: oklch(0.73 0.13 32);
-    --review: oklch(0.78 0.09 70);
-    --selection: oklch(0.42 0.06 65);
-    --shadow: 0 1px 2px oklch(0 0 0 / 0.3), 0 10px 28px -14px oklch(0 0 0 / 0.6);
-    --current: oklch(0.33 0.04 62);
-    --hover: oklch(0.93 0.01 80 / 0.06);
-    --ink-faint: oklch(0.62 0.014 80);
-    --shadow-float: 0 1px 2px oklch(0 0 0 / 0.4), 0 16px 36px -12px oklch(0 0 0 / 0.7);
-    --scrim: oklch(0 0 0 / 0.5);
-    --code-keyword: oklch(0.76 0.11 35);
-    --code-string: oklch(0.79 0.1 135);
-    --code-type: oklch(0.78 0.07 235);
-    --code-number: oklch(0.81 0.1 75);
-    --code-function: oklch(0.78 0.08 305);
-    --code-comment: oklch(0.65 0.014 80);
+    /* The model at night: a slate table, blue-grey plates lit from the top left. */
+    --table: oklch(0.185 0.014 262);
+    --plate: oklch(0.255 0.016 262);
+    --sunk: oklch(0.22 0.015 262);
+    --ink: oklch(0.94 0.008 262);
+    --ink-muted: oklch(0.77 0.015 262);
+    --ink-faint: oklch(0.63 0.016 262);
+    --rule: oklch(0.32 0.016 262);
+    --rule-strong: oklch(0.41 0.018 262);
+    --accent: oklch(0.72 0.14 268);
+    --accent-deep: oklch(0.64 0.15 268);
+    --on-accent: oklch(0.18 0.03 268);
+    --filed: oklch(0.77 0.13 158);
+    --failed: oklch(0.72 0.15 28);
+    --selection: oklch(0.42 0.09 268);
+    --current: oklch(0.32 0.045 268);
+    --hover: oklch(0.94 0.008 262 / 0.06);
+    --scrim: oklch(0 0 0 / 0.55);
+
+    --edge: inset 0 1px 0 oklch(1 0 0 / 0.06), 0 0 0 1px oklch(0 0 0 / 0.35);
+    --shadow-1:
+      var(--edge), 2px 3px 6px -2px oklch(0 0 0 / 0.35), 6px 10px 18px -10px oklch(0 0 0 / 0.55);
+    --shadow-2:
+      var(--edge), 4px 6px 12px -4px oklch(0 0 0 / 0.4), 18px 28px 48px -22px oklch(0 0 0 / 0.7);
+    --shadow-float:
+      var(--edge), 3px 5px 10px -4px oklch(0 0 0 / 0.45), 22px 32px 60px -22px oklch(0 0 0 / 0.8);
+    --shadow-press: inset 0 1px 2px oklch(0 0 0 / 0.4);
+
+    --hue-0: oklch(0.66 0.16 268);
+    --hue-1: oklch(0.76 0.14 52);
+    --hue-2: oklch(0.74 0.12 165);
+    --hue-3: oklch(0.7 0.14 298);
+    --hue-4: oklch(0.85 0.13 92);
+    --hue-5: oklch(0.7 0.16 2);
+    --hue-6: oklch(0.68 0.09 215);
+    --hue-none: oklch(0.5 0.015 262);
+    --hue-face-mix: oklch(0.12 0.02 262);
+
+    --code-keyword: oklch(0.78 0.12 300);
+    --code-string: oklch(0.8 0.11 155);
+    --code-type: oklch(0.79 0.09 240);
+    --code-number: oklch(0.82 0.11 60);
+    --code-function: oklch(0.79 0.1 268);
+    --code-comment: oklch(0.66 0.015 262);
+  }
+}
+
+/* A folder's colour, set on any element with data-hue. Text on a block uses --on-hue. */
+[data-hue] {
+  --hue: var(--hue-none);
+  --on-hue: var(--ink);
+}
+[data-hue='0'] {
+  --hue: var(--hue-0);
+  --on-hue: oklch(1 0 0);
+}
+[data-hue='1'] {
+  --hue: var(--hue-1);
+  --on-hue: oklch(0.22 0.04 52);
+}
+[data-hue='2'] {
+  --hue: var(--hue-2);
+  --on-hue: oklch(0.22 0.04 165);
+}
+[data-hue='3'] {
+  --hue: var(--hue-3);
+  --on-hue: oklch(1 0 0);
+}
+[data-hue='4'] {
+  --hue: var(--hue-4);
+  --on-hue: oklch(0.25 0.05 92);
+}
+[data-hue='5'] {
+  --hue: var(--hue-5);
+  --on-hue: oklch(1 0 0);
+}
+[data-hue='6'] {
+  --hue: var(--hue-6);
+  --on-hue: oklch(1 0 0);
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-hue='0'],
+  [data-hue='3'],
+  [data-hue='5'],
+  [data-hue='6'] {
+    --on-hue: oklch(0.18 0.03 262);
   }
 }

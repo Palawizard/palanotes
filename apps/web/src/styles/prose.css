@@ -110,7 +110,7 @@
 .prose-note code {
   font-family: var(--font-mono);
   font-size: 0.9375em;
-  background: var(--ground);
+  background: var(--sunk);
   border: 1px solid var(--rule);
   border-radius: 4px;
   padding: 0 0.3em;
@@ -119,7 +119,7 @@
 .prose-note pre {
   font-family: var(--font-mono);
   line-height: 1.5;
-  background: var(--ground);
+  background: var(--sunk);
   border: 1px solid var(--rule);
   border-radius: var(--radius);
   padding: 0.75rem 1rem;
@@ -212,13 +212,13 @@
 }
 
 .prose-note th {
-  background: var(--ground);
+  background: var(--sunk);
   font-weight: 700;
 }
 
 .prose-note a {
   color: inherit;
-  text-decoration-color: var(--kraft-deep);
+  text-decoration-color: var(--accent);
   text-underline-offset: 0.2em;
 }
 

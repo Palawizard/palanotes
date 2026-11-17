@@ -6,7 +6,7 @@
   grid-template-columns: var(--rail-width) minmax(0, 1fr);
   min-height: 100dvh;
   /* The cover runs the full height even when the page scrolls past the sticky rail. */
-  background: linear-gradient(to right, var(--kraft) var(--rail-width), var(--paper) 0);
+  background: linear-gradient(to right, var(--kraft) var(--rail-width), var(--plate) 0);
 }
 
 .rail {

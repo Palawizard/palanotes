@@ -6,7 +6,7 @@
 .sheet {
   display: flex;
   flex-direction: column;
-  background: var(--paper);
+  background: var(--plate);
   border: 1px solid var(--rule-strong);
   border-radius: var(--radius);
   overflow: hidden;
@@ -26,7 +26,7 @@
   font: inherit;
   line-height: 1.6;
   padding: 1rem 1.25rem 1.25rem;
-  caret-color: var(--kraft-deep);
+  caret-color: var(--accent);
 }
 
 .sheet-input::placeholder {
@@ -42,7 +42,7 @@
   align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
-  background: var(--ground);
+  background: var(--sunk);
   border-top: 1px solid var(--rule);
   padding: 0.75rem 1.25rem;
 }
