@@ -17,9 +17,10 @@ export default async function WritePage() {
   }
   const date = today.format(new Date());
   return (
-    <>
-      <p className="sheet-date">{date.charAt(0).toUpperCase() + date.slice(1)}</p>
-      <Desk initialEntries={await loadPocket(getDb(), user.id)} />
-    </>
+    <Desk
+      date={date.charAt(0).toUpperCase() + date.slice(1)}
+      sortMode={user.sortMode}
+      initialEntries={await loadPocket(getDb(), user.id)}
+    />
   );
 }

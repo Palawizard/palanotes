@@ -19,6 +19,7 @@ interface PocketProps {
   busyId: string | null;
   messages: Record<string, string>;
   onAction: (entryId: string, action: EntryAction) => void;
+  onReview: () => void;
 }
 
 const EXPANDABLE = new Set<EntryStatus>(['proposed', 'applied', 'failed', 'rejected']);
@@ -29,6 +30,18 @@ const SUMMARY: { status: EntryStatus; one: string; many: string }[] = [
   { status: 'processing', one: 'en cours', many: 'en cours' },
   { status: 'pending', one: 'en attente', many: 'en attente' },
 ];
+
+// The block of the folder the entry goes to: its colour once the destination is known, an
+// outline while it is not (or when it is a top-level folder still to be created).
+export function EntryCube({ entry }: { entry: EntryView }) {
+  const action = entry.run?.actions[0];
+  const known =
+    action && (entry.status === 'proposed' || entry.status === 'applied') && action.hue !== null;
+  if (entry.status === 'failed') {
+    return <span className="cube cube-failed" aria-hidden="true" />;
+  }
+  return <span className="cube" data-hue={known ? action.hue : 'none'} aria-hidden="true" />;
+}
 
 // Where the filing sends the entry, for the row: the folder, or the note it extends.
 function destination(entry: EntryView): string | null {
@@ -48,6 +61,7 @@ export function Pocket({
   busyId,
   messages,
   onAction,
+  onReview,
 }: PocketProps) {
   const [open, setOpen] = useState<string | null>(null);
   const [autoOpened, setAutoOpened] = useState<string | null>(null);
@@ -60,6 +74,7 @@ export function Pocket({
   }
 
   const toDo = entries.filter((entry) => TO_DO.has(entry.status));
+  const proposed = entries.filter((entry) => entry.status === 'proposed').length;
   const done = entries.filter((entry) => !TO_DO.has(entry.status));
   const counts = SUMMARY.map((item) => ({
     ...item,
@@ -72,6 +87,7 @@ export function Pocket({
     const where = destination(entry);
     const summary = (
       <>
+        <EntryCube entry={entry} />
         <span className="pocket-text">{entry.preview}</span>
         <span className="pocket-when">
           <time dateTime={entry.createdAt}>{formatWhen(entry.createdAt)}</time>
@@ -93,6 +109,8 @@ export function Pocket({
         key={entry.id}
         className="pocket-row"
         data-open={isOpen}
+        data-state={entry.status}
+        data-new={entry.id === newId || undefined}
         data-filing={entry.id === filingId}
         data-settled={entry.id === settledId}
       >
@@ -144,6 +162,11 @@ export function Pocket({
             )}
           </p>
         ) : null}
+        {proposed > 0 ? (
+          <button type="button" className="button button-accent pocket-review" onClick={onReview}>
+            {proposed > 1 ? `Valider les ${proposed} une par une` : 'Valider la proposition'}
+          </button>
+        ) : null}
       </div>
       {entries.length === 0 ? (
         <p className="pocket-empty">
@@ -169,7 +192,7 @@ export function Pocket({
   );
 }
 
-function PlanCard({ action }: { action: ActionView }) {
+export function PlanCard({ action }: { action: ActionView }) {
   return (
     <article className="plan-card">
       <p className="plan-where">
@@ -177,7 +200,7 @@ function PlanCard({ action }: { action: ActionView }) {
           {action.type === 'create' ? 'Nouvelle note dans' : 'Ajout à la note'}
         </span>
         <span className="plan-where-path">
-          <Icon name={action.type === 'create' ? 'folder' : 'note'} size={14} />
+          <span className="cube" data-hue={action.hue ?? 'none'} aria-hidden="true" />
           {action.type === 'create'
             ? action.folderPath
             : `« ${action.noteTitle} »${action.folderPath ? `, dans ${action.folderPath}` : ''}`}

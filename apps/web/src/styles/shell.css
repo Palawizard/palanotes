@@ -285,7 +285,7 @@
 }
 
 .main {
-  padding: 0.5rem 0 3rem;
+  padding: 0 0 3rem;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;

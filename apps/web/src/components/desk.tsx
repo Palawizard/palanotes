@@ -5,6 +5,7 @@ import type { EntryView } from '@/server/entry-view';
 import { apiPath } from '@/lib/paths';
 import { Composer } from './composer';
 import { Pocket, type EntryAction } from './pocket';
+import { ReviewQueue } from './review-queue';
 
 const POLL_MS = 2500;
 const FILING_MS = 220;
@@ -16,13 +17,22 @@ function withoutKey(record: Record<string, string>, key: string): Record<string,
   return next;
 }
 
-export function Desk({ initialEntries }: { initialEntries: EntryView[] }) {
+export function Desk({
+  date,
+  sortMode,
+  initialEntries,
+}: {
+  date: string;
+  sortMode: 'review' | 'direct';
+  initialEntries: EntryView[];
+}) {
   const [entries, setEntries] = useState(initialEntries);
   const [newId, setNewId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [filingId, setFilingId] = useState<string | null>(null);
   const [settledId, setSettledId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Record<string, string>>({});
+  const [reviewing, setReviewing] = useState(false);
   const unsettled = entries.some((entry) => UNSETTLED.has(entry.status));
 
   const refresh = useCallback(async () => {
@@ -90,8 +100,8 @@ export function Desk({ initialEntries }: { initialEntries: EntryView[] }) {
   }, []);
 
   return (
-    <>
-      <Composer onSubmitted={onSubmitted} />
+    <div className="desk">
+      <Composer date={date} sortMode={sortMode} onSubmitted={onSubmitted} />
       <Pocket
         entries={entries}
         newId={newId}
@@ -100,7 +110,16 @@ export function Desk({ initialEntries }: { initialEntries: EntryView[] }) {
         busyId={busyId}
         messages={messages}
         onAction={onAction}
+        onReview={() => setReviewing(true)}
       />
-    </>
+      <ReviewQueue
+        open={reviewing}
+        entries={entries}
+        busyId={busyId}
+        messages={messages}
+        onAction={onAction}
+        onClose={() => setReviewing(false)}
+      />
+    </div>
   );
 }
