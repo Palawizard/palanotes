@@ -103,9 +103,12 @@ export function FolderMassing({ roots }: { roots: FolderItem[] }) {
     let cancelled = false;
     const check = () => {
       if (cancelled) return;
+      const range = document.createRange();
       for (const name of frame.querySelectorAll<HTMLElement>('.mass-name')) {
         name.hidden = false;
-        name.hidden = name.scrollWidth > name.clientWidth + 1;
+        range.selectNodeContents(name);
+        // Subpixel width of the longest line, against the room left inside the padding.
+        name.hidden = range.getBoundingClientRect().width > name.getBoundingClientRect().width - 1;
       }
     };
     void document.fonts.ready.then(check);
