@@ -9,6 +9,7 @@ export interface NoteRowData {
   date: string;
   folderId?: string;
   folderPath?: string;
+  hue?: number | null;
 }
 
 // One note in a list: title and date on the first line, a one-line excerpt, then the
@@ -49,7 +50,12 @@ export function NoteRow({
       {note.excerpt ? <span className="note-row-excerpt">{note.excerpt}</span> : null}
       {note.folderPath || note.tags.length > 0 ? (
         <span className="note-row-meta">
-          {note.folderPath ? <span className="note-row-path">{note.folderPath}</span> : null}
+          {note.folderPath ? (
+            <span className="note-row-path">
+              <span className="cube" data-hue={note.hue ?? 'none'} aria-hidden="true" />
+              {note.folderPath}
+            </span>
+          ) : null}
           {note.tags.slice(0, 3).map((tag) => (
             <span key={tag} className="tag">
               {tag}

@@ -310,7 +310,12 @@ export function FolderTree({ items, savedOpen }: { items: FolderItem[]; savedOpe
                 onClick={() => setFocusId(item.id)}
                 title={item.path}
               >
-                <Icon name="folder" className="tree-icon" />
+                <span
+                  className="cube tree-cube"
+                  data-hue={item.hue ?? 'none'}
+                  data-root={level === 1 || undefined}
+                  aria-hidden="true"
+                />
                 <span className="tree-name" id={`tree-name-${item.id}`}>
                   {item.name}
                 </span>{' '}

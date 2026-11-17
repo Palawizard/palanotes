@@ -11,6 +11,7 @@ export interface NotePaneData {
   tags: string[];
   folderId: string;
   updatedAt: string;
+  hue: number | null;
   trail: { id: string; name: string }[];
 }
 
@@ -34,6 +35,7 @@ export async function loadNotePane(
     tags: note.tags,
     folderId: note.folderId,
     updatedAt: note.updatedAt.toISOString(),
+    hue: tree.byId.get(note.folderId)?.hue ?? null,
     trail: tree.ancestors(note.folderId).map((node) => ({ id: node.id, name: node.name })),
   };
 }
@@ -42,6 +44,7 @@ export function toRowData(
   note: NoteRowRecord,
   date: 'createdAt' | 'updatedAt',
   folderPath?: string,
+  hue?: number | null,
 ): NoteRowData {
   return {
     id: note.id,
@@ -51,5 +54,6 @@ export function toRowData(
     date: note[date].toISOString(),
     folderId: note.folderId,
     folderPath,
+    hue,
   };
 }

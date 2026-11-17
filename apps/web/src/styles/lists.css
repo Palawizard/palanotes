@@ -1,5 +1,6 @@
 .section-title {
-  font-weight: 700;
+  font-weight: 650;
+  letter-spacing: -0.01em;
 }
 
 .section-title a {
@@ -109,7 +110,7 @@
 
 .note-body {
   border-top: 1px solid var(--rule);
-  padding-top: 1.25rem;
+  padding-top: 1.5rem;
 }
 
 .note-rows {
@@ -126,9 +127,9 @@
 
 .note-row {
   display: grid;
-  gap: 0.0625rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: var(--radius);
+  gap: 0.125rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 10px;
   text-decoration: none;
   min-width: 0;
 }
@@ -153,7 +154,7 @@
 .note-row-title {
   flex: 1;
   min-width: 0;
-  font-weight: 700;
+  font-weight: 620;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -168,6 +169,7 @@
 
 .note-row-excerpt {
   color: var(--ink-muted);
+  font-size: 0.9375rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -187,11 +189,20 @@
 }
 
 .note-row-path {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4375rem;
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
   flex: 0 1 auto;
   margin-right: 0.25rem;
+}
+
+.note-row-path .cube {
+  width: 0.5625rem;
+  height: 0.5625rem;
+  border-radius: 2px;
 }
 
 .note-row-meta .tag {

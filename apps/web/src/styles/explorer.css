@@ -1,5 +1,5 @@
-/* Explorer: folders, the notes of a folder, one note. The tree pane sits one tone down
-   (ground), like the inside of the cover; the list and the note are paper. */
+/* Explorer: three plates on the table. The tree and the list are low plates, the open
+   note is the working plate, the highest one. */
 
 .main:has(> .explorer) {
   max-width: none;
@@ -8,11 +8,12 @@
 }
 
 .explorer {
-  --tree-width: clamp(14rem, 18vw, 17rem);
+  --tree-width: clamp(14.5rem, 18vw, 17rem);
   --list-width: clamp(19rem, 26vw, 24rem);
   display: grid;
   grid-template-columns: var(--tree-width) var(--list-width) minmax(0, 1fr);
-  height: 100dvh;
+  gap: 1rem;
+  height: calc(100dvh - 2rem);
 }
 
 .explorer-main {
@@ -26,15 +27,15 @@
   flex-direction: column;
   min-width: 0;
   min-height: 0;
+  background: var(--plate);
+  border-radius: var(--radius-plate);
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
 }
 
-.explorer-tree {
-  background: var(--sunk);
-  border-right: 1px solid var(--rule);
-}
-
-.explorer-list {
-  border-right: 1px solid var(--rule);
+.explorer-note {
+  border-radius: var(--radius-stage);
+  box-shadow: var(--shadow-2);
 }
 
 .pane-head {
@@ -42,11 +43,11 @@
   display: flex;
   flex-direction: column;
   gap: 0.375rem;
-  padding: 1rem 1rem 0.75rem;
+  padding: 1rem 1.125rem 0.875rem;
   border-bottom: 1px solid var(--rule);
 }
 
-/* The tree and note headers share one height, so their rules line up across the spread. */
+/* The tree and note headers share one height, so their rules line up across the table. */
 .explorer-tree .pane-head,
 .note-pane-head {
   height: 3.5rem;
@@ -55,13 +56,14 @@
 }
 
 .pane-title {
-  font-weight: 700;
+  font-weight: 650;
 }
 
 .pane-heading {
   font-size: var(--text-title);
-  font-weight: 700;
-  line-height: 1.2;
+  font-weight: 650;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
   overflow-wrap: anywhere;
 }
 
@@ -117,26 +119,30 @@
   display: inline-flex;
   align-items: center;
   gap: 0.125rem;
-  font-size: var(--text-meta);
+  padding: 0.1875rem;
+  border-radius: 9px;
+  background: var(--sunk);
+  font-size: 0.8125rem;
   line-height: var(--leading-meta);
 }
 
 .sort-icon {
   color: var(--ink-faint);
-  margin-right: 0.25rem;
+  margin: 0 0.125rem 0 0.25rem;
 }
 
 .sort-link {
-  padding: 0.125rem 0.5rem;
-  border-radius: 4px;
+  padding: 0.125rem 0.5625rem;
+  border-radius: 6px;
   color: var(--ink-muted);
   text-decoration: none;
 }
 
 .sort-link[aria-current='true'] {
-  background: var(--current);
+  background: var(--plate);
+  box-shadow: var(--shadow-1);
   color: var(--ink);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -190,7 +196,7 @@
 }
 
 .tree-item:focus-visible > .tree-row {
-  outline: 2px solid var(--ink);
+  outline: 2px solid var(--accent);
   outline-offset: -2px;
 }
 
@@ -220,7 +226,7 @@
 }
 
 .tree-pinned[data-current] {
-  font-weight: 700;
+  font-weight: 620;
 }
 
 .tree-toggle {
@@ -266,7 +272,17 @@
 }
 
 .tree-row[data-current] .tree-name {
-  font-weight: 700;
+  font-weight: 620;
+}
+
+.tree-cube:not([data-root]) {
+  width: 0.5625rem;
+  height: 0.5625rem;
+  margin-inline: 0.09375rem;
+  border-radius: 2px;
+  box-shadow:
+    1px 1px 0 color-mix(in oklch, var(--hue), var(--hue-face-mix) 34%),
+    2px 3px 3px -1px oklch(0.2 0.05 262 / 0.25);
 }
 
 .tree-name {
@@ -279,18 +295,18 @@
 
 .tree-count {
   flex: none;
-  font-size: var(--text-meta);
-  color: var(--ink-muted);
-  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--ink-faint);
 }
 
 /* Subfolders at the top of a folder's list. */
 
 .folder-rows {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  padding-bottom: 0.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  gap: 0.375rem;
+  padding: 0.25rem 0.25rem 0.75rem;
   margin-bottom: 0.5rem;
   border-bottom: 1px solid var(--rule);
 }
@@ -298,11 +314,13 @@
 .folder-row {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  min-height: 2.25rem;
-  padding: 0.25rem 0.75rem;
-  border-radius: var(--radius);
+  gap: 0.625rem;
+  min-height: 2.5rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 10px;
+  background: var(--sunk);
   text-decoration: none;
+  transition: transform 200ms var(--ease-out);
 }
 
 .folder-row-name {
@@ -311,12 +329,18 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-weight: 500;
+  font-weight: 560;
+}
+
+.folder-row .tree-count {
+  font-size: 0.75rem;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .folder-row:hover {
-    background: var(--hover);
+    background: var(--plate);
+    box-shadow: var(--shadow-1);
+    transform: translate(-1px, -1px);
   }
 }
 
@@ -327,6 +351,15 @@
   flex-direction: column;
   min-height: 0;
   flex: 1;
+  animation: note-set 340ms var(--ease-settle);
+}
+
+/* An opened note is slid onto the table and settles with a little overshoot. */
+@keyframes note-set {
+  from {
+    opacity: 0;
+    transform: translateX(1.5rem);
+  }
 }
 
 .note-pane-head {
@@ -341,7 +374,7 @@
   min-height: 0;
   overflow-y: auto;
   scrollbar-width: thin;
-  padding: 1.5rem clamp(1rem, 3vw, 2.5rem) 4rem;
+  padding: 1.75rem clamp(1.25rem, 3.5vw, 3rem) 4rem;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -363,9 +396,6 @@
   .explorer-main[data-level='note'] > .explorer-list,
   .explorer-main:not([data-level='note']) > .explorer-note {
     display: none;
-  }
-  .explorer-list {
-    border-right: 0;
   }
   .explorer-main[data-level='note'] .note-pane-head .back-link {
     display: inline-flex;
@@ -390,8 +420,7 @@
   .explorer-tree,
   .explorer-list,
   .explorer-note {
-    border: 0;
-    background: none;
+    overflow: visible;
   }
   .explorer:has(> .explorer-main:not([data-level='folders'])) > .explorer-tree,
   .explorer-main:not([data-level='list']) > .explorer-list,
@@ -429,6 +458,18 @@
 @media (prefers-reduced-motion: reduce) {
   .tree-toggle svg {
     transition: none;
+  }
+  .note-pane {
+    animation: note-fade 200ms ease;
+  }
+  .folder-row {
+    transition: none;
+  }
+}
+
+@keyframes note-fade {
+  from {
+    opacity: 0;
   }
 }
 
@@ -509,9 +550,8 @@
   bottom: 1.25rem;
   z-index: 40;
   max-width: min(36rem, calc(100vw - 2rem));
-  padding: 0.5rem 0.875rem;
-  border: 1px solid var(--rule-strong);
-  border-radius: var(--radius);
+  padding: 0.625rem 1rem;
+  border-radius: 12px;
   background: var(--plate);
   color: var(--ink);
   box-shadow: var(--shadow-float);
@@ -585,4 +625,50 @@
   .tree-more:active:not(:disabled) {
     transform: translateY(-50%);
   }
+}
+
+/* Guide words of a long list sorted by title. */
+.list-range {
+  font-size: 0.8125rem;
+  color: var(--ink-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.list-range-word {
+  color: var(--ink);
+  font-weight: 560;
+}
+
+.cube-large {
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 4px;
+  box-shadow:
+    1px 1px 0 color-mix(in oklch, var(--hue), var(--hue-face-mix) 30%),
+    2px 2px 0 color-mix(in oklch, var(--hue), var(--hue-face-mix) 36%),
+    3px 3px 0 color-mix(in oklch, var(--hue), var(--hue-face-mix) 40%),
+    4px 6px 8px -2px oklch(0.2 0.05 262 / 0.3);
+}
+
+@media (max-width: 47.99rem) {
+  .explorer-tree,
+  .explorer-list,
+  .explorer-note {
+    border-radius: var(--radius-plate);
+  }
+}
+
+@media (max-width: 47.99rem) {
+  .explorer-status {
+    bottom: calc(5.75rem + env(safe-area-inset-bottom));
+  }
+}
+
+.note-pane-place {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
 }
