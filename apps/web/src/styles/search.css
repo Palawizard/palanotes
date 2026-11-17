@@ -14,7 +14,7 @@
 .search-head {
   display: flex;
   flex-direction: column;
-  gap: 0.875rem;
+  gap: 1rem;
   max-width: 46rem;
 }
 

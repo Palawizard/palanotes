@@ -122,7 +122,7 @@
   background: var(--sunk);
   border-radius: var(--radius-row);
   box-shadow: var(--shadow-press);
-  padding: 0.875rem 1.125rem;
+  padding: 1rem 1.25rem;
   overflow-x: auto;
   scrollbar-width: thin;
 }

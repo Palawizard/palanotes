@@ -12,12 +12,61 @@ export const FILED_EVENT = 'notes:filed';
 
 // The binder seen as a massing model: one block per top-level folder holding notes, its
 // area following its number of notes. Empty folders stay in the list below.
-function blocks(roots: FolderItem[]) {
+// Folders under this share of the notes are too small to read as volumes: they are
+// gathered in one stone block, or the only one keeps its colour, drawn at that share.
+const SMALL_SHARE = 0.06;
+
+interface Block {
+  key: string;
+  name: string;
+  count: number;
+  hue: number | null;
+  href: string;
+  id: string | null;
+}
+
+function gather(roots: FolderItem[], total: number): Block[] {
   const full = roots
     .filter((folder) => folder.totalCount > 0)
     .sort((a, b) => b.totalCount - a.totalCount);
+  const large = full.filter((folder) => folder.totalCount / total >= SMALL_SHARE);
+  const small = full.filter((folder) => folder.totalCount / total < SMALL_SHARE);
+  const blocks: Block[] = large.map((folder) => ({
+    key: folder.id,
+    name: folder.name,
+    count: folder.totalCount,
+    hue: folder.hue,
+    href: `/dossiers/${folder.id}`,
+    id: folder.id,
+  }));
+  const [only] = small;
+  if (small.length === 1 && only) {
+    blocks.push({
+      key: only.id,
+      name: only.name,
+      count: only.totalCount,
+      hue: only.hue,
+      href: `/dossiers/${only.id}`,
+      id: only.id,
+    });
+  } else if (small.length > 1) {
+    blocks.push({
+      key: 'rest',
+      name: `${small.length} autres`,
+      count: small.reduce((sum, folder) => sum + folder.totalCount, 0),
+      hue: null,
+      href: '/dossiers',
+      id: null,
+    });
+  }
+  return blocks;
+}
+
+function blocks(roots: FolderItem[], total: number) {
+  const full = gather(roots, total);
+  // The gathered block keeps a readable floor; every other area is exactly proportional.
   const rects = squarify(
-    full.map((folder) => folder.totalCount),
+    full.map((block) => Math.max(block.count, total * SMALL_SHARE)),
     FRAME.width,
     FRAME.height,
   );
@@ -31,9 +80,9 @@ function blocks(roots: FolderItem[]) {
         width: `calc(${(rect.w / FRAME.width) * 100}% - 8px)`,
         height: `calc(${(rect.h / FRAME.height) * 100}% - 8px)`,
       } satisfies CSSProperties,
-      // Text only where it fits on one word per line; the list below names every folder.
-      named: rect.w >= 54 && rect.h >= 22,
-      counted: rect.w >= 54 && rect.h >= 44,
+      // Text only where it fits; the list below names every folder.
+      named: rect.w >= 64 && rect.h >= 22,
+      counted: rect.w >= 32 && rect.h >= 22,
     };
   });
 }
@@ -84,20 +133,20 @@ export function FolderMassing({ roots }: { roots: FolderItem[] }) {
       </h2>
       {total > 0 ? (
         <div className="massing" aria-hidden="true">
-          {blocks(roots).map(({ folder, style, named, counted }) => (
+          {blocks(roots, total).map(({ folder, style, named, counted }) => (
             <Link
-              key={folder.id}
-              href={`/dossiers/${folder.id}`}
+              key={folder.key}
+              href={folder.href}
               tabIndex={-1}
               className="mass"
-              data-hue={folder.hue ?? 'none'}
-              data-current={current(pathname, folder.id) || undefined}
+              data-hue={folder.hue ?? 'rest'}
+              data-current={(folder.id !== null && current(pathname, folder.id)) || undefined}
               data-lifted={(folder.hue !== null && folder.hue === lifted) || undefined}
               style={style}
-              title={`${folder.name}, ${folder.totalCount}`}
+              title={`${folder.name}, ${folder.count}`}
             >
               {named ? <span className="mass-name">{folder.name}</span> : null}
-              {counted ? <span className="mass-count">{folder.totalCount}</span> : null}
+              {counted ? <span className="mass-count">{folder.count}</span> : null}
             </Link>
           ))}
         </div>

@@ -575,7 +575,7 @@ a.tag {
 .settings-account {
   display: flex;
   align-items: center;
-  gap: 0.875rem;
+  gap: 1rem;
 }
 
 .settings-avatar {
