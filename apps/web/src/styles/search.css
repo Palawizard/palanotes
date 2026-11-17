@@ -31,7 +31,7 @@
 
 .search-box > svg {
   position: absolute;
-  left: 0.75rem;
+  left: 1rem;
   top: 50%;
   transform: translateY(-50%);
   color: var(--ink-faint);
@@ -39,8 +39,12 @@
 }
 
 .search-field {
-  padding-left: 2.25rem;
-  padding-right: 2.5rem;
+  padding: 0.75rem 2.75rem 0.75rem 2.75rem;
+  font-size: 1.0625rem;
+  background: var(--plate);
+  border: 0;
+  border-radius: 12px;
+  box-shadow: var(--shadow-1);
 }
 
 .search-field::-webkit-search-cancel-button {
@@ -49,7 +53,7 @@
 
 .search-clear {
   position: absolute;
-  right: 0.375rem;
+  right: 0.5rem;
   top: 50%;
   transform: translateY(-50%);
   display: grid;
@@ -102,7 +106,8 @@
 }
 
 .results-count {
-  font-weight: 700;
+  font-weight: 600;
+  color: var(--ink-muted);
   font-variant-numeric: tabular-nums;
 }
 
@@ -119,21 +124,24 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  padding: 0.875rem 1rem;
+  padding: 1rem 1.125rem;
   background: var(--plate);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
+  border-radius: 12px;
+  box-shadow: var(--shadow-1);
+  transition:
+    transform 220ms var(--ease-out),
+    box-shadow 220ms var(--ease-out);
 }
 
 .result:has(.result-link:focus-visible) {
-  outline: 2px solid var(--ink);
-  outline-offset: 2px;
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .result:hover {
-    border-color: var(--rule-strong);
-    background: var(--sunk);
+    transform: translate(-1px, -2px);
+    box-shadow: var(--shadow-2);
   }
 }
 
@@ -153,11 +161,12 @@
   content: '';
   position: absolute;
   inset: 0;
-  border-radius: var(--radius);
+  border-radius: 12px;
 }
 
 .result-title {
-  font-weight: 700;
+  font-weight: 620;
+  font-size: 1.0625rem;
   overflow-wrap: anywhere;
 }
 
@@ -179,9 +188,10 @@
   min-width: 0;
 }
 
-.result-path svg {
-  flex: none;
-  color: var(--ink-faint);
+.result-path .cube {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 2px;
 }
 
 .result-excerpt {
@@ -206,9 +216,8 @@
 
 .tag[data-active] {
   background: var(--current);
-  border-color: var(--rule-strong);
   color: var(--ink);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 mark {
@@ -238,8 +247,7 @@ mark {
     overflow: hidden;
     padding: 1rem 1.25rem;
     background: var(--plate);
-    border: 1px solid var(--rule-strong);
-    border-radius: var(--radius);
+    border-radius: var(--radius-plate);
     box-shadow: var(--shadow-float);
     opacity: 0;
     visibility: hidden;
@@ -274,7 +282,7 @@ mark {
 }
 
 .result-preview-title {
-  font-weight: 700;
+  font-weight: 650;
 }
 
 /* The cut at the bottom fades into the paper, which stays opaque over the filters. */
@@ -283,7 +291,7 @@ mark {
   position: absolute;
   inset: auto 0 0;
   height: 3.5rem;
-  border-radius: 0 0 var(--radius) var(--radius);
+  border-radius: 0 0 var(--radius-plate) var(--radius-plate);
   background: linear-gradient(to bottom, transparent, var(--plate));
   pointer-events: none;
 }
@@ -304,12 +312,14 @@ mark {
 
 .refine-wide {
   position: sticky;
-  top: 1.5rem;
+  top: 1rem;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  padding-left: 1.25rem;
-  border-left: 1px solid var(--rule);
+  padding: 1.125rem 1.125rem 1.25rem;
+  background: var(--plate);
+  border-radius: var(--radius-plate);
+  box-shadow: var(--shadow-1);
 }
 
 .refine-phone {
@@ -323,7 +333,9 @@ mark {
 }
 
 .refine-title {
-  font-weight: 700;
+  font-size: var(--text-meta);
+  font-weight: 600;
+  color: var(--ink-muted);
 }
 
 .refine-list {
@@ -352,7 +364,14 @@ mark {
 
 .refine-link[aria-current='true'] {
   background: var(--current);
-  font-weight: 700;
+  font-weight: 600;
+}
+
+.refine-link .cube {
+  width: 0.625rem;
+  height: 0.625rem;
+  margin-inline: 0.125rem;
+  border-radius: 2px;
 }
 
 .refine-link[aria-current='true'] svg {
@@ -373,8 +392,9 @@ mark {
 
 .refine-count,
 .tag-count {
-  color: var(--ink-muted);
-  font-variant-numeric: tabular-nums;
+  color: var(--ink-faint);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
 }
 
 .refine-toggle {
@@ -389,14 +409,13 @@ mark {
 .refine-box {
   width: 1rem;
   height: 1rem;
-  border: 1px solid var(--rule-strong);
   border-radius: 4px;
-  background: var(--plate);
+  background: var(--sunk);
+  box-shadow: var(--shadow-press);
 }
 
 .refine-box[data-checked] {
-  background: var(--ink);
-  border-color: var(--ink);
+  background: var(--accent);
   box-shadow: inset 0 0 0 3px var(--plate);
 }
 
@@ -410,8 +429,11 @@ mark {
 }
 
 .idle-tags .tag {
-  font-size: var(--text-body);
-  padding: 0.125rem 0.5rem;
+  font-size: 0.9375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 8px;
+  background: var(--plate);
+  box-shadow: var(--shadow-1);
 }
 
 .no-result {
@@ -419,14 +441,14 @@ mark {
   flex-direction: column;
   gap: 0.75rem;
   align-items: flex-start;
-  padding: 1.25rem;
-  background: var(--sunk);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
+  padding: 1.5rem;
+  background: var(--plate);
+  border-radius: var(--radius-plate);
+  box-shadow: var(--shadow-1);
 }
 
 .no-result > p:first-child {
-  font-weight: 700;
+  font-weight: 650;
 }
 
 .no-result-tries {
@@ -439,18 +461,21 @@ mark {
   text-decoration: underline;
   text-decoration-color: var(--accent);
   text-underline-offset: 0.25em;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .skeleton {
   display: block;
-  border-radius: 4px;
+  border-radius: 6px;
   background: var(--sunk);
 }
 
 .skeleton-field {
-  height: 2.625rem;
+  height: 3.125rem;
   max-width: 46rem;
+  border-radius: 12px;
+  background: var(--plate);
+  box-shadow: var(--shadow-1);
 }
 
 .skeleton-card {
@@ -474,14 +499,14 @@ mark {
   }
   .refine-phone {
     display: block;
-    border: 1px solid var(--rule);
-    border-radius: var(--radius);
-    background: var(--sunk);
+    border-radius: 12px;
+    background: var(--plate);
+    box-shadow: var(--shadow-1);
   }
   .refine-phone summary {
     cursor: pointer;
-    padding: 0.5rem 0.875rem;
-    font-weight: 700;
+    padding: 0.625rem 1rem;
+    font-weight: 600;
     list-style: none;
     display: flex;
     align-items: center;
