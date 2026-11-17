@@ -69,3 +69,15 @@ Code blocks in notes are coloured by `rehype-highlight` (highlight.js through lo
 ## 2026-11-07: a note is deleted in one click
 
 « Supprimer » in the note header sends the note to the trash at once, without a confirmation dialog: one note is cheap to bring back, and a dialog on every deletion soon gets in the way. « Annuler » in the status line, Ctrl+Z and the trash (30 days) cover a mistake. The trash keeps notes in the same `trash_items` table as folders, with a `kind` column, so the purge, the list and « Vider la corbeille » need nothing new. A note always belongs to a folder, so when its folder was deleted after it, restoring makes the old folder path again rather than leaving the note nowhere. Folders keep their confirmation, since they can hold hundreds of notes.
+
+## 2026-11-16: local development through a fake OIDC provider
+
+`pnpm dev:local` runs the app without Authentik by starting `oauth2-mock-server` (already used by the end-to-end tests) as the sign-in provider, with every visitor signed in as one local account. The app keeps a single sign-in path: there is no bypass switch in the web code that a wrong production setting could turn on, and the local run goes through the same login, callback and session cookie as production. The script refuses to start when `NODE_ENV` is `production` and is left out of the Docker images.
+
+Next.js reads `.env` files from `apps/web` only, so `next.config.ts` loads the root `.env`, and the worker and database scripts use Node's `--env-file-if-exists`. Variables already set in the environment win, which keeps `compose.yaml` in charge in production.
+
+## 2026-11-17: the interface as an architect's model
+
+The kraft notebook look of the second version (kraft cover rail, paper page, pocket under the writing area) is replaced. The interface is now drawn as a lit architect's model: white plates on a blue-grey table, three heights told apart by their shadows (rail and lists, the working plate, what floats), Geist and Geist Mono instead of Atkinson Hyperlegible. The pocket moves beside the writing plate on wide screens, the rail folds to its icons in the explorer, and a phone gets a tab bar at the bottom and a full-screen sheet to go through the proposals one at a time. `DESIGN.md` describes the shipped system; the previous one stays in its history.
+
+Each top-level folder gets one of seven colours, used for its block in the rail, the small cubes in the tree, the lists, the search results and the pocket. The colour is not stored: it follows the creation order of the top-level folders (`apps/web/src/lib/folder-hue.ts`), so a new folder takes the next colour and the others keep theirs. Deleting a top-level folder shifts the colours of the folders created after it; a stored colour would avoid that and can come later with a migration.

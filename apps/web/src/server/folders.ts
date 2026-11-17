@@ -2,6 +2,7 @@ import 'server-only';
 import { cache } from 'react';
 import { buildFolderPaths, folderTotals, formatFolderPath } from '@palanotes/core';
 import { listFoldersWithCounts, type Db } from '@palanotes/db';
+import { folderHue, rootHues } from '@/lib/folder-hue';
 
 export interface FolderTreeNode {
   id: string;
@@ -10,6 +11,7 @@ export interface FolderTreeNode {
   path: string;
   noteCount: number;
   totalCount: number;
+  hue: number | null;
   children: FolderTreeNode[];
 }
 
@@ -27,6 +29,7 @@ export interface FolderItem {
   path: string;
   noteCount: number;
   totalCount: number;
+  hue: number | null;
 }
 
 const collator = new Intl.Collator('fr', { sensitivity: 'base', numeric: true });
@@ -36,6 +39,8 @@ export const loadFolderTree = cache(async (db: Db, userId: string): Promise<Fold
   const folders = await listFoldersWithCounts(db, userId);
   const paths = buildFolderPaths(folders);
   const totals = folderTotals(folders);
+  const hues = rootHues(folders);
+  const parents = new Map(folders.map((folder) => [folder.id, folder]));
   const byId = new Map<string, FolderTreeNode>(
     folders.map((folder) => [
       folder.id,
@@ -46,6 +51,7 @@ export const loadFolderTree = cache(async (db: Db, userId: string): Promise<Fold
         path: formatFolderPath(paths.get(folder.id) ?? [folder.name]),
         noteCount: folder.noteCount,
         totalCount: totals.get(folder.id) ?? folder.noteCount,
+        hue: folderHue(folder.id, parents, hues),
         children: [],
       },
     ]),
@@ -93,6 +99,7 @@ export function flattenTree(tree: FolderTree): FolderItem[] {
         path: node.path,
         noteCount: node.noteCount,
         totalCount: node.totalCount,
+        hue: node.hue,
       });
       walk(node.children);
     }

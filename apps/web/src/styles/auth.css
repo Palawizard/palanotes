@@ -1,7 +1,7 @@
 /* Sign-in pages */
 
 .center-page {
-  background: var(--kraft);
+  background: var(--table);
   min-height: 100dvh;
   display: grid;
   place-items: center;
@@ -9,11 +9,10 @@
 }
 
 .center-card {
-  background: var(--paper);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 1.5rem;
+  background: var(--plate);
+  border-radius: var(--radius-stage);
+  box-shadow: var(--shadow-2);
+  padding: 2rem;
   max-width: 24rem;
   width: 100%;
   display: flex;
@@ -23,6 +22,7 @@
 
 .center-title {
   font-size: var(--text-title);
-  font-weight: 700;
+  font-weight: 650;
+  letter-spacing: -0.025em;
   line-height: 1.2;
 }

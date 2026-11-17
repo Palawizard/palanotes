@@ -9,15 +9,17 @@ import {
   type EntryStatus,
   type SortRun,
 } from '@palanotes/db';
+import { folderHue, pathHue, rootHues } from '@/lib/folder-hue';
 import { withoutLeadingTitle } from '@/lib/markdown-text';
 
 export type ActionView =
-  | { type: 'create'; folderPath: string; title: string; content: string }
+  | { type: 'create'; folderPath: string; hue: number | null; title: string; content: string }
   | {
       type: 'append';
       noteId: string;
       noteTitle: string;
       folderPath: string;
+      hue: number | null;
       sectionTitle: string;
       content: string;
     };
@@ -106,6 +108,8 @@ export async function loadPocket(db: Db, userId: string): Promise<EntryView[]> {
     ),
   );
   const paths = buildFolderPaths(folders);
+  const hues = rootHues(folders);
+  const byId = new Map(folders.map((folder) => [folder.id, folder]));
 
   const live = new Set(notes.keys());
   const shown = entries.filter(
@@ -120,14 +124,16 @@ export async function loadPocket(db: Db, userId: string): Promise<EntryView[]> {
     }
     const actions = plan.actions.map((action): ActionView => {
       if (action.type === 'create') {
+        const folderPath = formatFolderPath(
+          action.folderPath
+            .split('/')
+            .map((part) => part.trim())
+            .filter(Boolean),
+        );
         return {
           type: 'create',
-          folderPath: formatFolderPath(
-            action.folderPath
-              .split('/')
-              .map((part) => part.trim())
-              .filter(Boolean),
-          ),
+          folderPath,
+          hue: pathHue(folderPath, folders, hues),
           title: action.title,
           content: withoutLeadingTitle(action.content, action.title),
         };
@@ -138,6 +144,7 @@ export async function loadPocket(db: Db, userId: string): Promise<EntryView[]> {
         noteId: action.noteId,
         noteTitle: note?.title ?? 'Note supprimée',
         folderPath: note ? formatFolderPath(paths.get(note.folderId) ?? []) : '',
+        hue: note ? folderHue(note.folderId, byId, hues) : null,
         sectionTitle: action.sectionTitle,
         content: action.content,
       };

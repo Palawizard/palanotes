@@ -1,16 +1,16 @@
 import type { Metadata, Viewport } from 'next';
-import { Atkinson_Hyperlegible_Mono, Atkinson_Hyperlegible_Next } from 'next/font/google';
+import { Geist, Geist_Mono } from 'next/font/google';
 import type { ReactNode } from 'react';
 import './globals.css';
 
-const sans = Atkinson_Hyperlegible_Next({
+const sans = Geist({
   subsets: ['latin', 'latin-ext'],
-  variable: '--font-atkinson',
+  variable: '--font-geist',
   display: 'swap',
 });
-const mono = Atkinson_Hyperlegible_Mono({
+const mono = Geist_Mono({
   subsets: ['latin', 'latin-ext'],
-  variable: '--font-atkinson-mono',
+  variable: '--font-geist-mono',
   display: 'swap',
 });
 
@@ -21,8 +21,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#b98a55' },
-    { media: '(prefers-color-scheme: dark)', color: '#4a3a2a' },
+    { media: '(prefers-color-scheme: light)', color: '#e1e6ed' },
+    { media: '(prefers-color-scheme: dark)', color: '#14171d' },
   ],
 };
 

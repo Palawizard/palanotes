@@ -1,10 +1,13 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import type { EntryView } from '@/server/entry-view';
 import { apiPath } from '@/lib/paths';
 import { Composer } from './composer';
+import { FILED_EVENT } from './folder-massing';
 import { Pocket, type EntryAction } from './pocket';
+import { ReviewQueue } from './review-queue';
 
 const POLL_MS = 2500;
 const FILING_MS = 220;
@@ -16,13 +19,23 @@ function withoutKey(record: Record<string, string>, key: string): Record<string,
   return next;
 }
 
-export function Desk({ initialEntries }: { initialEntries: EntryView[] }) {
+export function Desk({
+  date,
+  sortMode,
+  initialEntries,
+}: {
+  date: string;
+  sortMode: 'review' | 'direct';
+  initialEntries: EntryView[];
+}) {
   const [entries, setEntries] = useState(initialEntries);
   const [newId, setNewId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [filingId, setFilingId] = useState<string | null>(null);
   const [settledId, setSettledId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Record<string, string>>({});
+  const [reviewing, setReviewing] = useState(false);
+  const router = useRouter();
   const unsettled = entries.some((entry) => UNSETTLED.has(entry.status));
 
   const refresh = useCallback(async () => {
@@ -50,48 +63,54 @@ export function Desk({ initialEntries }: { initialEntries: EntryView[] }) {
     setEntries((current) => [entry, ...current.filter((item) => item.id !== entry.id)]);
   }, []);
 
-  const onAction = useCallback(async (entryId: string, action: EntryAction) => {
-    setBusyId(entryId);
-    setMessages((current) => withoutKey(current, entryId));
-    try {
-      const response = await fetch(apiPath(`/api/entries/${entryId}`), {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ action }),
-      });
-      const data = (await response.json().catch(() => ({}))) as {
-        entries?: EntryView[];
-        message?: string;
-      };
-      if (response.ok && data.entries) {
-        const next = data.entries;
-        if (action === 'accept') {
-          // Let the row slip out toward its folder before it shows its filed state.
-          setFilingId(entryId);
-          await new Promise((resolve) => setTimeout(resolve, FILING_MS));
-          setFilingId(null);
-          setSettledId(entryId);
+  const onAction = useCallback(
+    async (entryId: string, action: EntryAction) => {
+      setBusyId(entryId);
+      setMessages((current) => withoutKey(current, entryId));
+      try {
+        const response = await fetch(apiPath(`/api/entries/${entryId}`), {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ action }),
+        });
+        const data = (await response.json().catch(() => ({}))) as {
+          entries?: EntryView[];
+          message?: string;
+        };
+        if (response.ok && data.entries) {
+          const next = data.entries;
+          if (action === 'accept') {
+            // Let the row slip out toward its folder before it shows its filed state.
+            setFilingId(entryId);
+            await new Promise((resolve) => setTimeout(resolve, FILING_MS));
+            setFilingId(null);
+            setSettledId(entryId);
+            const hue = next.find((entry) => entry.id === entryId)?.run?.actions[0]?.hue ?? null;
+            window.dispatchEvent(new CustomEvent(FILED_EVENT, { detail: { hue } }));
+          }
+          if (action === 'accept' || action === 'undo') router.refresh();
+          setEntries(next);
+        } else {
+          setMessages((current) => ({
+            ...current,
+            [entryId]: data.message ?? 'Action impossible pour l’instant. Réessaie.',
+          }));
         }
-        setEntries(next);
-      } else {
+      } catch {
         setMessages((current) => ({
           ...current,
-          [entryId]: data.message ?? 'Action impossible pour l’instant. Réessaie.',
+          [entryId]: 'Connexion perdue. Réessaie.',
         }));
+      } finally {
+        setBusyId(null);
       }
-    } catch {
-      setMessages((current) => ({
-        ...current,
-        [entryId]: 'Connexion perdue. Réessaie.',
-      }));
-    } finally {
-      setBusyId(null);
-    }
-  }, []);
+    },
+    [router],
+  );
 
   return (
-    <>
-      <Composer onSubmitted={onSubmitted} />
+    <div className="desk">
+      <Composer date={date} sortMode={sortMode} onSubmitted={onSubmitted} />
       <Pocket
         entries={entries}
         newId={newId}
@@ -100,7 +119,16 @@ export function Desk({ initialEntries }: { initialEntries: EntryView[] }) {
         busyId={busyId}
         messages={messages}
         onAction={onAction}
+        onReview={() => setReviewing(true)}
       />
-    </>
+      <ReviewQueue
+        open={reviewing}
+        entries={entries}
+        busyId={busyId}
+        messages={messages}
+        onAction={onAction}
+        onClose={() => setReviewing(false)}
+      />
+    </div>
   );
 }

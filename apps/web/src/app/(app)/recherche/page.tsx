@@ -42,6 +42,7 @@ function facets(all: SearchHit[], state: SearchState, tree: FolderTree, now: Dat
     .map(([id, count]) => ({
       key: id,
       label: tree.byId.get(id)?.path ?? '',
+      hue: tree.byId.get(id)?.hue ?? null,
       count,
       href: searchHref(state, { folder: id, sub: false }),
       active: state.folder === id,
@@ -208,6 +209,7 @@ export default async function SearchPage({
                       hit={hit}
                       query={state.q}
                       folderPath={tree.byId.get(hit.folderId)?.path ?? ''}
+                      hue={tree.byId.get(hit.folderId)?.hue ?? null}
                       href={`/note/${hit.id}?depuis=${encodeURIComponent(here)}`}
                       activeTags={state.tags}
                       tagHref={tagHref}

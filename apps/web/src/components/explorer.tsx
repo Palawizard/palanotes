@@ -101,13 +101,16 @@ export function NotePane({
     <article className="note-pane" key={note.id}>
       <div className="pane-head note-pane-head">
         <BackLink href={backHref} label={backLabel} />
-        <Breadcrumb
-          label="Dossier de la note"
-          endsHere={false}
-          items={[
-            ...note.trail.map((node) => ({ label: node.name, href: `/dossiers/${node.id}` })),
-          ]}
-        />
+        <div className="note-pane-place">
+          <span className="cube" data-hue={note.hue ?? 'none'} aria-hidden="true" />
+          <Breadcrumb
+            label="Dossier de la note"
+            endsHere={false}
+            items={[
+              ...note.trail.map((node) => ({ label: node.name, href: `/dossiers/${node.id}` })),
+            ]}
+          />
+        </div>
       </div>
       <div className="note-pane-body">
         <NoteView

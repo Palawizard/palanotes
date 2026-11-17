@@ -116,6 +116,7 @@ export interface Facet {
   count: number;
   href: string;
   active: boolean;
+  hue?: number | null;
 }
 
 export function RefineGroup({
@@ -139,7 +140,11 @@ export function RefineGroup({
               className="refine-link"
               aria-current={facet.active ? 'true' : undefined}
             >
-              <Icon name={facet.active ? 'check' : icon} size={14} />
+              {facet.hue !== undefined && !facet.active ? (
+                <span className="cube" data-hue={facet.hue ?? 'none'} aria-hidden="true" />
+              ) : (
+                <Icon name={facet.active ? 'check' : icon} size={14} />
+              )}
               <span className="refine-label">{facet.label}</span>
               <span className="refine-count">{facet.count}</span>
             </Link>

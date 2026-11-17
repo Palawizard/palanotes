@@ -38,9 +38,22 @@ const SCREENS: Screen[] = [
     name: 'pochette',
     path: async () => './',
     prepare: async (page) => {
-      const row = page.getByRole('region', { name: 'Pochette' }).getByRole('button').first();
+      const row = page
+        .getByRole('region', { name: 'Pochette' })
+        .locator('.pocket-list button')
+        .first();
       await row.click();
       await row.scrollIntoViewIfNeeded();
+    },
+  },
+  {
+    // The proposals one at a time; the sheet is opened from the pocket on a phone only.
+    name: 'propositions',
+    path: async () => './',
+    prepare: async (page) => {
+      const review = page.getByRole('button', { name: /une par une|Valider la proposition/ });
+      if (await review.isVisible()) await review.click();
+      await page.waitForTimeout(400);
     },
   },
   { name: 'dossiers', path: async () => './dossiers', fullPage: true },

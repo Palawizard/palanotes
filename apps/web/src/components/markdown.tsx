@@ -1,4 +1,4 @@
-import ReactMarkdown from 'react-markdown';
+import ReactMarkdown, { type Components } from 'react-markdown';
 import rehypeHighlight, { type Options as HighlightOptions } from 'rehype-highlight';
 import remarkGfm from 'remark-gfm';
 
@@ -34,11 +34,27 @@ const highlight: HighlightOptions = {
 };
 const rehypePlugins: [[typeof rehypeHighlight, HighlightOptions]] = [[rehypeHighlight, highlight]];
 
+// The boxes of a task list are read-only; they are named after their state so a screen
+// reader says more than « case à cocher ».
+const components: Components = {
+  input(props) {
+    const attributes = { ...props };
+    delete attributes.node;
+    if (attributes.type !== 'checkbox') return <input {...attributes} />;
+    return <input {...attributes} aria-label={attributes.checked ? 'Fait' : 'À faire'} />;
+  },
+};
+
 // Raw HTML in notes is shown as text, never rendered.
 export function Markdown({ children }: { children: string }) {
   return (
     <div className="prose-note">
-      <ReactMarkdown remarkPlugins={remarkPlugins} rehypePlugins={rehypePlugins} skipHtml>
+      <ReactMarkdown
+        remarkPlugins={remarkPlugins}
+        rehypePlugins={rehypePlugins}
+        components={components}
+        skipHtml
+      >
         {children}
       </ReactMarkdown>
     </div>

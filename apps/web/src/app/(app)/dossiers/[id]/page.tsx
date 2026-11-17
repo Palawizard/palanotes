@@ -6,7 +6,7 @@ import { parseNoteSort, sortNotes } from '@palanotes/core';
 import { listNoteRowsInFolder } from '@palanotes/db';
 import { Breadcrumb } from '@/components/breadcrumb';
 import { BackLink, ExplorerMain, NotePane, SortLinks } from '@/components/explorer';
-import { Icon } from '@/components/icons';
+import { ListRange } from '@/components/list-range';
 import { NoteRow } from '@/components/note-row';
 import { FolderMenuButton } from '@/components/explorer-shell';
 import { explorerHref, PAGE_SIZE, parseShown } from '@/lib/explorer-url';
@@ -76,6 +76,11 @@ export default async function FolderPage({
               endsHere={false}
             />
             <div className="list-title-row">
+              <span
+                className="cube cube-large"
+                data-hue={folder.hue ?? 'none'}
+                aria-hidden="true"
+              />
               <h1 className="pane-heading" id="list-title">
                 {folder.name}
               </h1>
@@ -90,6 +95,7 @@ export default async function FolderPage({
                 />
               ) : null}
             </div>
+            {sort === 'titre' && visible.length > 12 ? <ListRange listId="list-rows" /> : null}
           </div>
           <div className="pane-scroll">
             {folder.children.length > 0 ? (
@@ -97,7 +103,7 @@ export default async function FolderPage({
                 {folder.children.map((child) => (
                   <li key={child.id}>
                     <Link href={`/dossiers/${child.id}`} className="folder-row">
-                      <Icon name="folder" className="tree-icon" />
+                      <span className="cube" data-hue={child.hue ?? 'none'} aria-hidden="true" />
                       <span className="folder-row-name">{child.name}</span>
                       <span className="tree-count">{child.totalCount}</span>
                     </Link>
@@ -106,7 +112,7 @@ export default async function FolderPage({
               </ul>
             ) : null}
             {visible.length > 0 ? (
-              <ul className="note-rows" aria-label={`Notes de ${folder.name}`}>
+              <ul id="list-rows" className="note-rows" aria-label={`Notes de ${folder.name}`}>
                 {visible.map((row) => (
                   <li key={row.id}>
                     <NoteRow

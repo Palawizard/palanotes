@@ -15,5 +15,6 @@ docs
 packages/db/src/demo
 packages/db/src/demo-cli.ts
 apps/web/e2e
+apps/web/scripts
 apps/web/playwright*.ts
 *.log
