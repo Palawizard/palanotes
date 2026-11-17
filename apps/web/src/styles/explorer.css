@@ -120,9 +120,9 @@
   align-items: center;
   gap: 0.125rem;
   padding: 0.1875rem;
-  border-radius: 9px;
+  border-radius: var(--radius-row);
   background: var(--sunk);
-  font-size: 0.8125rem;
+  font-size: var(--text-sm);
   line-height: var(--leading-meta);
 }
 
@@ -133,7 +133,7 @@
 
 .sort-link {
   padding: 0.125rem 0.5625rem;
-  border-radius: 6px;
+  border-radius: var(--radius-small);
   color: var(--ink-muted);
   text-decoration: none;
 }
@@ -168,7 +168,7 @@
   width: fit-content;
   margin-left: -0.375rem;
   padding: 0.125rem 0.375rem 0.125rem 0.125rem;
-  border-radius: 4px;
+  border-radius: var(--radius-small);
   font-size: var(--text-meta);
   font-weight: 700;
   text-decoration: none;
@@ -279,7 +279,7 @@
   width: 0.5625rem;
   height: 0.5625rem;
   margin-inline: 0.09375rem;
-  border-radius: 2px;
+  border-radius: var(--radius-cube);
   box-shadow:
     1px 1px 0 color-mix(in oklch, var(--hue), var(--hue-face-mix) 34%),
     2px 3px 3px -1px oklch(0.2 0.05 262 / 0.25);
@@ -296,8 +296,8 @@
 .tree-count {
   flex: none;
   font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--ink-faint);
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
 }
 
 /* Subfolders at the top of a folder's list. */
@@ -317,7 +317,7 @@
   gap: 0.625rem;
   min-height: 2.5rem;
   padding: 0.375rem 0.75rem;
-  border-radius: 10px;
+  border-radius: var(--radius-row);
   background: var(--sunk);
   text-decoration: none;
   transition: transform 200ms var(--ease-out);
@@ -333,7 +333,7 @@
 }
 
 .folder-row .tree-count {
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -551,7 +551,7 @@
   z-index: 40;
   max-width: min(36rem, calc(100vw - 2rem));
   padding: 0.625rem 1rem;
-  border-radius: 12px;
+  border-radius: var(--radius-card);
   background: var(--plate);
   color: var(--ink);
   box-shadow: var(--shadow-float);
@@ -629,7 +629,7 @@
 
 /* Guide words of a long list sorted by title. */
 .list-range {
-  font-size: 0.8125rem;
+  font-size: var(--text-sm);
   color: var(--ink-muted);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -644,7 +644,7 @@
 .cube-large {
   width: 1.125rem;
   height: 1.125rem;
-  border-radius: 4px;
+  border-radius: var(--radius-small);
   box-shadow:
     1px 1px 0 color-mix(in oklch, var(--hue), var(--hue-face-mix) 30%),
     2px 2px 0 color-mix(in oklch, var(--hue), var(--hue-face-mix) 36%),

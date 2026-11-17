@@ -18,7 +18,7 @@
 }
 
 .pocket-title {
-  font-size: 1.0625rem;
+  font-size: var(--text-lead);
   font-weight: 650;
   letter-spacing: -0.01em;
 }
@@ -34,7 +34,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  font-size: 0.8125rem;
+  font-size: var(--text-sm);
   line-height: var(--leading-meta);
   font-weight: 600;
   white-space: nowrap;
@@ -57,7 +57,7 @@
   padding: 1rem 1.125rem;
   color: var(--ink-muted);
   background: var(--plate);
-  border-radius: 12px;
+  border-radius: var(--radius-card);
   box-shadow: var(--edge);
 }
 
@@ -72,7 +72,7 @@
 
 .pocket-row {
   background: var(--plate);
-  border-radius: 12px;
+  border-radius: var(--radius-card);
   box-shadow: var(--shadow-1);
   overflow: hidden;
 }
@@ -129,7 +129,7 @@ button.pocket-summary {
   gap: 0.125rem 0.75rem;
   margin-top: 0.125rem;
   color: var(--ink-muted);
-  font-size: 0.8125rem;
+  font-size: var(--text-sm);
   line-height: var(--leading-meta);
   font-variant-numeric: tabular-nums;
 }
@@ -174,7 +174,7 @@ button.pocket-summary {
 /* The proposal: a well cut into the entry's plate. */
 .plan-card {
   background: var(--sunk);
-  border-radius: 10px;
+  border-radius: var(--radius-row);
   padding: 0.75rem 0.875rem;
   display: flex;
   flex-direction: column;
@@ -186,7 +186,7 @@ button.pocket-summary {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.25rem 0.5rem;
-  font-size: 0.8125rem;
+  font-size: var(--text-sm);
   line-height: var(--leading-meta);
 }
 
@@ -218,7 +218,7 @@ button.pocket-summary {
   overflow: auto;
   border-top: 1px solid var(--rule);
   padding-top: 0.5rem;
-  font-size: 0.9375rem;
+  font-size: var(--text-compact);
 }
 
 .plan-links {
@@ -249,7 +249,7 @@ button.pocket-summary {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  font-size: 0.8125rem;
+  font-size: var(--text-sm);
 }
 
 .pocket-raw summary::-webkit-details-marker {
@@ -269,9 +269,9 @@ button.pocket-summary {
   white-space: pre-wrap;
   word-break: break-word;
   font-family: var(--font-mono);
-  font-size: 0.875rem;
+  font-size: var(--text-meta);
   background: var(--sunk);
-  border-radius: 10px;
+  border-radius: var(--radius-row);
   padding: 0.75rem 0.875rem;
 }
 
@@ -420,7 +420,7 @@ button.pocket-summary {
 
 .review-from time {
   color: var(--ink-muted);
-  font-size: 0.8125rem;
+  font-size: var(--text-sm);
 }
 
 .review-explanation {

@@ -40,10 +40,10 @@
 
 .search-field {
   padding: 0.75rem 2.75rem 0.75rem 2.75rem;
-  font-size: 1.0625rem;
+  font-size: var(--text-lead);
   background: var(--plate);
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--radius-card);
   box-shadow: var(--shadow-1);
 }
 
@@ -60,7 +60,7 @@
   place-items: center;
   width: 1.75rem;
   height: 1.75rem;
-  border-radius: 4px;
+  border-radius: var(--radius-small);
   color: var(--ink-muted);
 }
 
@@ -126,7 +126,7 @@
   gap: 0.5rem;
   padding: 1rem 1.125rem;
   background: var(--plate);
-  border-radius: 12px;
+  border-radius: var(--radius-card);
   box-shadow: var(--shadow-1);
   transition:
     transform 220ms var(--ease-out),
@@ -161,12 +161,12 @@
   content: '';
   position: absolute;
   inset: 0;
-  border-radius: 12px;
+  border-radius: var(--radius-card);
 }
 
 .result-title {
   font-weight: 620;
-  font-size: 1.0625rem;
+  font-size: var(--text-lead);
   overflow-wrap: anywhere;
 }
 
@@ -191,7 +191,7 @@
 .result-path .cube {
   width: 0.625rem;
   height: 0.625rem;
-  border-radius: 2px;
+  border-radius: var(--radius-cube);
 }
 
 .result-excerpt {
@@ -223,7 +223,7 @@
 mark {
   background: var(--selection);
   color: var(--ink);
-  border-radius: 2px;
+  border-radius: var(--radius-cube);
   padding: 0 0.1em;
 }
 
@@ -371,7 +371,7 @@ mark {
   width: 0.625rem;
   height: 0.625rem;
   margin-inline: 0.125rem;
-  border-radius: 2px;
+  border-radius: var(--radius-cube);
 }
 
 .refine-link[aria-current='true'] svg {
@@ -392,9 +392,9 @@ mark {
 
 .refine-count,
 .tag-count {
-  color: var(--ink-faint);
+  color: var(--ink-muted);
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
 }
 
 .refine-toggle {
@@ -409,7 +409,7 @@ mark {
 .refine-box {
   width: 1rem;
   height: 1rem;
-  border-radius: 4px;
+  border-radius: var(--radius-small);
   background: var(--sunk);
   box-shadow: var(--shadow-press);
 }
@@ -429,7 +429,7 @@ mark {
 }
 
 .idle-tags .tag {
-  font-size: 0.9375rem;
+  font-size: var(--text-compact);
   padding: 0.25rem 0.625rem;
   border-radius: 8px;
   background: var(--plate);
@@ -466,14 +466,14 @@ mark {
 
 .skeleton {
   display: block;
-  border-radius: 6px;
+  border-radius: var(--radius-small);
   background: var(--sunk);
 }
 
 .skeleton-field {
   height: 3.125rem;
   max-width: 46rem;
-  border-radius: 12px;
+  border-radius: var(--radius-card);
   background: var(--plate);
   box-shadow: var(--shadow-1);
 }
@@ -499,7 +499,7 @@ mark {
   }
   .refine-phone {
     display: block;
-    border-radius: 12px;
+    border-radius: var(--radius-card);
     background: var(--plate);
     box-shadow: var(--shadow-1);
   }

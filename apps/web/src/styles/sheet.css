@@ -38,7 +38,7 @@
 }
 
 .sheet-mode {
-  font-size: 0.8125rem;
+  font-size: var(--text-sm);
   font-weight: 560;
   color: var(--ink-muted);
   background: var(--sunk);
@@ -73,7 +73,7 @@
   background: transparent;
   color: var(--ink);
   font: inherit;
-  font-size: 1.125rem;
+  font-size: var(--text-large);
   line-height: 1.65;
   padding: 0;
   caret-color: var(--accent);
@@ -142,9 +142,9 @@
 
 kbd {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   background: var(--sunk);
-  border-radius: 5px;
+  border-radius: var(--radius-small);
   box-shadow:
     var(--edge),
     0 1px 0 var(--rule-strong);
