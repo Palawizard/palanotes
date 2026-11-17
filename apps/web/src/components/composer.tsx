@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRef, useState, useSyncExternalStore, type FormEvent, type KeyboardEvent } from 'react';
 import { ENTRY_MAX_LENGTH } from '@palanotes/core/jobs';
 import type { EntryView } from '@/server/entry-view';
@@ -23,7 +24,20 @@ function readDraft(): string {
   return window.localStorage.getItem(DRAFT_KEY) ?? '';
 }
 
-export function Composer({ onSubmitted }: { onSubmitted: (entry: EntryView) => void }) {
+const MODES = {
+  review: 'Rangement à valider',
+  direct: 'Rangement direct',
+} as const;
+
+export function Composer({
+  date,
+  sortMode,
+  onSubmitted,
+}: {
+  date: string;
+  sortMode: keyof typeof MODES;
+  onSubmitted: (entry: EntryView) => void;
+}) {
   // The saved draft is read once the page runs in the browser; the server renders it empty.
   const savedDraft = useSyncExternalStore(subscribeToNothing, readDraft, () => '');
   const [edited, setEdited] = useState<string | null>(null);
@@ -97,8 +111,17 @@ export function Composer({ onSubmitted }: { onSubmitted: (entry: EntryView) => v
       onSubmit={onSubmit}
       action={apiPath('/api/entries')}
       method="post"
-      aria-label="Nouvelle note"
+      aria-labelledby="sheet-title"
     >
+      <div className="sheet-head">
+        <p className="sheet-date">{date}</p>
+        <Link href="/reglages" className="sheet-mode" title="Changer dans les réglages">
+          {MODES[sortMode]}
+        </Link>
+      </div>
+      <h1 className="sheet-title" id="sheet-title">
+        Qu’as-tu en tête{'\u00a0'}?
+      </h1>
       <label htmlFor="entry" className="sr-only">
         Ta note
       </label>

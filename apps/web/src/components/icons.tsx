@@ -64,6 +64,19 @@ const PATHS = {
   ),
   check: <path d="m3 8.5 3.25 3.25L13 5" />,
   arrowLeft: <path d="M13.25 8H2.75m4-4.25L2.75 8l4 4.25" />,
+  sliders: (
+    <>
+      <path d="M2.5 4.5h6m3 0h2M2.5 11.5h2m3 0h6" />
+      <circle cx="10" cy="4.5" r="1.5" />
+      <circle cx="6" cy="11.5" r="1.5" />
+    </>
+  ),
+  write: (
+    <>
+      <path d="M2.75 13.25h10.5" />
+      <path d="m9.5 2.75 2.25 2.25L6 10.75H3.75V8.5z" />
+    </>
+  ),
 } satisfies Record<string, ReactNode>;
 
 export type IconName = keyof typeof PATHS;

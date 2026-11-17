@@ -47,7 +47,12 @@ export async function RecentView({
                     current={row.id === note?.id}
                     now={now}
                     scroll={false}
-                    note={toRowData(row, 'updatedAt', tree.byId.get(row.folderId)?.path)}
+                    note={toRowData(
+                      row,
+                      'updatedAt',
+                      tree.byId.get(row.folderId)?.path,
+                      tree.byId.get(row.folderId)?.hue,
+                    )}
                   />
                 </li>
               ))}

@@ -14,7 +14,8 @@
 .prose-note h4,
 .prose-note h5,
 .prose-note h6 {
-  font-weight: 700;
+  font-weight: 650;
+  letter-spacing: -0.012em;
   line-height: 1.3;
   text-wrap: balance;
 }
@@ -52,7 +53,7 @@
 }
 
 .prose-note strong {
-  font-weight: 700;
+  font-weight: 650;
 }
 
 .prose-note ul,
@@ -110,19 +111,18 @@
 .prose-note code {
   font-family: var(--font-mono);
   font-size: 0.9375em;
-  background: var(--ground);
-  border: 1px solid var(--rule);
-  border-radius: 4px;
-  padding: 0 0.3em;
+  background: var(--sunk);
+  border-radius: var(--radius-small);
+  padding: 0.0625em 0.3125em;
 }
 
 .prose-note pre {
   font-family: var(--font-mono);
   line-height: 1.5;
-  background: var(--ground);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  padding: 0.75rem 1rem;
+  background: var(--sunk);
+  border-radius: var(--radius-row);
+  box-shadow: var(--shadow-press);
+  padding: 1rem 1.25rem;
   overflow-x: auto;
   scrollbar-width: thin;
 }
@@ -212,13 +212,13 @@
 }
 
 .prose-note th {
-  background: var(--ground);
+  background: var(--sunk);
   font-weight: 700;
 }
 
 .prose-note a {
   color: inherit;
-  text-decoration-color: var(--kraft-deep);
+  text-decoration-color: var(--accent);
   text-underline-offset: 0.2em;
 }
 

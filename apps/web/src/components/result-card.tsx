@@ -3,7 +3,6 @@ import type { SearchHit } from '@palanotes/db';
 import { formatFull, formatShort } from '@/lib/format';
 import { displayExcerpt, markSimilarWords, openingOf, plainExcerpt } from '@/lib/markdown-text';
 import { Highlighted } from './highlighted';
-import { Icon } from './icons';
 import { Markdown } from './markdown';
 
 // One search result: a card with the title, the folder, the date, the tags and an excerpt
@@ -13,6 +12,7 @@ export function ResultCard({
   hit,
   query,
   folderPath,
+  hue,
   href,
   activeTags,
   tagHref,
@@ -21,6 +21,7 @@ export function ResultCard({
   hit: SearchHit;
   query: string;
   folderPath: string;
+  hue: number | null;
   href: string;
   activeTags: string[];
   tagHref: (tag: string) => string;
@@ -37,7 +38,7 @@ export function ResultCard({
         </h3>
         <span className="result-meta">
           <span className="result-path">
-            <Icon name="folder" size={14} />
+            <span className="cube" data-hue={hue ?? 'none'} aria-hidden="true" />
             {folderPath}
           </span>
           <time

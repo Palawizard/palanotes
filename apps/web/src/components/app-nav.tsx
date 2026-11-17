@@ -2,12 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { Icon, type IconName } from './icons';
 
-const LINKS = [
-  { href: '/', label: 'Écrire' },
-  { href: '/dossiers', label: 'Dossiers' },
-  { href: '/recherche', label: 'Recherche' },
-] as const;
+const LINKS: { href: string; label: string; icon: IconName }[] = [
+  { href: '/', label: 'Écrire', icon: 'write' },
+  { href: '/dossiers', label: 'Dossiers', icon: 'folder' },
+  { href: '/recherche', label: 'Recherche', icon: 'search' },
+];
 
 function isActive(pathname: string, href: string): boolean {
   if (href === '/dossiers') {
@@ -27,10 +28,11 @@ export function AppNav() {
           className="rail-link"
           aria-current={isActive(pathname, link.href) ? 'page' : undefined}
         >
-          {link.label}
+          <Icon name={link.icon} />
+          <span>{link.label}</span>
         </Link>
       ))}
-      {/* On a phone the rail foot is hidden, so settings join the bar. */}
+      {/* On a phone the rail becomes a tab bar: settings join it. */}
       <SettingsLink className="rail-only-phone" />
     </nav>
   );
@@ -44,7 +46,8 @@ export function SettingsLink({ className = '' }: { className?: string }) {
       className={`rail-link ${className}`.trim()}
       aria-current={pathname.startsWith('/reglages') ? 'page' : undefined}
     >
-      Réglages
+      <Icon name="sliders" />
+      <span>Réglages</span>
     </Link>
   );
 }
