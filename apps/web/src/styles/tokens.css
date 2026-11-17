@@ -17,20 +17,21 @@
   --on-accent: oklch(1 0 0);
   --filed: oklch(0.5 0.12 158);
   --failed: oklch(0.52 0.19 28);
-  --review: var(--accent);
+  --review: var(--ink);
   --selection: oklch(0.87 0.07 268);
   --current: oklch(0.945 0.028 268);
   --hover: oklch(0.25 0.03 262 / 0.045);
   --scrim: oklch(0.25 0.03 262 / 0.35);
 
   /* Three heights: plates (rail, lists, entries), the working plate, and what floats. */
-  --edge: 0 0 0 1px oklch(0.3 0.04 262 / 0.05);
+  /* The cut edge of the foam board: a hairline round the plate and a darker bottom face. */
+  --edge: 0 0 0 1px oklch(0.3 0.04 262 / 0.05), inset 0 -2px 0 oklch(0.3 0.04 262 / 0.06);
   --shadow-1:
     var(--edge), 0 1px 1px oklch(0.3 0.05 262 / 0.05), 2px 3px 6px -2px oklch(0.3 0.05 262 / 0.1),
     6px 10px 18px -10px oklch(0.3 0.05 262 / 0.2);
   --shadow-2:
-    var(--edge), 0 1px 1px oklch(0.3 0.05 262 / 0.05), 4px 6px 12px -4px oklch(0.3 0.05 262 / 0.11),
-    18px 28px 48px -22px oklch(0.3 0.05 262 / 0.3);
+    var(--edge), 0 1px 1px oklch(0.3 0.05 262 / 0.05), 6px 9px 16px -6px oklch(0.3 0.05 262 / 0.14),
+    26px 38px 64px -26px oklch(0.3 0.05 262 / 0.38);
   --shadow-float:
     var(--edge), 3px 5px 10px -4px oklch(0.3 0.05 262 / 0.16),
     22px 32px 60px -22px oklch(0.3 0.05 262 / 0.4);

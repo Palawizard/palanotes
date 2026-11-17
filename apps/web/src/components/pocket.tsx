@@ -63,7 +63,10 @@ export function Pocket({
   onAction,
   onReview,
 }: PocketProps) {
-  const [open, setOpen] = useState<string | null>(null);
+  // The oldest proposal still waiting starts open, so accepting it takes one click.
+  const [open, setOpen] = useState<string | null>(
+    () => entries.findLast((entry) => entry.status === 'proposed')?.id ?? null,
+  );
   const [autoOpened, setAutoOpened] = useState<string | null>(null);
 
   // The entry just written opens on its own once its filing is ready to look at.
@@ -163,7 +166,7 @@ export function Pocket({
           </p>
         ) : null}
         {proposed > 0 ? (
-          <button type="button" className="button button-accent pocket-review" onClick={onReview}>
+          <button type="button" className="button pocket-review" onClick={onReview}>
             {proposed > 1 ? `Valider les ${proposed} une par une` : 'Valider la proposition'}
           </button>
         ) : null}

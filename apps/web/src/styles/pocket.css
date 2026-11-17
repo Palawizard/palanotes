@@ -4,7 +4,7 @@
 .pocket {
   display: flex;
   flex-direction: column;
-  gap: 0.625rem;
+  gap: 0.5rem;
   min-width: 0;
 }
 
@@ -90,7 +90,7 @@
   column-gap: 0.75rem;
   width: 100%;
   text-align: left;
-  padding: 0.75rem 0.875rem 0.75rem;
+  padding: 0.75rem 1rem 0.75rem;
   font: inherit;
   color: inherit;
 }
@@ -156,7 +156,7 @@ button.pocket-summary {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  padding: 0 0.875rem 0.875rem;
+  padding: 0 1rem 1rem;
 }
 
 .pocket-explanation,
@@ -175,7 +175,7 @@ button.pocket-summary {
 .plan-card {
   background: var(--sunk);
   border-radius: var(--radius-row);
-  padding: 0.75rem 0.875rem;
+  padding: 0.75rem 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.375rem;
@@ -241,6 +241,16 @@ button.pocket-summary {
   flex: 1;
 }
 
+/* A proposal's three answers share one row, the accept one a little wider. */
+.pocket-actions:has(> .pocket-actions-gap) {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+}
+
+.pocket-actions:has(> .pocket-actions-gap) > .pocket-actions-gap {
+  display: none;
+}
+
 .pocket-raw summary {
   cursor: pointer;
   color: var(--ink-muted);
@@ -272,7 +282,7 @@ button.pocket-summary {
   font-size: var(--text-meta);
   background: var(--sunk);
   border-radius: var(--radius-row);
-  padding: 0.75rem 0.875rem;
+  padding: 0.75rem 1rem;
 }
 
 /* State colours sit on top of the world only where they mean something. */
@@ -436,12 +446,7 @@ button.pocket-summary {
 }
 
 .review-actions .button {
-  padding-block: 0.875rem;
-}
-
-.review-accept {
-  background: var(--accent);
-  color: var(--on-accent);
+  padding-block: 1rem;
 }
 
 @media (max-width: 47.99rem) {

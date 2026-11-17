@@ -128,9 +128,19 @@
   background: var(--plate);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-1);
-  transition:
-    transform 220ms var(--ease-out),
-    box-shadow 220ms var(--ease-out);
+  transition: transform 220ms var(--ease-out);
+}
+
+/* The raised shadow is drawn once and faded in, so hovering only moves transform and opacity. */
+.result::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: var(--shadow-2);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 220ms var(--ease-out);
 }
 
 .result:has(.result-link:focus-visible) {
@@ -141,7 +151,10 @@
 @media (hover: hover) and (pointer: fine) {
   .result:hover {
     transform: translate(-1px, -2px);
-    box-shadow: var(--shadow-2);
+  }
+
+  .result:hover::before {
+    opacity: 1;
   }
 }
 
@@ -430,7 +443,7 @@ mark {
 
 .idle-tags .tag {
   font-size: var(--text-compact);
-  padding: 0.25rem 0.625rem;
+  padding: 0.25rem 0.75rem;
   border-radius: 8px;
   background: var(--plate);
   box-shadow: var(--shadow-1);
@@ -459,7 +472,7 @@ mark {
 
 .no-result-tries a {
   text-decoration: underline;
-  text-decoration-color: var(--accent);
+  text-decoration-color: var(--rule-strong);
   text-underline-offset: 0.25em;
   font-weight: 600;
 }
@@ -505,7 +518,7 @@ mark {
   }
   .refine-phone summary {
     cursor: pointer;
-    padding: 0.625rem 1rem;
+    padding: 0.75rem 1rem;
     font-weight: 600;
     list-style: none;
     display: flex;
@@ -526,7 +539,7 @@ mark {
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    padding: 0.25rem 0.875rem 0.875rem;
+    padding: 0.25rem 1rem 1rem;
   }
   .refine-link {
     margin-inline: 0;

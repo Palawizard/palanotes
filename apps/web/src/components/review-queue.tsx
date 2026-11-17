@@ -94,7 +94,7 @@ export function ReviewQueue({
             </button>
             <button
               type="button"
-              className="button review-accept"
+              className="button"
               disabled={busy}
               onClick={() => onAction(entry.id, 'accept')}
             >
