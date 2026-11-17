@@ -157,7 +157,8 @@
 }
 
 .mass-name {
-  overflow-wrap: break-word;
+  overflow-wrap: normal;
+  word-break: keep-all;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;

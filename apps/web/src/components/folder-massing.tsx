@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { squarify } from '@/lib/squarify';
 import type { FolderItem } from '@/server/folders';
 
@@ -80,8 +80,7 @@ function blocks(roots: FolderItem[], total: number) {
         width: `calc(${(rect.w / FRAME.width) * 100}% - 8px)`,
         height: `calc(${(rect.h / FRAME.height) * 100}% - 8px)`,
       } satisfies CSSProperties,
-      // Text only where it fits; the list below names every folder.
-      named: rect.w >= 64 && rect.h >= 22,
+      named: rect.h >= 22,
       counted: rect.w >= 32 && rect.h >= 22,
     };
   });
@@ -94,6 +93,29 @@ function current(pathname: string, id: string): boolean {
 export function FolderMassing({ roots }: { roots: FolderItem[] }) {
   const pathname = usePathname();
   const [lifted, setLifted] = useState<number | null>(null);
+  const massing = useRef<HTMLDivElement>(null);
+
+  // A name whose longest word does not fit its block is hidden rather than broken; the list
+  // below names every folder. Measured once the font is in.
+  useEffect(() => {
+    const frame = massing.current;
+    if (!frame) return;
+    let cancelled = false;
+    const check = () => {
+      if (cancelled) return;
+      for (const name of frame.querySelectorAll<HTMLElement>('.mass-name')) {
+        name.hidden = false;
+        name.hidden = name.scrollWidth > name.clientWidth + 1;
+      }
+    };
+    void document.fonts.ready.then(check);
+    const observer = new ResizeObserver(check);
+    observer.observe(frame);
+    return () => {
+      cancelled = true;
+      observer.disconnect();
+    };
+  }, [roots]);
   const total = roots.reduce((sum, folder) => sum + folder.totalCount, 0);
 
   // A filed entry lifts the block of the folder it went to, for a moment.
@@ -132,7 +154,7 @@ export function FolderMassing({ roots }: { roots: FolderItem[] }) {
         </span>
       </h2>
       {total > 0 ? (
-        <div className="massing" aria-hidden="true">
+        <div className="massing" aria-hidden="true" ref={massing}>
           {blocks(roots, total).map(({ folder, style, named, counted }) => (
             <Link
               key={folder.key}
