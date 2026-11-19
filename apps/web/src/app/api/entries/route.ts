@@ -1,22 +1,16 @@
 import { z } from 'zod';
-import { ENTRY_MAX_LENGTH } from '@palanotes/core';
-import { createEntry } from '@palanotes/db';
 import { getCurrentUser } from '@/server/auth';
 import { getConfig } from '@/server/config';
 import { getDb } from '@/server/db';
 import { loadPocket, toEntryView } from '@/server/entry-view';
 import { queueSortEntry } from '@/server/queue';
 import { RateLimiter } from '@/server/rate-limit';
+import { entryContent, submitEntry } from '@/server/submit-entry';
 import { appUrl } from '@/server/urls';
 
 export const dynamic = 'force-dynamic';
 
-const body = z.object({
-  content: z
-    .string()
-    .max(ENTRY_MAX_LENGTH)
-    .refine((value) => value.trim().length > 0),
-});
+const body = z.object({ content: entryContent });
 
 const limiter = new RateLimiter(30, 60_000);
 
@@ -51,8 +45,7 @@ export async function POST(request: Request): Promise<Response> {
     const tooLong = parsed.error.issues.some((issue) => issue.code === 'too_big');
     return Response.json({ error: tooLong ? 'too_long' : 'empty' }, { status: 400 });
   }
-  const entry = await createEntry(getDb(), user.id, parsed.data.content);
-  await queueSortEntry({ entryId: entry.id });
+  const entry = await submitEntry(getDb(), user.id, parsed.data.content, queueSortEntry);
   if (fromForm) {
     // Plain form post (script not loaded yet): back to the writing page.
     return Response.redirect(appUrl(getConfig(), '/'), 303);
