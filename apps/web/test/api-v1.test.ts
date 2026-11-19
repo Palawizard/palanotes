@@ -20,6 +20,7 @@ import {
   type ApiDeps,
 } from '@/server/api-v1';
 import { RateLimiter } from '@/server/rate-limit';
+import { entryLimiter } from '@/server/submit-entry';
 import { TEST_DB } from './global-setup';
 
 const db = createTestDb(TEST_DB);
@@ -38,6 +39,7 @@ beforeEach(() => {
       queued.push(job);
     },
     limiter: new RateLimiter(60, 60_000),
+    entryLimiter: new RateLimiter(30, 60_000),
   };
 });
 
@@ -282,6 +284,44 @@ describe('POST /api/v1/entries', () => {
       expect(await response.json()).toEqual({ error: 'invalid_request' });
     }
     expect(queued).toEqual([]);
+  });
+
+  it('counts entries per account, whichever token sends them', async () => {
+    const user = await createTestUser(db, 'Bavard');
+    const first = (await createPersonalToken(db, user.id, 'Premier')).token;
+    const second = (await createPersonalToken(db, user.id, 'Second')).token;
+    for (let index = 0; index < 30; index += 1) {
+      const response = await createEntryHandler(
+        post({ content: `Idée ${index}` }, index % 2 === 0 ? first : second),
+        deps,
+      );
+      expect(response.status).toBe(201);
+    }
+    const limited = await createEntryHandler(post({ content: 'Une de trop' }, second), deps);
+    expect(limited.status).toBe(429);
+    expect(await limited.json()).toEqual({ error: 'rate_limited' });
+    expect(queued).toHaveLength(30);
+    // Reading stays possible: only new entries are limited per account.
+    expect((await listNotesHandler(get('/notes', first), deps)).status).toBe(200);
+    expect((await createEntryHandler(post({ content: 'Autre compte' }, token), deps)).status).toBe(
+      201,
+    );
+  });
+
+  it('shares its count with the writing page of the app', async () => {
+    const user = await createTestUser(db, 'Partagé');
+    const shared = (await createPersonalToken(db, user.id, 'Partagé')).token;
+    const appLimiter = entryLimiter();
+    expect(entryLimiter()).toBe(appLimiter);
+    // Thirty entries typed in the app this minute.
+    for (let index = 0; index < 30; index += 1) {
+      expect(appLimiter.allow(user.id)).toBe(true);
+    }
+    const response = await createEntryHandler(post({ content: 'Une de plus' }, shared), {
+      ...deps,
+      entryLimiter: appLimiter,
+    });
+    expect(response.status).toBe(429);
   });
 
   it('accepts text up to 20000 characters', async () => {

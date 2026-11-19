@@ -4,15 +4,12 @@ import { getConfig } from '@/server/config';
 import { getDb } from '@/server/db';
 import { loadPocket, toEntryView } from '@/server/entry-view';
 import { queueSortEntry } from '@/server/queue';
-import { RateLimiter } from '@/server/rate-limit';
-import { entryContent, submitEntry } from '@/server/submit-entry';
+import { entryContent, entryLimiter, submitEntry } from '@/server/submit-entry';
 import { appUrl } from '@/server/urls';
 
 export const dynamic = 'force-dynamic';
 
 const body = z.object({ content: entryContent });
-
-const limiter = new RateLimiter(30, 60_000);
 
 export async function GET(): Promise<Response> {
   const user = await getCurrentUser();
@@ -36,7 +33,7 @@ export async function POST(request: Request): Promise<Response> {
   if (!user) {
     return Response.json({ error: 'unauthorized' }, { status: 401 });
   }
-  if (!limiter.allow(user.id)) {
+  if (!entryLimiter().allow(user.id)) {
     return Response.json({ error: 'rate_limited' }, { status: 429 });
   }
   const { input, fromForm } = await readBody(request);

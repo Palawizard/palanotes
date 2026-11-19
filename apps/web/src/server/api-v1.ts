@@ -22,7 +22,10 @@ export interface ApiDeps {
   db: Db;
   basePath: string;
   queue: QueueSortEntry;
+  // Per token, for every route.
   limiter: RateLimiter;
+  // Per account, for new entries: the same count as the app's writing page.
+  entryLimiter: RateLimiter;
 }
 
 export interface ApiNote {
@@ -46,6 +49,7 @@ function json(body: unknown, status = 200): Response {
 
 const unauthorized = (): Response => json({ error: 'unauthorized' }, 401);
 const invalidRequest = (): Response => json({ error: 'invalid_request' }, 400);
+const rateLimited = (): Response => json({ error: 'rate_limited' }, 429);
 
 function bearerToken(headers: Headers): string | null {
   const match = /^Bearer +(\S+) *$/i.exec(headers.get('authorization') ?? '');
@@ -59,7 +63,7 @@ async function authenticate(request: Request, deps: ApiDeps): Promise<User | Res
     return unauthorized();
   }
   if (!deps.limiter.allow(found.tokenId)) {
-    return json({ error: 'rate_limited' }, 429);
+    return rateLimited();
   }
   return found.user;
 }
@@ -128,6 +132,7 @@ const entryBody = z.object({ content: entryContent });
 export async function createEntryHandler(request: Request, deps: ApiDeps): Promise<Response> {
   const user = await authenticate(request, deps);
   if (user instanceof Response) return user;
+  if (!deps.entryLimiter.allow(user.id)) return rateLimited();
   const parsed = entryBody.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return invalidRequest();
   const entry = await submitEntry(deps.db, user.id, parsed.data.content, deps.queue);
