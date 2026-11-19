@@ -61,4 +61,4 @@ compose.yaml     production stack
 
 Production: see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). Decisions: [docs/DECISIONS.md](docs/DECISIONS.md).
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for details.
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for details, including the routes another app can call with a personal token (created in the settings).

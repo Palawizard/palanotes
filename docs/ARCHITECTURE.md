@@ -90,9 +90,22 @@ The goal is to find a note even when it was filed in the wrong place, typed with
 
 Embedding search (pgvector) can be added later if this is not enough.
 
+## API for other apps
+
+Another app of the same person (a dashboard, server side only) reads the notes, searches them and sends raw text through `/notes/api/v1/*`, with a personal token.
+
+- **Tokens.** Created in the settings (« Accès pour une autre app ») with a name. A token is `pn_` followed by 32 random bytes in base64url; it is shown once, with a copy button, and only its SHA-256 is stored in `personal_tokens` (`packages/db/src/repo/personal-tokens.ts`), with its name, creation date and last use (written at most once a minute). A token belongs to one account and goes with it. Revoking deletes the row: the token stops working at once. Routes used by the settings page, with the session cookie: `POST /api/tokens` (`{ "name" }`, answers the token once) and `DELETE /api/tokens/<id>`.
+- **Authentication.** `Authorization: Bearer <token>` on `/api/v1/*` only. These routes never read the session cookie, and no other route reads a token. A missing, unknown or revoked token gets `401 {"error":"unauthorized"}`. The proxy lets `/api/v1/*` through without the cookie and origin checks, since a browser never sends that header by itself; the route handlers (`apps/web/src/server/api-v1.ts`) check the token, and every query is filtered by the token's account. Each token may make 60 requests a minute (in memory, one instance), then gets `429 {"error":"rate_limited"}`. Answers carry `Cache-Control: no-store`.
+- **Routes.**
+  - `GET /notes/api/v1/notes?limit=10`: the last modified notes first, `limit` from 1 to 50 (default 10). `{ "notes": [{ "id", "title", "folderPath", "updatedAt", "path" }] }`, where `folderPath` is like `Travail / Réunions` and `path` opens the note in the explorer, base path included (`/notes/dossiers/<folder>?note=<id>`).
+  - `GET /notes/api/v1/search?q=<text>&limit=20`: `searchNotes` as on the search page, `q` from 1 to 200 characters, `limit` from 1 to 50 (default 20). Same fields plus `excerpt`, in plain text (the highlight markers are removed).
+  - `POST /notes/api/v1/entries` with `{ "content": "<raw text>" }` (1 to 20,000 characters, not only spaces): stored and queued exactly like an entry typed on the writing page (`submitEntry`), then filed by the worker. Answers `201 { "id" }`.
+  - A bad parameter or body gets `400 {"error":"invalid_request"}`.
+- **Calling it.** From another container on the reverse proxy's network, `http://palanotes-web:3000/notes/api/v1/...` avoids going out through Cloudflare; otherwise use the public URL `https://palawi.fr/notes/api/v1/...`. Example: `curl -H "Authorization: Bearer $PALANOTES_TOKEN" 'https://palawi.fr/notes/api/v1/notes?limit=5'`.
+
 ## Data
 
-Tables: `users`, `folders` (tree through `parent_id`), `entries` (raw text), `notes`, `sort_runs` (model plans), `note_versions` (history), `trash_items` (deleted folders and notes, kept 30 days). Schema: `packages/db/src/schema.ts`.
+Tables: `users`, `folders` (tree through `parent_id`), `entries` (raw text), `notes`, `sort_runs` (model plans), `note_versions` (history), `trash_items` (deleted folders and notes, kept 30 days), `personal_tokens` (hashes of the tokens for other apps). Schema: `packages/db/src/schema.ts`.
 
 ## Sign-in
 
@@ -104,4 +117,4 @@ OIDC with Authentik (`https://auth.palawi.fr/application/o/palanotes/`), authori
 
 Users are identified by their `sub` (`users.auth_subject`), never by their email. The session cookie `palawi_notes_session` is a signed JWT that belongs to the app only, with `path=/notes`, `Secure`, `HttpOnly` and `SameSite=Lax`. Access is limited to an Authentik group.
 
-`src/proxy.ts` checks the cookie signature on every request (pages are redirected to sign-in, API routes answer 401) and refuses state-changing requests from another origin. Pages and route handlers then load the account from the database with `getCurrentUser()`; every query is filtered by that account.
+`src/proxy.ts` checks the cookie signature on every request (pages are redirected to sign-in, API routes answer 401) and refuses state-changing requests from another origin. `/api/v1/*` is the exception: it takes a personal token instead (see « API for other apps »). Pages and route handlers then load the account from the database with `getCurrentUser()`; every query is filtered by that account.
