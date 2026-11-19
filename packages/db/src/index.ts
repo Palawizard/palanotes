@@ -8,3 +8,4 @@ export * from './repo/sort-runs';
 export * from './repo/apply';
 export * from './repo/search';
 export * from './repo/trash';
+export * from './repo/personal-tokens';
