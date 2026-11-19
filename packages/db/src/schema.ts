@@ -202,3 +202,20 @@ export const trashItems = pgTable(
     index('trash_items_deleted_idx').on(t.deletedAt),
   ],
 );
+
+// A personal token lets another app of the same person reach the `/api/v1` routes. Only the
+// SHA-256 of the token is kept: the token itself is shown once, when it is created.
+export const personalTokens = pgTable(
+  'personal_tokens',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    tokenHash: text('token_hash').notNull().unique(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
+  },
+  (t) => [index('personal_tokens_user_idx').on(t.userId, t.createdAt.desc())],
+);

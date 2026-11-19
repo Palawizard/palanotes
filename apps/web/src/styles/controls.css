@@ -598,6 +598,123 @@ a.tag {
   font-weight: 600;
 }
 
+/* Personal tokens: a form, the new token laid on the plate once, then one line per token. */
+
+.tokens {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.token-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.token-form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.token-form-row .field {
+  flex: 1 1 12rem;
+  width: auto;
+  min-width: 0;
+}
+
+/* The new token arrives as a low plate, like a choice, and settles in place. */
+.token-reveal {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: var(--plate);
+  border-radius: var(--radius-card);
+  box-shadow: var(--edge), var(--shadow-1);
+  transition:
+    opacity 200ms var(--ease-out),
+    transform 340ms var(--ease-settle);
+
+  @starting-style {
+    opacity: 0;
+    transform: translate(-2px, -6px);
+  }
+}
+
+.token-warning {
+  font-weight: 600;
+}
+
+.token-value {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--sunk);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-press);
+  padding: 0.5rem 0.75rem;
+  word-break: break-all;
+  user-select: all;
+}
+
+.token-reveal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.token-copy-status {
+  color: var(--ink-muted);
+  font-size: var(--text-meta);
+}
+
+.token-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.token-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0;
+}
+
+.token-row + .token-row {
+  border-top: 1px solid var(--rule);
+}
+
+.token-text {
+  min-width: 0;
+}
+
+.token-name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.token-meta {
+  color: var(--ink-muted);
+  font-size: var(--text-meta);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .token-reveal {
+    @starting-style {
+      transform: none;
+    }
+  }
+}
+
 @media (max-width: 47.99rem) {
   .settings-section {
     grid-template-columns: minmax(0, 1fr);
