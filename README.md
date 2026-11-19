@@ -46,6 +46,8 @@ To try the app with realistic content, load the demo account into the local acco
 | `pnpm db:demo --subject <sub>`         | load the demo account (about 50 folders, 345 notes over a year) into an empty account of a local database; refused in production                         |
 | `pnpm --filter @palanotes/web screens` | screenshots of every screen with the demo account, at 1440, 1280 and 390 px, light and dark, plus timings in `perf.json` (`SCREENS_DIR` sets the folder) |
 
+The tests of every package, the web app included, need that Postgres server (`TEST_DATABASE_URL`): each package creates its own database on it, `palanotes_test_web` for the web app.
+
 ## Layout
 
 ```
