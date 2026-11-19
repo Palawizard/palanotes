@@ -5,6 +5,8 @@ test.use({ viewport: { width: 1440, height: 900 } });
 test('a personal token is created, shown once, used by another app and revoked', async ({
   page,
   context,
+  playwright,
+  baseURL,
 }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await page.goto('./reglages');
@@ -44,6 +46,15 @@ test('a personal token is created, shown once, used by another app and revoked',
   await page.goto(body.notes[0]?.path.replace(/^\/notes\//, './') ?? '');
   await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible();
 
+  // The token opens nothing outside /api/v1, even from the app's own origin.
+  const outside = await playwright.request.newContext({ baseURL });
+  const appRoute = await outside.post('api/entries', {
+    headers: { ...auth, origin: new URL(baseURL ?? '').origin },
+    data: { content: 'Envoyée sur une route de l’app' },
+  });
+  expect(appRoute.status()).toBe(401);
+  await outside.dispose();
+
   const search = await page.request.get(`api/v1/search?q=${encodeURIComponent('réseau')}`, {
     headers: auth,
   });
@@ -77,4 +88,33 @@ test('a personal token is created, shown once, used by another app and revoked',
 
   const revoked = await page.request.get('api/v1/notes', { headers: auth });
   expect(revoked.status()).toBe(401);
+});
+
+test('an eleventh token is refused with a way out', async ({ page, baseURL }) => {
+  const origin = new URL(baseURL ?? '').origin;
+  await page.goto('./reglages');
+  const created: string[] = [];
+  for (let index = 0; index < 10; index += 1) {
+    const response = await page.request.post('api/tokens', {
+      headers: { origin },
+      data: { name: `Jeton ${index}` },
+    });
+    expect(response.status()).toBe(201);
+    created.push(((await response.json()) as { record: { id: string } }).record.id);
+  }
+  await page.reload();
+  const section = page.getByRole('region', { name: 'Accès pour une autre app' });
+  await expect(section.getByRole('list', { name: 'Jetons' }).getByRole('listitem')).toHaveCount(10);
+  await section.getByLabel('Nom du jeton').fill('Un de trop');
+  await section.getByRole('button', { name: 'Créer un jeton' }).click();
+  await expect(section.getByRole('alert')).toHaveText(
+    'Tu as déjà 10 jetons : révoque-en un avant d’en créer un autre.',
+  );
+  await expect(section.locator('code')).toHaveCount(0);
+
+  for (const id of created) {
+    expect((await page.request.delete(`api/tokens/${id}`, { headers: { origin } })).status()).toBe(
+      204,
+    );
+  }
 });
