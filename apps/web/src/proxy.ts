@@ -11,6 +11,8 @@ const PUBLIC_PATHS = new Set([
   '/api/auth/logout',
   '/signed-out',
 ]);
+// WARNING: every route under /api/v1/ skips the cookie and origin checks below, so each one
+// must authenticate the request by its personal token itself (see server/api-v1.ts).
 const API_V1_PREFIX = '/api/v1/';
 
 // Optimistic check from the cookie only. Pages and route handlers still load the
