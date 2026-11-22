@@ -207,4 +207,4 @@ docker compose up -d
 
 ## 11. Infra records to update
 
-After a first deployment, the server records gain: the new stack on vm-apps (`/srv/palanotes`, services and memory limits), the `/notes` route, the Authentik provider and group `palawi-notes`, the backup cron and its folder, the uptime monitor, the Homepage entry, the subscription token's renewal date, and the addition to `purge-comptes-orphelins`.
+After a first deployment, update the server records with: the new stack on vm-apps (`/srv/palanotes`, services and memory limits), the `/notes` route, the Authentik provider and group `palawi-notes`, the backup cron and its folder, the uptime monitor, the Homepage entry, the subscription token's renewal date, and the addition to `purge-comptes-orphelins`.
