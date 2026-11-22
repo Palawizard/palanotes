@@ -146,7 +146,7 @@ Check the token without filing a note:
 docker compose exec worker sh -c 'env -u ANTHROPIC_API_KEY CLAUDE_CONFIG_DIR="$CLAUDE_CLI_CONFIG_DIR" claude -p "Réponds juste OK" --tools "" --max-turns 1'
 ```
 
-It must print `OK`. A message about onboarding or login means the token is wrong or expired: create a new one (step 2). The worker needs outbound HTTPS to Anthropic; if vm-apps filters egress, allow it for this stack. Then write a short note in the app: the pocket shows « Rangement… », then « À valider » within a minute. If it shows « Échec », `docker compose logs worker` gives the reason (never the note text).
+It must print `OK`. A message about onboarding or login means the token is wrong or expired: create a new one (step 2). The worker needs outbound HTTPS to Anthropic; if vm-apps filters egress, allow it for this stack. Then write a short note in the app: the pocket shows "Rangement...", then "À valider" within a minute. If it shows "Échec", `docker compose logs worker` gives the reason (never the note text).
 
 ## 7. Backups
 
@@ -175,7 +175,7 @@ gunzip -c /srv/backups/palanotes/palanotes-YYYYMMDD-HHMMSS.sql.gz \
 
 - Uptime monitor (HTTP): `https://palawi.fr/notes/api/health`, expect status 200 and `"ok"`. It answers 503 when the database is down.
 - Container health: `web` checks that health route, `worker` checks that its heartbeat file was written in the last two minutes (it writes only when the database answers).
-- Homepage: a service entry named « Notes », link `https://palawi.fr/notes`, with the site monitor on the health URL.
+- Homepage: a service entry named "Notes", link `https://palawi.fr/notes`, with the site monitor on the health URL.
 
 ## 9. Orphan accounts (`purge-comptes-orphelins`)
 
@@ -207,4 +207,4 @@ docker compose up -d
 
 ## 11. Infra documentation to update
 
-In the « Infra Palawi » documentation: the new stack on vm-apps (`/srv/palanotes`, services and memory limits), the `/notes` route, the Authentik provider and group `palawi-notes`, the backup cron and its folder, the uptime monitor, the Homepage entry, the subscription token's renewal date, and the addition to `purge-comptes-orphelins`.
+In the "Infra Palawi" documentation: the new stack on vm-apps (`/srv/palanotes`, services and memory limits), the `/notes` route, the Authentik provider and group `palawi-notes`, the backup cron and its folder, the uptime monitor, the Homepage entry, the subscription token's renewal date, and the addition to `purge-comptes-orphelins`.
