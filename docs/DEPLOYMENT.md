@@ -205,6 +205,6 @@ docker compose up -d
 
 `migrate` applies new migrations before `web` and `worker` start again. To pin a release, set `PALANOTES_TAG` to the version and check out its tag.
 
-## 11. Infra documentation to update
+## 11. Infra records to update
 
-In the "Infra Palawi" documentation: the new stack on vm-apps (`/srv/palanotes`, services and memory limits), the `/notes` route, the Authentik provider and group `palawi-notes`, the backup cron and its folder, the uptime monitor, the Homepage entry, the subscription token's renewal date, and the addition to `purge-comptes-orphelins`.
+After a first deployment, the server records gain: the new stack on vm-apps (`/srv/palanotes`, services and memory limits), the `/notes` route, the Authentik provider and group `palawi-notes`, the backup cron and its folder, the uptime monitor, the Homepage entry, the subscription token's renewal date, and the addition to `purge-comptes-orphelins`.
