@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 test.describe('explorer on a wide screen', () => {
   test.use({ viewport: { width: 1440, height: 900 } });
