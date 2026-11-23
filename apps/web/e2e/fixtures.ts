@@ -1,30 +1,12 @@
 import { test as base, expect, type BrowserContext } from '@playwright/test';
-import { closeDb, createDb, upsertUser } from '@palanotes/db';
-import { DemoAccountNotEmptyError, seedDemoAccount } from '@palanotes/db/demo';
+import { closeDb, createDb, upsertUser, type Db } from '@palanotes/db';
+import { seedDemoAccount } from '@palanotes/db/demo';
 import { FAKE_SUBJECT_COOKIE } from '../scripts/fake-oidc';
-import { E2E_OIDC_PORT, e2eEnv, workerSubject } from './env';
+import { E2E_OIDC_PORT, e2eEnv } from './env';
 
 export interface E2eAccount {
   id: string;
   subject: string;
-}
-
-// One account per parallel worker, each with its own copy of the demo account, so tests that
-// change notes or folders never share data and the suite can use every worker. A restarted
-// worker keeps its parallelIndex and finds its account already seeded.
-async function ensureAccount(subject: string): Promise<E2eAccount> {
-  const db = createDb(e2eEnv.DATABASE_URL ?? '', { max: 1 });
-  try {
-    const user = await upsertUser(db, { authSubject: subject, displayName: 'Palawi' });
-    try {
-      await seedDemoAccount(db, user.id);
-    } catch (error) {
-      if (!(error instanceof DemoAccountNotEmptyError)) throw error;
-    }
-    return { id: user.id, subject };
-  } finally {
-    await closeDb(db);
-  }
 }
 
 // The fake OIDC provider signs a browser in with the subject of this cookie.
@@ -34,13 +16,23 @@ export async function signInAs(context: BrowserContext, account: E2eAccount): Pr
   ]);
 }
 
-export const test = base.extend<object, { account: E2eAccount }>({
-  account: [
-    async ({}, provide, workerInfo) => {
-      await provide(await ensureAccount(workerSubject(workerInfo.parallelIndex)));
+// Every test signs in with an account of its own, seeded with the demo data (about 0.2 s), so
+// tests never see what another test, a repeat or a retry left behind, and all run in parallel.
+export const test = base.extend<{ account: E2eAccount }, { accountsDb: Db }>({
+  accountsDb: [
+    async ({}, provide) => {
+      const db = createDb(e2eEnv.DATABASE_URL ?? '', { max: 1 });
+      await provide(db);
+      await closeDb(db);
     },
     { scope: 'worker' },
   ],
+  account: async ({ accountsDb }, provide, testInfo) => {
+    const subject = `e2e-${testInfo.testId}-${testInfo.repeatEachIndex}-${testInfo.retry}`;
+    const user = await upsertUser(accountsDb, { authSubject: subject, displayName: 'Palawi' });
+    await seedDemoAccount(accountsDb, user.id);
+    await provide({ id: user.id, subject });
+  },
   context: async ({ context, account }, provide) => {
     await signInAs(context, account);
     await provide(context);
