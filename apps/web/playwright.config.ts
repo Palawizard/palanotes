@@ -4,7 +4,7 @@ import { E2E_OIDC_PORT, E2E_PORT, e2eEnv } from './e2e/env';
 export default defineConfig({
   testDir: './e2e',
   testIgnore: ['screens/**'],
-  // Each worker has its own account (e2e/fixtures.ts), so every test can run in parallel.
+  // Each test has its own account (e2e/fixtures.ts), so every test can run in parallel.
   fullyParallel: true,
   workers: process.env.CI ? '100%' : undefined,
   timeout: 60_000,

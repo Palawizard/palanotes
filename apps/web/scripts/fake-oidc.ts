@@ -6,7 +6,7 @@ export interface FakeIdentity {
 }
 
 // A visitor whose browser carries this cookie signs in with the subject it holds: the
-// end-to-end tests give each Playwright worker its own account this way.
+// end-to-end tests give each test its own account this way.
 export const FAKE_SUBJECT_COOKIE = 'fake_oidc_subject';
 
 function cookie(header: string | undefined, name: string): string | undefined {
