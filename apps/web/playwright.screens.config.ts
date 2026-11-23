@@ -9,5 +9,7 @@ export default defineConfig({
   testIgnore: [],
   timeout: 300_000,
   retries: 0,
+  // The performance pass measures the screens: it must not share the machine with the screenshots.
+  workers: 1,
   projects: [{ name: 'screens', use: { browserName: 'chromium' } }],
 });
