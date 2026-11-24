@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 test('search finds a note filed in the wrong folder, with and without accents and with a typo', async ({
   page,

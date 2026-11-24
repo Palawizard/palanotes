@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, signInAs, test } from './fixtures';
 
 test('writing an entry puts it in the pocket and keeps the raw text', async ({ page }) => {
   await page.goto('./');
@@ -145,8 +145,9 @@ test('direct mode files without asking and can be undone', async ({ page }) => {
   await expect(page.getByRole('status')).toHaveText('Enregistré.');
 });
 
-test('the writing form still works before the page script runs', async ({ browser }) => {
+test('the writing form still works before the page script runs', async ({ browser, account }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
+  await signInAs(context, account);
   const page = await context.newPage();
   await page.goto('./');
   await page.getByLabel('Ta note').fill('Envoyée sans script');
