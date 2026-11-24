@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 test('an anonymous visitor is sent through sign-in and lands on the home page', async ({
   page,

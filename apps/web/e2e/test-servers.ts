@@ -1,6 +1,6 @@
 // Started by Playwright before the app: resets the e2e database, loads the demo account for the
-// e2e owner, runs a fake OIDC provider that signs everyone in as that owner, and starts the
-// worker with the fake model.
+// e2e owner, runs a fake OIDC provider that signs visitors in as that owner (or as the test
+// account their cookie names, see fixtures.ts), and starts the worker with the fake model.
 import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';

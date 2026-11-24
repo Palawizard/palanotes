@@ -48,6 +48,14 @@ export function PersonalTokens({ initial, now }: { initial: TokenView[]; now: st
     }
   });
 
+  // The copy button only exists once the new token is rendered: focus it from an effect, not
+  // from a frame callback that can run before React commits.
+  useEffect(() => {
+    if (created) {
+      copyRef.current?.focus();
+    }
+  }, [created]);
+
   async function create() {
     const trimmed = name.trim();
     if (!trimmed) {
@@ -73,7 +81,6 @@ export function PersonalTokens({ initial, now }: { initial: TokenView[]; now: st
     setCopied('idle');
     setStatus('');
     setName('');
-    requestAnimationFrame(() => copyRef.current?.focus());
   }
 
   async function copy() {
